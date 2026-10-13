@@ -381,6 +381,8 @@ class GameEngine {
       if (modal && !modal.classList.contains('hidden')) return;
       const setModal = document.getElementById('settings-modal');
       if (setModal && !setModal.classList.contains('hidden')) return;
+      const optModal = document.getElementById('options-modal');
+      if (optModal && !optModal.classList.contains('hidden')) return;
       if (e.target.closest('#hud-overlay') || e.target.closest('.screen-modal')) return;
       this.isMouseDown = true;
       this.prevMouseX = e.clientX;
@@ -393,6 +395,8 @@ class GameEngine {
       if (modal && !modal.classList.contains('hidden')) return;
       const setModal = document.getElementById('settings-modal');
       if (setModal && !setModal.classList.contains('hidden')) return;
+      const optModal = document.getElementById('options-modal');
+      if (optModal && !optModal.classList.contains('hidden')) return;
 
       if (this.isMouseDown) {
         // High-sensitivity mouse drag
@@ -429,6 +433,8 @@ class GameEngine {
       if (modal && !modal.classList.contains('hidden')) return;
       const setModal = document.getElementById('settings-modal');
       if (setModal && !setModal.classList.contains('hidden')) return;
+      const optModal = document.getElementById('options-modal');
+      if (optModal && !optModal.classList.contains('hidden')) return;
       if (e.target.closest('#hud-overlay') || e.target.closest('.screen-modal') || e.target.closest('button')) return;
 
       if (e.touches && e.touches.length === 1) {
@@ -514,13 +520,13 @@ class GameEngine {
 
       // Escape key closes modals if open
       if (e.key === 'Escape') {
+        const optModal = document.getElementById('options-modal') || document.getElementById('settings-modal');
+        if (optModal && !optModal.classList.contains('hidden')) {
+          this.toggleOptionsModal(false);
+        }
         const modal = document.getElementById('manual-modal');
         if (modal && !modal.classList.contains('hidden')) {
           this.toggleManualModal(false);
-        }
-        const setModal = document.getElementById('settings-modal');
-        if (setModal && !setModal.classList.contains('hidden')) {
-          this.toggleSettingsModal(false);
         }
       }
     });
@@ -677,24 +683,29 @@ class GameEngine {
       });
     });
 
+    const btnOptions = document.getElementById('btn-menu-options');
+    btnOptions?.addEventListener('click', () => {
+      this.toggleOptionsModal(true);
+    });
+
     const modal = document.getElementById('manual-modal');
     const btnModalX = document.getElementById('btn-modal-x');
 
     btnManual?.addEventListener('click', () => {
-      this.toggleManualModal(true);
+      this.toggleOptionsModal(true, 'tab-howtoplay');
     });
 
     btnCloseManual?.addEventListener('click', () => {
-      this.toggleManualModal(false);
+      this.toggleOptionsModal(false);
     });
 
     btnModalX?.addEventListener('click', () => {
-      this.toggleManualModal(false);
+      this.toggleOptionsModal(false);
     });
 
     modal?.addEventListener('click', (e) => {
       if (e.target === modal) {
-        this.toggleManualModal(false);
+        this.toggleOptionsModal(false);
       }
     });
 
@@ -817,58 +828,49 @@ class GameEngine {
   }
 
   toggleManualModal(forceState = null) {
-    const modal = document.getElementById('manual-modal');
-    if (!modal) return;
-    const isCurrentlyHidden = modal.classList.contains('hidden');
-    const shouldOpen = forceState !== null ? forceState : isCurrentlyHidden;
-
-    if (shouldOpen) {
-      modal.classList.remove('hidden');
-      window.Sound.playMenuBlip();
-      // Reset scroll position and tab state
-      const scrollContent = modal.querySelector('.manual-scroll-content');
-      if (scrollContent) scrollContent.scrollTop = 0;
-      document.querySelectorAll('.manual-nav-tab').forEach((t, idx) => {
-        if (idx === 0) t.classList.add('active');
-        else t.classList.remove('active');
-      });
-    } else {
-      modal.classList.add('hidden');
-      window.Sound.playMenuBlip();
-    }
+    this.toggleOptionsModal(forceState, 'tab-howtoplay');
   }
 
-  // --- SETTINGS, HOTKEY REBINDING & AUDIO CONTROLS ---
+  // --- OPTIONS, SETTINGS, SURVIVAL PROTOCOLS & AUDIO CONTROLS ---
   setupSettingsModal() {
+    this.setupOptionsModal();
+  }
+
+  setupOptionsModal() {
+    const btnOptions = document.getElementById('btn-menu-options');
     const btnSettings = document.getElementById('btn-menu-settings');
-    const modal = document.getElementById('settings-modal');
-    const btnClose = document.getElementById('btn-close-settings');
-    const btnX = document.getElementById('btn-settings-x');
+    const modal = document.getElementById('options-modal') || document.getElementById('settings-modal');
+    const btnClose = document.getElementById('btn-close-options') || document.getElementById('btn-close-settings');
+    const btnX = document.getElementById('btn-options-x') || document.getElementById('btn-settings-x');
+
+    btnOptions?.addEventListener('click', () => {
+      this.toggleOptionsModal(true);
+    });
 
     btnSettings?.addEventListener('click', () => {
-      this.toggleSettingsModal(true);
+      this.toggleOptionsModal(true);
     });
 
     btnClose?.addEventListener('click', () => {
-      this.toggleSettingsModal(false);
+      this.toggleOptionsModal(false);
     });
 
     btnX?.addEventListener('click', () => {
-      this.toggleSettingsModal(false);
+      this.toggleOptionsModal(false);
     });
 
     modal?.addEventListener('click', (e) => {
       if (e.target === modal) {
-        this.toggleSettingsModal(false);
+        this.toggleOptionsModal(false);
       }
     });
 
-    // Tab switching inside Settings modal
-    document.querySelectorAll('.settings-nav-tab').forEach(tab => {
+    // Tab switching inside Options modal (How to Play, Keybinds, Audio, Speed)
+    document.querySelectorAll('.settings-nav-tab, .options-nav-tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
         window.Sound.playMenuBlip();
-        document.querySelectorAll('.settings-nav-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.settings-tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.settings-nav-tab, .options-nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.settings-tab-pane, .options-tab-pane').forEach(p => p.classList.remove('active'));
         e.currentTarget.classList.add('active');
         const targetId = e.currentTarget.dataset.tab;
         const targetPane = document.getElementById(targetId);
@@ -1026,8 +1028,8 @@ class GameEngine {
     this.updateKeybindingLabels();
   }
 
-  toggleSettingsModal(forceState = null) {
-    const modal = document.getElementById('settings-modal');
+  toggleOptionsModal(forceState = null, defaultTab = null) {
+    const modal = document.getElementById('options-modal') || document.getElementById('settings-modal');
     if (!modal) return;
     const isCurrentlyHidden = modal.classList.contains('hidden');
     const shouldOpen = forceState !== null ? forceState : isCurrentlyHidden;
@@ -1039,12 +1041,24 @@ class GameEngine {
     if (shouldOpen) {
       modal.classList.remove('hidden');
       window.Sound.playMenuBlip();
-      const scrollContent = modal.querySelector('.settings-scroll-content');
+      if (defaultTab) {
+        document.querySelectorAll('.settings-nav-tab, .options-nav-tab').forEach(t => {
+          t.classList.toggle('active', t.dataset.tab === defaultTab);
+        });
+        document.querySelectorAll('.settings-tab-pane, .options-tab-pane').forEach(p => {
+          p.classList.toggle('active', p.id === defaultTab);
+        });
+      }
+      const scrollContent = modal.querySelector('.settings-scroll-content') || modal.querySelector('.options-scroll-content');
       if (scrollContent) scrollContent.scrollTop = 0;
     } else {
       modal.classList.add('hidden');
       window.Sound.playMenuBlip();
     }
+  }
+
+  toggleSettingsModal(forceState = null) {
+    this.toggleOptionsModal(forceState, 'tab-keybinds');
   }
 
   returnToMainMenu() {
@@ -1062,6 +1076,7 @@ class GameEngine {
     document.getElementById('night-transition-screen')?.classList.add('hidden');
     document.getElementById('manual-modal')?.classList.add('hidden');
     document.getElementById('settings-modal')?.classList.add('hidden');
+    document.getElementById('options-modal')?.classList.add('hidden');
 
     const menu = document.getElementById('fnaf-main-menu');
     if (menu) menu.classList.remove('hidden');
@@ -1080,6 +1095,7 @@ class GameEngine {
     document.getElementById('night-transition-screen')?.classList.add('hidden');
     document.getElementById('manual-modal')?.classList.add('hidden');
     document.getElementById('settings-modal')?.classList.add('hidden');
+    document.getElementById('options-modal')?.classList.add('hidden');
     document.getElementById('gameover-screen')?.classList.add('hidden');
     document.getElementById('victory-screen')?.classList.add('hidden');
 

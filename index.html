@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
-  <link rel="stylesheet" href="css/style.css?v=20261013_v8">
+  <link rel="stylesheet" href="css/style.css?v=20261013_v9">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
@@ -277,16 +277,10 @@
             <button class="night-chip" data-night="5">NIGHT 5</button>
           </div>
 
-          <button class="fnaf-menu-item fnaf-manual-btn" id="btn-menu-manual" title="View Security Manual and Controls">
+          <button class="fnaf-menu-item fnaf-options-btn" id="btn-menu-options" title="Game Options, Audio, Controls &amp; Survival Manual">
             <span class="fnaf-arrow">&gt;&gt;</span>
-            <span class="fnaf-text">HOW TO PLAY</span>
-            <span class="fnaf-guide-badge"><span class="badge-dot"></span>SECURITY PROTOCOLS</span>
-          </button>
-
-          <button class="fnaf-menu-item fnaf-settings-btn" id="btn-menu-settings" title="Configure Controls, Audio & Shift Speed">
-            <span class="fnaf-arrow">&gt;&gt;</span>
-            <span class="fnaf-text">SETTINGS</span>
-            <span class="fnaf-settings-badge"><span class="badge-dot-blue"></span>CONTROLS &amp; AUDIO</span>
+            <span class="fnaf-text">OPTIONS</span>
+            <span class="fnaf-settings-badge"><span class="badge-dot-blue"></span>HOW TO PLAY &amp; SETTINGS</span>
           </button>
 
           <button class="fnaf-menu-item" id="btn-menu-fullscreen">
@@ -314,38 +308,40 @@
       </div>
     </div>
 
-    <!-- Modal: Security Manual / How to Play Instructions -->
-    <div class="screen-modal hidden" id="manual-modal">
-      <div class="start-box manual-box">
+    <!-- Modal: Unified Options & Security Protocols (How to Play, Keybinds, Audio, Shift Speed) -->
+    <div class="screen-modal hidden" id="options-modal">
+      <div class="start-box settings-box options-box">
         <div class="manual-header">
           <div class="manual-header-top">
             <div class="manual-seal-block">
-              <span class="manual-cross-icon">✝</span>
+              <span class="manual-cross-icon">⚙️</span>
               <div>
                 <span class="title-sub">ST. JUDE CATHOLIC PARISH ARCHIVES</span>
-                <div class="manual-doc-id">DOC REF: ARCH-SEC-1987 // REVISED 2026</div>
+                <div class="manual-doc-id">OPTIONS &amp; SURVIVAL PROTOCOLS // FACILITY CONFIGURATION</div>
               </div>
             </div>
-            <button class="manual-close-x" id="btn-modal-x" title="Close Guide [ESC / H]">&times;</button>
+            <button class="manual-close-x" id="btn-options-x" title="Close Options [ESC]">&times;</button>
           </div>
 
-          <h2 class="manual-main-title">SECURITY PROTOCOLS &amp; SURVIVAL MANUAL</h2>
+          <h2 class="manual-main-title">FACILITY OPTIONS &amp; SURVIVAL PROTOCOLS</h2>
           <div class="manual-title-bar">
-            <span class="manual-badge-tag"><span class="badge-dot"></span>OVERNIGHT GUARDIAN MANUAL</span>
-            <span class="manual-shift-tag">SHIFT: 12:00 AM — 06:00 AM</span>
+            <span class="manual-badge-tag"><span class="badge-dot-blue"></span>HOW TO PLAY &amp; SETTINGS</span>
+            <span class="manual-shift-tag">SURVIVAL GUIDE • CUSTOM HOTKEYS • AUDIO • SHIFT SPEED</span>
           </div>
           <div class="title-divider"></div>
 
-          <!-- Quick Navigation Tabs -->
+          <!-- Options Tab Navigation -->
           <div class="manual-nav-tabs">
-            <button class="manual-nav-tab active" data-target="manual-sec-objective">1. OBJECTIVE</button>
-            <button class="manual-nav-tab" data-target="manual-sec-commands">2. QUICK CONTROLS</button>
-            <button class="manual-nav-tab" data-target="manual-sec-entities">3. ENTITIES GUIDE</button>
-            <button class="manual-nav-tab" data-target="manual-sec-power">4. POWER PRESERVATION</button>
+            <button class="settings-nav-tab active" data-tab="tab-howtoplay">1. HOW TO PLAY</button>
+            <button class="settings-nav-tab" data-tab="tab-keybinds">2. KEY MAPPING</button>
+            <button class="settings-nav-tab" data-tab="tab-audio">3. AUDIO &amp; VOLUME</button>
+            <button class="settings-nav-tab" data-tab="tab-speed">4. SHIFT TIMER SPEED</button>
           </div>
         </div>
 
-        <div class="manual-scroll-content">
+        <div class="settings-scroll-content">
+          <!-- Tab 1: How to Play Instructions & Security Protocol -->
+          <div class="settings-tab-pane active" id="tab-howtoplay">
           <!-- Section 1: Objective -->
           <div class="manual-section" id="manual-sec-objective">
             <h3 class="manual-section-title">
@@ -608,48 +604,10 @@
           </div>
         </div>
 
-        <div class="manual-footer">
-          <button class="primary-btn manual-return-btn" id="btn-close-manual">
-            <span>CLOSE INSTRUCTIONS</span>
-            <kbd class="btn-kbd-chip">[ESC]</kbd>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal: Settings & Options (Key Mapping, Sounds, Shift Speed) -->
-    <div class="screen-modal hidden" id="settings-modal">
-      <div class="start-box settings-box">
-        <div class="manual-header">
-          <div class="manual-header-top">
-            <div class="manual-seal-block">
-              <span class="manual-cross-icon">⚙️</span>
-              <div>
-                <span class="title-sub">ST. JUDE CATHOLIC PARISH ARCHIVES</span>
-                <div class="manual-doc-id">SYSTEM CONFIGURATION // FACILITY PREFERENCES</div>
-              </div>
-            </div>
-            <button class="manual-close-x" id="btn-settings-x" title="Close Settings [ESC]">&times;</button>
           </div>
 
-          <h2 class="manual-main-title">FACILITY CONFIGURATION &amp; SETTINGS</h2>
-          <div class="manual-title-bar">
-            <span class="manual-badge-tag"><span class="badge-dot-blue"></span>PREFERENCES &amp; KEYBINDS</span>
-            <span class="manual-shift-tag">CUSTOM HOTKEYS • AUDIO CONTROLS • SHIFT SPEED</span>
-          </div>
-          <div class="title-divider"></div>
-
-          <!-- Settings Tab Navigation -->
-          <div class="manual-nav-tabs">
-            <button class="settings-nav-tab active" data-tab="tab-keybinds">1. KEY MAPPING</button>
-            <button class="settings-nav-tab" data-tab="tab-audio">2. AUDIO &amp; VOLUME</button>
-            <button class="settings-nav-tab" data-tab="tab-speed">3. SHIFT TIMER SPEED</button>
-          </div>
-        </div>
-
-        <div class="settings-scroll-content">
-          <!-- Tab 1: Key Mapping Controls -->
-          <div class="settings-tab-pane active" id="tab-keybinds">
+          <!-- Tab 2: Key Mapping Controls -->
+          <div class="settings-tab-pane" id="tab-keybinds">
             <div class="settings-pane-header">
               <h3 class="manual-section-title">
                 <span class="sec-num">KEYS</span>
@@ -805,8 +763,8 @@
         </div>
 
         <div class="manual-footer">
-          <button class="primary-btn settings-save-btn" id="btn-close-settings">
-            <span>SAVE &amp; CLOSE SETTINGS</span>
+          <button class="primary-btn settings-save-btn options-save-btn" id="btn-close-options">
+            <span>SAVE &amp; CLOSE OPTIONS</span>
             <kbd class="btn-kbd-chip">[ESC]</kbd>
           </button>
         </div>
@@ -846,9 +804,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261013_v8"></script>
-  <script src="js/textures.js?v=20261013_v8"></script>
-  <script src="js/models.js?v=20261013_v8"></script>
-  <script src="js/game.js?v=20261013_v8"></script>
+  <script src="js/audio.js?v=20261013_v9"></script>
+  <script src="js/textures.js?v=20261013_v9"></script>
+  <script src="js/models.js?v=20261013_v9"></script>
+  <script src="js/game.js?v=20261013_v9"></script>
 </body>
 </html>

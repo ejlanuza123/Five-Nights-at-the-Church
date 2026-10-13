@@ -1449,8 +1449,9 @@ html, body {
   box-shadow: 0 0 16px rgba(234, 179, 8, 0.6);
 }
 
-/* Dedicated Settings Button on Main Menu */
-.fnaf-menu-item.fnaf-settings-btn {
+/* Dedicated Options & Settings Button on Main Menu */
+.fnaf-menu-item.fnaf-settings-btn,
+.fnaf-menu-item.fnaf-options-btn {
   background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-left: 4px solid #38bdf8;
@@ -1462,11 +1463,13 @@ html, body {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.fnaf-menu-item.fnaf-settings-btn .fnaf-arrow {
+.fnaf-menu-item.fnaf-settings-btn .fnaf-arrow,
+.fnaf-menu-item.fnaf-options-btn .fnaf-arrow {
   color: #38bdf8;
 }
 
-.fnaf-menu-item.fnaf-settings-btn .fnaf-text {
+.fnaf-menu-item.fnaf-settings-btn .fnaf-text,
+.fnaf-menu-item.fnaf-options-btn .fnaf-text {
   font-size: 28px;
   color: #e0f2fe;
   text-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
@@ -1499,19 +1502,22 @@ html, body {
   animation: pulseDot 1.4s infinite;
 }
 
-.fnaf-menu-item.fnaf-settings-btn:hover {
+.fnaf-menu-item.fnaf-settings-btn:hover,
+.fnaf-menu-item.fnaf-options-btn:hover {
   background: rgba(30, 41, 59, 0.9);
   border-color: #38bdf8;
   box-shadow: 0 0 25px rgba(56, 189, 248, 0.45), 0 4px 16px rgba(0, 0, 0, 0.8);
   transform: translateX(14px) scale(1.02);
 }
 
-.fnaf-menu-item.fnaf-settings-btn:hover .fnaf-arrow {
+.fnaf-menu-item.fnaf-settings-btn:hover .fnaf-arrow,
+.fnaf-menu-item.fnaf-options-btn:hover .fnaf-arrow {
   color: #ffffff;
   transform: translateX(5px);
 }
 
-.fnaf-menu-item.fnaf-settings-btn:hover .fnaf-text {
+.fnaf-menu-item.fnaf-settings-btn:hover .fnaf-text,
+.fnaf-menu-item.fnaf-options-btn:hover .fnaf-text {
   color: #ffffff;
   text-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
 }
