@@ -310,32 +310,33 @@
 
     <!-- Modal: Unified Options & Security Protocols (How to Play, Keybinds, Audio, Shift Speed) -->
     <div class="screen-modal hidden" id="options-modal">
-      <div class="start-box settings-box options-box">
-        <div class="manual-header">
-          <div class="manual-header-top">
-            <div class="manual-seal-block">
-              <span class="manual-cross-icon">⚙️</span>
+      <div class="settings-box options-box">
+        <div class="options-header">
+          <div class="options-header-top">
+            <div class="options-seal-block">
+              <span class="options-gear-icon">⚙️</span>
               <div>
-                <span class="title-sub">ST. JUDE CATHOLIC PARISH ARCHIVES</span>
-                <div class="manual-doc-id">OPTIONS &amp; SURVIVAL PROTOCOLS // FACILITY CONFIGURATION</div>
+                <h2 class="options-main-title">FACILITY OPTIONS &amp; SURVIVAL PROTOCOLS</h2>
+                <div class="options-doc-id">ST. JUDE CATHOLIC PARISH ARCHIVES • SYSTEM CONFIGURATION</div>
               </div>
             </div>
-            <button class="manual-close-x" id="btn-options-x" title="Close Options [ESC]">&times;</button>
+            <button class="options-close-x" id="btn-options-x" title="Close Options [ESC]">&times;</button>
           </div>
-
-          <h2 class="manual-main-title">FACILITY OPTIONS &amp; SURVIVAL PROTOCOLS</h2>
-          <div class="manual-title-bar">
-            <span class="manual-badge-tag"><span class="badge-dot-blue"></span>HOW TO PLAY &amp; SETTINGS</span>
-            <span class="manual-shift-tag">SURVIVAL GUIDE • CUSTOM HOTKEYS • AUDIO • SHIFT SPEED</span>
-          </div>
-          <div class="title-divider"></div>
 
           <!-- Options Tab Navigation -->
-          <div class="manual-nav-tabs">
-            <button class="settings-nav-tab active" data-tab="tab-howtoplay">1. HOW TO PLAY</button>
-            <button class="settings-nav-tab" data-tab="tab-keybinds">2. KEY MAPPING</button>
-            <button class="settings-nav-tab" data-tab="tab-audio">3. AUDIO &amp; VOLUME</button>
-            <button class="settings-nav-tab" data-tab="tab-speed">4. SHIFT TIMER SPEED</button>
+          <div class="options-nav-tabs">
+            <button class="settings-nav-tab active" data-tab="tab-howtoplay">
+              <span class="tab-num">1</span> HOW TO PLAY
+            </button>
+            <button class="settings-nav-tab" data-tab="tab-keybinds">
+              <span class="tab-num">2</span> KEY MAPPING
+            </button>
+            <button class="settings-nav-tab" data-tab="tab-audio">
+              <span class="tab-num">3</span> AUDIO &amp; VOLUME
+            </button>
+            <button class="settings-nav-tab" data-tab="tab-speed">
+              <span class="tab-num">4</span> SHIFT TIMER SPEED
+            </button>
           </div>
         </div>
 
@@ -762,11 +763,18 @@
           </div>
         </div>
 
-        <div class="manual-footer">
-          <button class="primary-btn settings-save-btn options-save-btn" id="btn-close-options">
-            <span>SAVE &amp; CLOSE OPTIONS</span>
-            <kbd class="btn-kbd-chip">[ESC]</kbd>
-          </button>
+        <div class="options-footer">
+          <div class="options-footer-status">
+            <span class="footer-status-dot"></span>
+            <span class="footer-status-text">Preferences &amp; keybindings are saved automatically</span>
+          </div>
+          <div class="options-footer-actions">
+            <button class="options-save-btn" id="btn-close-options" title="Save changes and close options [ESC]">
+              <span class="save-btn-icon">✓</span>
+              <span class="save-btn-text">SAVE &amp; CLOSE</span>
+              <kbd class="save-btn-key">ESC</kbd>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -804,9 +812,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261013_v9"></script>
-  <script src="js/textures.js?v=20261013_v9"></script>
-  <script src="js/models.js?v=20261013_v9"></script>
-  <script src="js/game.js?v=20261013_v9"></script>
+  <script src="js/audio.js?v=20261013_v10"></script>
+  <script src="js/textures.js?v=20261013_v10"></script>
+  <script src="js/models.js?v=20261013_v10"></script>
+  <script src="js/game.js?v=20261013_v10"></script>
 </body>
 </html>

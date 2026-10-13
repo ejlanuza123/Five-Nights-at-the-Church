@@ -2366,35 +2366,124 @@ kbd.key-badge {
 }
 
 /* ================= SETTINGS & OPTIONS MODAL ================= */
-#settings-modal {
+#options-modal,
+#settings-modal,
+#manual-modal {
   position: fixed;
   inset: 0;
   z-index: 2000 !important;
-  background: rgba(4, 7, 13, 0.92);
-  backdrop-filter: blur(12px);
+  background: rgba(4, 7, 13, 0.94);
+  backdrop-filter: blur(14px);
   padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-.settings-box {
-  width: 860px;
-  max-width: 94vw;
-  max-height: 90vh;
+.settings-box,
+.options-box {
+  width: 900px;
+  max-width: 95vw;
+  height: 88vh;
+  max-height: 88vh;
   display: flex;
   flex-direction: column;
-  padding: 26px 30px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
+  padding: 22px 26px 16px 26px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(8, 12, 22, 0.99) 100%);
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-top: 3px solid #38bdf8;
   border-radius: 12px;
   box-shadow: 0 0 70px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   box-sizing: border-box;
+  text-align: left;
+}
+
+/* Options Header */
+.options-header {
+  flex-shrink: 0;
+  margin-bottom: 6px;
+}
+
+.options-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.options-seal-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.options-gear-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+}
+
+.options-main-title {
+  font-family: var(--font-gothic), Impact, sans-serif;
+  font-size: 23px;
+  letter-spacing: 2px;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+}
+
+.options-doc-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 1.5px;
+  margin-top: 3px;
+}
+
+.options-close-x {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.options-close-x:hover {
+  background: #dc2626;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
+  transform: rotate(90deg);
+}
+
+.options-nav-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow-x: auto;
 }
 
 .settings-scroll-content {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 12px;
-  margin-top: 12px;
-  max-height: calc(90vh - 210px);
+  margin-top: 10px;
+  margin-bottom: 6px;
   scroll-behavior: smooth;
 }
 
@@ -2438,32 +2527,45 @@ kbd.key-badge {
 }
 
 .settings-nav-tab {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
   color: #94a3b8;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
-  padding: 6px 14px;
-  border-radius: 5px;
+  padding: 8px 12px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   outline: none;
 }
 
 .settings-nav-tab:hover {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
   color: #ffffff;
+  border-color: rgba(56, 189, 248, 0.25);
 }
 
 .settings-nav-tab.active {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: #38bdf8;
-  color: #bae6fd;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+  background: linear-gradient(180deg, rgba(2, 132, 199, 0.35) 0%, rgba(14, 165, 233, 0.2) 100%);
+  border: 1px solid #38bdf8;
+  color: #e0f2fe;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+.settings-nav-tab .tab-num {
+  font-size: 10px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 1px 5px;
+  border-radius: 3px;
 }
 
 /* Key Mapping List */
@@ -2725,25 +2827,112 @@ kbd.key-badge {
   margin: 0;
 }
 
+/* Docked Options Footer & Save Button */
+.options-footer {
+  margin-top: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(56, 189, 248, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+  background: rgba(8, 12, 22, 0.65);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.options-footer-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
+}
+
+.footer-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+  animation: pulseStatus 2s infinite ease-in-out;
+}
+
+@keyframes pulseStatus {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.options-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.options-save-btn,
 .settings-save-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 12px 28px;
-  font-size: 14px;
-  letter-spacing: 2px;
+  padding: 10px 24px;
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #ffffff;
   background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
-  border: 1px solid #38bdf8;
-  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.45);
+  border: 1.5px solid #38bdf8;
   border-radius: 8px;
+  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  user-select: none;
 }
 
+.options-save-btn:hover,
 .settings-save-btn:hover {
   background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
-  box-shadow: 0 0 30px rgba(56, 189, 248, 0.7);
+  border-color: #7dd3fc;
+  box-shadow: 0 0 26px rgba(56, 189, 248, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transform: translateY(-2px);
+  color: #ffffff;
+}
+
+.options-save-btn:active,
+.settings-save-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.save-btn-icon {
+  font-size: 15px;
+  font-weight: 900;
+  color: #7dd3fc;
+}
+
+.save-btn-text {
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+}
+
+.save-btn-key {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: rgba(3, 7, 18, 0.6);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #bae6fd;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 /* ==========================================================================
@@ -3056,13 +3245,26 @@ kbd.key-badge {
     filter: contrast(1.3) brightness(0.25) grayscale(0.9);
   }
 
-  /* Modals: Manual & Settings */
-  .manual-box, .settings-box {
+  /* Modals: Manual, Settings & Options */
+  .manual-box, .settings-box, .options-box {
     width: 96vw;
     max-width: 96vw;
+    height: 94dvh;
     max-height: 94dvh;
-    padding: 14px 12px;
+    padding: 14px 12px 10px 12px;
     border-radius: 8px;
+  }
+  .options-main-title {
+    font-size: 16px;
+    letter-spacing: 0.5px;
+  }
+  .options-doc-id {
+    font-size: 8.5px;
+  }
+  .options-nav-tabs {
+    gap: 4px;
+    margin-top: 8px;
+    padding: 2px;
   }
   .manual-main-title {
     font-size: 16px;
@@ -3079,12 +3281,13 @@ kbd.key-badge {
   }
   .manual-nav-tab, .settings-nav-tab {
     font-size: 9.5px;
-    padding: 4px 8px;
+    padding: 5px 6px;
     letter-spacing: 0.5px;
   }
   .manual-scroll-content, .settings-scroll-content {
-    max-height: calc(90dvh - 145px);
+    max-height: none;
     padding-right: 2px;
+    margin-top: 8px;
   }
   .manual-objective-grid, .commands-grid, .speed-options-grid {
     grid-template-columns: 1fr;
@@ -3124,11 +3327,28 @@ kbd.key-badge {
     text-align: center;
     padding: 8px 12px;
   }
+  .options-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+    margin-top: 8px;
+  }
+  .options-footer-status {
+    justify-content: center;
+    font-size: 9.5px;
+    text-align: center;
+  }
+  .options-footer-actions {
+    width: 100%;
+  }
   .manual-footer {
     margin-top: 10px;
   }
-  .manual-return-btn, .settings-save-btn {
-    padding: 9px 18px;
+  .options-save-btn, .manual-return-btn, .settings-save-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 16px;
     font-size: 12px;
     letter-spacing: 1px;
   }
@@ -3263,28 +3483,44 @@ kbd.key-badge {
   }
 
   /* Modals in Landscape */
-  .manual-box, .settings-box {
+  .manual-box, .settings-box, .options-box {
+    height: 96dvh;
     max-height: 96dvh;
-    padding: 10px 16px;
+    padding: 8px 14px 6px 14px;
   }
-  .manual-header-top {
-    margin-bottom: 4px;
+  .options-header-top, .manual-header-top {
+    margin-bottom: 2px;
+    padding-bottom: 4px;
   }
-  .manual-main-title {
-    font-size: 16px;
+  .options-main-title, .manual-main-title {
+    font-size: 14px;
     margin: 0;
   }
-  .manual-title-bar {
+  .options-doc-id, .manual-title-bar {
     display: none;
   }
+  .options-nav-tabs {
+    margin-top: 4px;
+    gap: 4px;
+    padding: 2px;
+  }
   .manual-scroll-content, .settings-scroll-content {
-    max-height: calc(96dvh - 105px);
+    max-height: none;
+    margin-top: 6px;
+    margin-bottom: 4px;
+  }
+  .options-footer {
+    padding: 4px 10px;
+    margin-top: 4px;
+  }
+  .options-footer-status {
+    display: none;
   }
   .manual-footer {
     margin-top: 6px;
   }
-  .manual-return-btn, .settings-save-btn {
-    padding: 6px 16px;
+  .options-save-btn, .manual-return-btn, .settings-save-btn {
+    padding: 5px 14px;
     font-size: 11px;
   }
 }
