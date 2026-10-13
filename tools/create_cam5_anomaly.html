@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Compositing CAM 05 Anomaly</title>
+</head>
+<body style="background:#000; color:#fff; font-family:sans-serif;">
+  <h2>Compositing CAM 05 Narthex Anomaly...</h2>
+  <canvas id="c" width="2752" height="1536" style="max-width:100%;"></canvas>
+  <script>
+    async function run() {
+      const canvas = document.getElementById('c');
+      const ctx = canvas.getContext('2d');
+
+      const loadImg = src => new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+
+      console.log('Loading base images...');
+      const [bgImg, statueImg] = await Promise.all([
+        loadImg('/assets/cctv/church_cam_05_narthex.png'),
+        loadImg('/assets/cctv/church_cam_anomaly.png')
+      ]);
+
+      console.log('Drawing background...');
+      ctx.drawImage(bgImg, 0, 0, 2752, 1536);
+
+      // Create an offscreen canvas to process the statue
+      const statCanvas = document.createElement('canvas');
+      statCanvas.width = 750;
+      statCanvas.height = 1150;
+      const sCtx = statCanvas.getContext('2d');
+
+      // Crop the weeping angel statue from church_cam_anomaly.png
+      // In Cam 1 (2752x1536), the angel is at approx sx: 2130, sy: 460, sw: 360, sh: 900
+      sCtx.drawImage(statueImg, 2130, 460, 360, 900, 0, 0, 750, 1150);
+
+      // Create alpha mask / feathered contour for seamless blending
+      const sData = sCtx.getImageData(0, 0, statCanvas.width, statCanvas.height);
+      const d = sData.data;
+      const W = statCanvas.width;
+      const H = statCanvas.height;
+
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const idx = (y * W + x) * 4;
+          const r = d[idx];
+          const g = d[idx + 1];
+          const b = d[idx + 2];
+          const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+
+          // Distance from vertical centerline for soft edge vignetting
+          const nx = (x - W / 2) / (W / 2);
+          const ny = y / H;
+
+          // Edge falloff
+          let edgeAlpha = 1.0;
+          if (Math.abs(nx) > 0.6) {
+            edgeAlpha = Math.max(0, 1.0 - (Math.abs(nx) - 0.6) / 0.38);
+          }
+          if (ny < 0.08) {
+            edgeAlpha *= Math.max(0, ny / 0.08);
+          }
+          if (ny > 0.88) {
+            edgeAlpha *= Math.max(0, (1.0 - ny) / 0.12);
+          }
+
+          // Dark background exclusion (the dark sanctuary pillars behind the angel)
+          let bgDarkAlpha = 1.0;
+          if (luma < 38) {
+            bgDarkAlpha = Math.max(0, (luma - 18) / 20);
+          }
+
+          d[idx + 3] = Math.floor(255 * edgeAlpha * bgDarkAlpha);
+
+          // Match color temperature of Cam 5 corridor (slightly cooler grey/green tint)
+          d[idx] = Math.min(255, Math.floor(r * 0.95));
+          d[idx + 1] = Math.min(255, Math.floor(g * 1.02));
+          d[idx + 2] = Math.min(255, Math.floor(b * 0.98));
+        }
+      }
+      sCtx.putImageData(sData, 0, 0);
+
+      // Draw dark floor cast shadow in the hallway in front of the window
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(1320, 1340, 240, 65, -0.05, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      ctx.filter = 'blur(22px)';
+      ctx.fill();
+      ctx.restore();
+
+      // Draw the angel statue standing tall in the hallway in front of the observation window
+      // Position: x: 1020, y: 380, width: 620, height: 980
+      ctx.save();
+      ctx.drawImage(statCanvas, 1020, 380, 620, 980);
+      ctx.restore();
+
+      // Add camera static noise and subtle glow
+      const finalData = ctx.getImageData(0, 0, 2752, 1536);
+      const fd = finalData.data;
+      for (let i = 0; i < fd.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 8;
+        fd[i] = Math.min(255, Math.max(0, fd[i] + noise));
+        fd[i+1] = Math.min(255, Math.max(0, fd[i+1] + noise));
+        fd[i+2] = Math.min(255, Math.max(0, fd[i+2] + noise));
+      }
+      ctx.putImageData(finalData, 0, 0);
+
+      console.log('Sending composite to server...');
+      const dataUrl = canvas.toDataURL('image/png', 0.95);
+      const res = await fetch('/api/save-cctv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: 'church_cam_05_narthex_anomaly.png',
+          data: dataUrl
+        })
+      });
+
+      const resJson = await res.json();
+      console.log('Result:', resJson);
+      document.title = 'DONE';
+      document.body.innerHTML += '<h1 style="color:#22c55e;">COMPOSITE COMPLETED & SAVED!</h1>';
+    }
+
+    run().catch(err => {
+      console.error(err);
+      document.title = 'ERROR';
+      document.body.innerHTML += '<h1 style="color:#ef4444;">ERROR: ' + err.message + '</h1>';
+    });
+  </script>
+</body>
+</html>

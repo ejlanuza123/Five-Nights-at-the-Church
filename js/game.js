@@ -1,0 +1,1566 @@
+/**
+ * Five Nights at the Church - Modern Gameplay & Security Engine
+ * AI Statues, Digital CCTV Surveillance, Modern Maglock & HVAC Controls
+ */
+
+class GameEngine {
+  constructor() {
+    this.canvas = document.getElementById('webgl-canvas');
+    this.renderer = null;
+    this.scene = null;
+    this.camera = null;
+    this.world = null;
+
+    // Game State
+    this.isRunning = false;
+    this.isPaused = false;
+    this.currentNight = 1;
+    this.hour = 0; // 0 = 12 AM, 1 = 1 AM, ..., 6 = 6 AM
+    this.nightTimer = 0;
+    this.hourDuration = 35; // 35 seconds per in-game hour
+    this.timeSpeed = 1;     // Speed multiplier (1x, 2x, 4x)
+    this.power = 100.0;
+    this.isBlackout = false;
+    this.gameOver = false;
+    this.victory = false;
+
+    // Player View Controls
+    this.cameraYaw = 0;
+    this.cameraPitch = 0;
+    this.targetYaw = 0;
+    this.targetPitch = 0;
+    this.isMouseDown = false;
+    this.prevMouseX = 0;
+    this.prevMouseY = 0;
+    this.keysDown = {};
+
+    // Modern Office Defense States
+    this.isLeftDoorClosed = false;    // Electronic Maglock Security Door
+    this.isLeftDoorLightOn = false;   // Left Corridor Downlight
+    this.isVentClosed = false;        // Motorized HVAC Fire Shutter
+    this.isVentLightOn = false;       // Duct Inspection LED
+    this.isWindowSpotOn = false;      // Observation Window High-Power Spotlight
+    this.windowSpotIntensity = 0.0;   // Dynamic light intensity (0.0 night -> 1.0 lit)
+    this.windowSpotIgnitionTimer = 0.0; // Filament surge ignition timer
+
+    // Digital Surveillance Monitor (CCTV)
+    this.isCCTVOpen = false;
+    this.activeCameraId = 1;
+    this.cameraStaticTimer = 0;
+
+    // AI Entities & Levels (Strictly tracked unique locations)
+    this.aiConfig = {
+      weepingAngel: { level: 2, stage: 0, location: 'CAM_01', timer: 0, attackTimer: 0 },
+      haloedSaint: { level: 1, stage: 0, location: 'CAM_03', timer: 0, attackTimer: 0 },
+      veiledMourner: { level: 0, stage: 0, location: 'CAM_02', timer: 0, attackTimer: 0 }
+    };
+
+    // Modern 3D Camera Viewpoints
+    this.cctvViews = {
+      1: { name: 'CAM 01 - SANCTUARY & ALTAR', pos: new THREE.Vector3(0, 4.5, -26), lookAt: new THREE.Vector3(0, 1.8, -35), room: 'altar' },
+      2: { name: 'CAM 02 - MEMORIAL COLUMBARIUM', pos: new THREE.Vector3(35, 2.9, -25), lookAt: new THREE.Vector3(35, 1.2, -32), room: 'columbarium' },
+      3: { name: 'CAM 03 - RECONCILIATION CHAPEL', pos: new THREE.Vector3(-35, 2.9, -24), lookAt: new THREE.Vector3(-35, 1.3, -32), room: 'confessional' },
+      4: { name: 'CAM 04 - HVAC RETURN AIR DUCT', pos: new THREE.Vector3(6.0, 0.75, 0.2), lookAt: new THREE.Vector3(3.2, 0.65, 0), room: 'hvac' },
+      5: { name: 'CAM 05 - NARTHEX & CORRIDOR', pos: new THREE.Vector3(0, 2.8, -8.0), lookAt: new THREE.Vector3(0, 1.8, -3.2), room: 'narthex' }
+    };
+
+    // Jumpscare Animation
+    this.jumpscareActive = false;
+    this.jumpscareTimer = 0;
+    this.jumpscareEntity = null;
+
+    this.init();
+  }
+
+  init() {
+    this.setupThreeJS();
+    this.setupEventListeners();
+    this.preloadCCTVFeeds();
+    this.setupStaticCanvas();
+    this.setupFnafMenu();
+    this.updateNightDifficulty();
+    this.renderLoop();
+  }
+
+  preloadCCTVFeeds() {
+    const feeds = [
+      'assets/cctv/church_cam_normal.png',
+      'assets/cctv/church_cam_anomaly.png',
+      'assets/cctv/church_cam_01_empty.png',
+      'assets/cctv/church_cam_01_mary_altar.png',
+      'assets/cctv/church_cam_01_saint_nave.png',
+      'assets/cctv/church_cam_02_columbarium.png',
+      'assets/cctv/church_cam_02_columbarium_anomaly.png',
+      'assets/cctv/church_cam_02_empty.png',
+      'assets/cctv/church_cam_02_angel_crypt.png',
+      'assets/cctv/church_cam_03_confessional.png',
+      'assets/cctv/church_cam_03_confessional_anomaly.png',
+      'assets/cctv/church_cam_03_empty.png',
+      'assets/cctv/church_cam_03_mary_chapel.png',
+      'assets/cctv/church_cam_04_vent.png',
+      'assets/cctv/church_cam_04_vent_anomaly.png',
+      'assets/cctv/church_cam_05_narthex.png',
+      'assets/cctv/church_cam_05_narthex_anomaly.png',
+      'assets/cctv/church_cam_05_saint_hallway.png',
+      'assets/cctv/church_cam_05_mary_hallway.png',
+      'assets/entities/angel_cutout.png',
+      'assets/entities/saint_cutout.png',
+      'assets/entities/mary_cutout.png',
+      'assets/entities/mourner_vent_cutout.png',
+      'assets/office/window_hallway_empty.jpg',
+      'assets/office/window_hallway_angel.jpg',
+      'assets/office/window_hallway_saint.jpg',
+      'assets/office/window_hallway_mary.jpg'
+    ];
+    this._preloadedImages = {};
+    feeds.forEach(src => {
+      const img = new Image();
+      img.src = src;
+      this._preloadedImages[src] = img;
+    });
+  }
+
+  setupStaticCanvas() {
+    const canvas = document.getElementById('cctv-static-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = 256;
+    canvas.height = 192;
+
+    const imgData = ctx.createImageData(canvas.width, canvas.height);
+    const data = imgData.data;
+
+    let lastDraw = 0;
+    const renderStatic = (now) => {
+      if (this.isCCTVOpen && (now - lastDraw > 33)) { // 30 FPS static noise
+        lastDraw = now;
+        const len = data.length;
+        for (let i = 0; i < len; i += 4) {
+          const v = (Math.random() * 255) | 0;
+          data[i] = v;
+          data[i + 1] = v;
+          data[i + 2] = v;
+          data[i + 3] = (Math.random() * 140 + 30) | 0;
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
+      requestAnimationFrame(renderStatic);
+    };
+    requestAnimationFrame(renderStatic);
+  }
+
+  setupThreeJS() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
+    this.renderer.setSize(width, height);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x06080e);
+    this.scene.fog = new THREE.FogExp2(0x06080e, 0.035);
+
+    this.camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 100);
+    this.camera.position.set(0, 1.45, 0); // Player seated at executive desk
+
+    this.world = new WorldBuilder(this.scene);
+    this.world.buildAll();
+
+    // Preload photorealistic window hallway view textures (Gemini Flash Image)
+    const texLoader = new THREE.TextureLoader();
+    this.windowTextures = {
+      empty: texLoader.load('assets/office/window_hallway_empty.jpg'),
+      angel: texLoader.load('assets/office/window_hallway_angel.jpg'),
+      saint: texLoader.load('assets/office/window_hallway_saint.jpg'),
+      mary: texLoader.load('assets/office/window_hallway_mary.jpg')
+    };
+
+    this.positionStatuesInitial();
+    this.updateWindowHallwayView();
+  }
+
+  // --- STATUE PLACEMENT & STAGES ---
+  positionStatuesInitial() {
+    this.setAngelStage(0);
+    this.setSaintStage(0);
+    this.setMournerStage(0);
+  }
+
+  setAngelStage(stage) {
+    const angel = this.world.statues.weepingAngel;
+    if (!angel) return;
+    this.aiConfig.weepingAngel.stage = stage;
+
+    // Strict Unique Location mapping (Angel is only ever in ONE place)
+    const locMap = { 0: 'CAM_01', 1: 'CAM_02', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
+    this.aiConfig.weepingAngel.location = locMap[stage] || 'CAM_01';
+
+    switch (stage) {
+      case 0: // CAM 01 - Sanctuary Altar (Home base)
+        angel.position.set(0, 0.88, -34);
+        angel.rotation.set(0, 0, 0);
+        angel.visible = true;
+        break;
+      case 1: // CAM 02 - Memorial Columbarium Crypt
+        angel.position.set(35, 0, -29);
+        angel.rotation.set(0, -Math.PI / 4, 0);
+        angel.visible = true;
+        break;
+      case 2: // CAM 05 - Narthex Corridor: Directly visible outside front office window!
+        angel.visible = false; // Photorealistically displayed on windowBackdrop!
+        break;
+      case 3: // Peeking directly around Left Arched Church Doorway threshold!
+        angel.position.set(-3.45, 0.0, -0.62);
+        angel.rotation.set(0, Math.PI * 0.44, 0); // Angled into office towards player desk
+        angel.visible = true;
+        break;
+      case 4: // Inside Office - Attack position
+        angel.position.set(-1.2, 0.5, -0.8);
+        angel.rotation.set(0, Math.PI * 0.35, 0);
+        angel.visible = true;
+        break;
+    }
+
+    this.updateWindowHallwayView();
+
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed(true);
+    }
+  }
+
+  setSaintStage(stage) {
+    const saint = this.world.statues.haloedSaint;
+    if (!saint) return;
+    this.aiConfig.haloedSaint.stage = stage;
+
+    // Strict Unique Location mapping (Saint is only ever in ONE place)
+    const locMap = { 0: 'CAM_03', 1: 'CAM_01', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
+    this.aiConfig.haloedSaint.location = locMap[stage] || 'CAM_03';
+
+    switch (stage) {
+      case 0: // CAM 03 - Reconciliation Chapel (Home base)
+        saint.position.set(-35, 0, -31);
+        saint.rotation.set(0, 0, 0);
+        saint.visible = true;
+        break;
+      case 1: // CAM 01 - Sanctuary Nave aisle approaching altar
+        saint.position.set(0, 0.0, -28);
+        saint.rotation.set(0, 0, 0);
+        saint.visible = true;
+        break;
+      case 2: // CAM 05 - Narthex Corridor: Directly visible outside front office window!
+        saint.visible = false; // Photorealistically displayed on windowBackdrop!
+        break;
+      case 3: // Peeking directly around Left Arched Church Doorway threshold!
+        saint.position.set(-3.48, 0.0, -0.58);
+        saint.rotation.set(0, Math.PI * 0.42, 0); // Angled into office
+        saint.visible = true;
+        break;
+      case 4: // Inside Office - Attack position
+        saint.position.set(-0.8, 0.6, -0.7);
+        saint.rotation.set(0, Math.PI * 0.2, 0);
+        saint.visible = true;
+        break;
+    }
+
+    this.updateWindowHallwayView();
+
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed(true);
+    }
+  }
+
+  setMournerStage(stage) {
+    const mourner = this.world.statues.veiledMourner;
+    if (!mourner) return;
+    this.aiConfig.veiledMourner.stage = stage;
+
+    // Strict Unique Location mapping (Mary/Mourner is only ever in ONE place)
+    const locMap = { 0: 'CAM_02', 1: 'CAM_01', 2: 'CAM_04', 3: 'RIGHT_VENT', 4: 'OFFICE' };
+    this.aiConfig.veiledMourner.location = locMap[stage] || 'CAM_02';
+
+    switch (stage) {
+      case 0: // CAM 02 - Memorial Columbarium Stand (Home base)
+        mourner.position.set(38, 0.8, -32);
+        mourner.rotation.set(0, -Math.PI / 3, 0);
+        mourner.visible = true;
+        break;
+      case 1: // CAM 01 - Visiting Sanctuary Altar Center Aisle
+        mourner.position.set(0, 0.0, -30);
+        mourner.rotation.set(0, 0, 0);
+        mourner.visible = true;
+        break;
+      case 2: // CAM 04 - Crawling inside modern HVAC Air Duct
+        mourner.position.set(4.8, 0.35, 0.45);
+        mourner.rotation.set(0, -Math.PI / 2, 0);
+        mourner.visible = true;
+        break;
+      case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
+        mourner.position.set(3.48, 0.38, 0.45);
+        mourner.rotation.set(0, -Math.PI * 0.45, 0); // Crouched at duct mouth looking up at player
+        mourner.visible = true;
+        break;
+      case 4: // Inside Office - Attack position
+        mourner.position.set(1.1, 0.5, -0.8);
+        mourner.rotation.set(0, -Math.PI * 0.4, 0);
+        mourner.visible = true;
+        break;
+    }
+
+    this.updateWindowHallwayView();
+
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed(true);
+    }
+  }
+
+  updateWindowHallwayView() {
+    if (!this.world || !this.world.nodes || !this.world.nodes.windowBackdropMat || !this.windowTextures) return;
+
+    const angelLoc = this.aiConfig.weepingAngel.location;
+    const saintLoc = this.aiConfig.haloedSaint.location;
+    const mournerLoc = this.aiConfig.veiledMourner.location;
+
+    let targetTex = this.windowTextures.empty;
+    if (angelLoc === 'CAM_05') {
+      targetTex = this.windowTextures.angel;
+    } else if (saintLoc === 'CAM_05') {
+      targetTex = this.windowTextures.saint;
+    } else if (mournerLoc === 'CAM_05') {
+      targetTex = this.windowTextures.mary;
+    }
+
+    const mat = this.world.nodes.windowBackdropMat;
+    if (mat) {
+      if (mat.uniforms && mat.uniforms.map) {
+        if (mat.uniforms.map.value !== targetTex) {
+          mat.uniforms.map.value = targetTex;
+        }
+      }
+      if (mat.map !== targetTex) {
+        mat.map = targetTex;
+        mat.needsUpdate = true;
+      }
+    }
+  }
+
+  // --- CONTROLS & INTERACTION ---
+  setupEventListeners() {
+    window.addEventListener('resize', () => this.onWindowResize());
+
+    // Mouse look panning
+    window.addEventListener('mousedown', (e) => {
+      if (this.isCCTVOpen || this.gameOver || this.victory) return;
+      const modal = document.getElementById('manual-modal');
+      if (modal && !modal.classList.contains('hidden')) return;
+      if (e.target.closest('#hud-overlay') || e.target.closest('.screen-modal')) return;
+      this.isMouseDown = true;
+      this.prevMouseX = e.clientX;
+      this.prevMouseY = e.clientY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (this.isCCTVOpen || this.gameOver || this.victory) return;
+      const modal = document.getElementById('manual-modal');
+      if (modal && !modal.classList.contains('hidden')) return;
+
+      if (this.isMouseDown) {
+        // High-sensitivity mouse drag
+        const deltaX = e.clientX - this.prevMouseX;
+        const deltaY = e.clientY - this.prevMouseY;
+        this.targetYaw -= deltaX * 0.0075;
+        this.targetPitch -= deltaY * 0.0045;
+        this.prevMouseX = e.clientX;
+        this.prevMouseY = e.clientY;
+      } else {
+        // Natural FNAF-style screen cursor tracking: moving cursor left/right turns view directly
+        const normX = (e.clientX / window.innerWidth - 0.5) * 2; // -1 (left) to +1 (right)
+        const normY = (e.clientY / window.innerHeight - 0.5) * 2;
+        this.targetYaw = -normX * (Math.PI * 0.44); // Full 79° pan across door, center window, and vent!
+        this.targetPitch = -normY * (Math.PI * 0.12);
+      }
+
+      this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.45, Math.PI * 0.45);
+      this.targetPitch = THREE.MathUtils.clamp(this.targetPitch, -Math.PI * 0.12, Math.PI * 0.12);
+    });
+
+    window.addEventListener('mouseup', () => {
+      this.isMouseDown = false;
+    });
+
+    // Keyboard controls
+    window.addEventListener('keydown', (e) => {
+      this.keysDown[e.key.toLowerCase()] = true;
+
+      // Enter key starts shift from menu
+      const fnafMenu = document.getElementById('fnaf-main-menu');
+      if (!this.isRunning && fnafMenu && !fnafMenu.classList.contains('hidden')) {
+        if (e.code === 'Enter') {
+          e.preventDefault();
+          this.startNightWithTransition(this.currentNight);
+          return;
+        }
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        this.toggleCCTV();
+      }
+
+      if (this.isCCTVOpen) {
+        if (e.key === '1') this.switchCamera(1);
+        if (e.key === '2') this.switchCamera(2);
+        if (e.key === '3') this.switchCamera(3);
+        if (e.key === '4') this.switchCamera(4);
+        if (e.key === '5') this.switchCamera(5);
+        if (e.key.toLowerCase() === 'l') this.toggleNightVision();
+        if (e.key === 'Escape') this.toggleCCTV();
+      } else if (!this.gameOver && !this.victory) {
+        const k = e.key.toLowerCase();
+        // Quick Commands for Office Doors & Lights
+        if (k === 'q') this.toggleLeftDoor();
+        if (k === 'z') this.toggleLeftDoorLight();
+        if (k === 'w' || k === 'f') this.toggleWindowSpot();
+        if (k === 'e') this.toggleVent();
+        if (k === 'r' || k === 'c') this.toggleVentLight();
+      }
+
+      // Quick Command for Instructions / How to Play
+      if (e.key.toLowerCase() === 'h') {
+        this.toggleManualModal();
+      }
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('manual-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+          this.toggleManualModal(false);
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      this.keysDown[e.key.toLowerCase()] = false;
+    });
+
+    // Simulation Speed Control Buttons (1x, 2x, 4x)
+    [1, 2, 4].forEach(spd => {
+      document.getElementById(`btn-speed-${spd}x`)?.addEventListener('click', (e) => {
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        this.timeSpeed = spd;
+        window.Sound.playLightClick();
+      });
+    });
+
+    // Modern Pushbutton Wall Controls
+    document.getElementById('btn-door-toggle')?.addEventListener('click', () => this.toggleLeftDoor());
+    document.getElementById('btn-door-light')?.addEventListener('click', () => this.toggleLeftDoorLight());
+    document.getElementById('btn-vent-toggle')?.addEventListener('click', () => this.toggleVent());
+    document.getElementById('btn-vent-light')?.addEventListener('click', () => this.toggleVentLight());
+    document.getElementById('btn-window-spot')?.addEventListener('click', () => this.toggleWindowSpot());
+    document.getElementById('btn-hud-help')?.addEventListener('click', () => this.toggleManualModal());
+
+    // CCTV Trigger Bar & Close Button
+    document.getElementById('cctv-flip-bar')?.addEventListener('click', () => this.toggleCCTV());
+    document.getElementById('cctv-flip-down-btn')?.addEventListener('click', () => this.toggleCCTV());
+
+    // CCTV Minimap camera buttons
+    for (let c = 1; c <= 5; c++) {
+      document.getElementById(`cam-btn-${c}`)?.addEventListener('click', () => this.switchCamera(c));
+    }
+
+    // CCTV IR Night Vision Button
+    document.getElementById('btn-cctv-light')?.addEventListener('click', () => {
+      window.Sound.playLightClick();
+      this.toggleNightVision();
+    });
+
+    // Game Over & Victory restart buttons
+    document.getElementById('btn-retry-game')?.addEventListener('click', () => this.restartGame());
+    document.getElementById('btn-next-night')?.addEventListener('click', () => this.advanceNight());
+
+    // Raycast interaction with 3D Door / Damper / LCD Screen
+    const raycaster = new THREE.Raycaster();
+    const mouseCoord = new THREE.Vector2();
+
+    this.canvas.addEventListener('click', (e) => {
+      if (this.isCCTVOpen || this.gameOver || this.victory) return;
+      mouseCoord.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseCoord.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouseCoord, this.camera);
+      const intersects = raycaster.intersectObjects(this.scene.children, true);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        let parent = hit.parent;
+
+        // Click Arched Church Door
+        if (parent === this.world.nodes.doorPivot || hit === this.world.nodes.doorPivot || hit.material === this.world.materials?.archedDoor) {
+          this.toggleLeftDoor();
+          return;
+        }
+
+        // Click Industrial Ventilation Grille / Shutter
+        if (parent === this.world.nodes.ventShutter || hit === this.world.nodes.ventShutter || hit.material === this.world.materials?.ventGrille) {
+          this.toggleVent();
+          return;
+        }
+
+        // Click Retro CRT TV Monitor on desk
+        if (hit.material === this.world.nodes.crtTvScreenMat || hit.material === this.world.nodes.crtScreenMat || (hit.position.x > 0.3 && hit.position.y > 0.7 && hit.position.z > -0.5)) {
+          this.toggleCCTV();
+          return;
+        }
+
+        // Click Tactical Flashlight on desk
+        if (hit.position.x < -0.3 && hit.position.x > -0.65 && hit.position.y > 0.75 && hit.position.y < 0.95 && hit.position.z > 0.0) {
+          this.toggleWindowSpot();
+          return;
+        }
+      }
+    });
+  }
+
+  onWindowResize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
+  }
+
+  // --- CLASSIC FNAF MAIN MENU SYSTEM ---
+  setupFnafMenu() {
+    this.setupMenuStaticCanvas();
+    this.setupMenuStatueTwitch();
+
+    // Start menu ambient drone upon first interaction with page
+    const tryStartMenuSound = () => {
+      if (!this.isRunning && !this._menuAudioStarted) {
+        this._menuAudioStarted = true;
+        window.Sound.init();
+        window.Sound.resume();
+        window.Sound.startMenuDrone();
+      }
+    };
+    window.addEventListener('click', tryStartMenuSound, { once: false });
+    window.addEventListener('keydown', tryStartMenuSound, { once: false });
+    window.addEventListener('mousemove', tryStartMenuSound, { once: true });
+
+    // Menu option buttons
+    const btnContinue = document.getElementById('btn-menu-continue');
+    const btnNewGame = document.getElementById('btn-menu-newgame');
+    const btnNightSelect = document.getElementById('btn-menu-nightselect');
+    const nightPicker = document.getElementById('menu-night-picker');
+    const btnManual = document.getElementById('btn-menu-manual');
+    const btnCloseManual = document.getElementById('btn-close-manual');
+    const btnFullscreen = document.getElementById('btn-menu-fullscreen');
+    const btnGameoverMenu = document.getElementById('btn-gameover-menu');
+    const btnVictoryMenu = document.getElementById('btn-victory-menu');
+
+    // Button sound effects on hover
+    document.querySelectorAll('.fnaf-menu-item, .night-chip').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        window.Sound.playMenuBlip();
+      });
+    });
+
+    btnContinue?.addEventListener('click', () => {
+      this.startNightWithTransition(this.currentNight);
+    });
+
+    btnNewGame?.addEventListener('click', () => {
+      this.currentNight = 1;
+      this.updateNightBadge();
+      this.startNightWithTransition(1);
+    });
+
+    btnNightSelect?.addEventListener('click', () => {
+      if (nightPicker) nightPicker.classList.toggle('hidden');
+      window.Sound.playMenuBlip();
+    });
+
+    document.querySelectorAll('.night-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        const night = parseInt(e.currentTarget.dataset.night, 10);
+        document.querySelectorAll('.night-chip').forEach(c => c.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        this.currentNight = night;
+        this.updateNightBadge();
+        this.startNightWithTransition(night);
+      });
+    });
+
+    const modal = document.getElementById('manual-modal');
+    const btnModalX = document.getElementById('btn-modal-x');
+
+    btnManual?.addEventListener('click', () => {
+      this.toggleManualModal(true);
+    });
+
+    btnCloseManual?.addEventListener('click', () => {
+      this.toggleManualModal(false);
+    });
+
+    btnModalX?.addEventListener('click', () => {
+      this.toggleManualModal(false);
+    });
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.toggleManualModal(false);
+      }
+    });
+
+    // Interactive Tab buttons inside manual
+    document.querySelectorAll('.manual-nav-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        window.Sound.playMenuBlip();
+        document.querySelectorAll('.manual-nav-tab').forEach(t => t.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        const targetId = e.currentTarget.dataset.target;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    btnFullscreen?.addEventListener('click', () => {
+      window.Sound.playMenuBlip();
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    btnGameoverMenu?.addEventListener('click', () => {
+      this.returnToMainMenu();
+    });
+
+    btnVictoryMenu?.addEventListener('click', () => {
+      this.returnToMainMenu();
+    });
+  }
+
+  updateNightBadge() {
+    const badge = document.getElementById('menu-night-badge');
+    if (badge) badge.textContent = `NIGHT ${this.currentNight}`;
+  }
+
+  setupMenuStaticCanvas() {
+    const canvas = document.getElementById('menu-static-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = 320;
+    canvas.height = 240;
+    const imgData = ctx.createImageData(canvas.width, canvas.height);
+    const data = imgData.data;
+
+    let lastDraw = 0;
+    const render = (now) => {
+      if (!this.isRunning && (now - lastDraw > 33)) {
+        lastDraw = now;
+        const len = data.length;
+        for (let i = 0; i < len; i += 4) {
+          const v = (Math.random() * 255) | 0;
+          data[i] = v;
+          data[i + 1] = v;
+          data[i + 2] = v;
+          data[i + 3] = (Math.random() * 150 + 35) | 0;
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
+      requestAnimationFrame(render);
+    };
+    requestAnimationFrame(render);
+  }
+
+  setupMenuStatueTwitch() {
+    const statueEl = document.getElementById('menu-statue-layer');
+    if (!statueEl) return;
+
+    const triggerTwitch = () => {
+      if (this.isRunning) return;
+      const idx = Math.floor(Math.random() * 3) + 1;
+      const twitchClass = `twitch-${idx}`;
+      statueEl.classList.add(twitchClass);
+      window.Sound.playCameraStatic(0.12, 0.32);
+
+      setTimeout(() => {
+        statueEl.classList.remove(twitchClass);
+      }, 100 + Math.random() * 120);
+
+      const nextDelay = 2200 + Math.random() * 3200;
+      setTimeout(triggerTwitch, nextDelay);
+    };
+
+    setTimeout(triggerTwitch, 2400);
+  }
+
+  startNightWithTransition(night = 1) {
+    this.currentNight = night;
+    this.updateNightDifficulty();
+
+    const menu = document.getElementById('fnaf-main-menu');
+    const transScreen = document.getElementById('night-transition-screen');
+    const nightTitleEl = document.getElementById('night-card-title-val');
+    const subLabel = document.getElementById('night-card-sub-val');
+
+    const suffixes = ['', '1st Night', '2nd Night', '3rd Night', '4th Night', '5th Night'];
+    if (nightTitleEl) {
+      nightTitleEl.textContent = `NIGHT ${this.currentNight}`;
+    }
+    if (subLabel) {
+      subLabel.textContent = (suffixes[this.currentNight] || `Night ${this.currentNight}`).toUpperCase();
+    }
+
+    window.Sound.init();
+    window.Sound.resume();
+    window.Sound.stopMenuDrone();
+    window.Sound.playNightTransitionChime();
+
+    if (menu) menu.classList.add('hidden');
+    if (transScreen) transScreen.classList.remove('hidden');
+
+    setTimeout(() => {
+      if (transScreen) transScreen.classList.add('hidden');
+      this.startGame();
+    }, 2800);
+  }
+
+  toggleManualModal(forceState = null) {
+    const modal = document.getElementById('manual-modal');
+    if (!modal) return;
+    const isCurrentlyHidden = modal.classList.contains('hidden');
+    const shouldOpen = forceState !== null ? forceState : isCurrentlyHidden;
+
+    if (shouldOpen) {
+      modal.classList.remove('hidden');
+      window.Sound.playMenuBlip();
+      // Reset scroll position and tab state
+      const scrollContent = modal.querySelector('.manual-scroll-content');
+      if (scrollContent) scrollContent.scrollTop = 0;
+      document.querySelectorAll('.manual-nav-tab').forEach((t, idx) => {
+        if (idx === 0) t.classList.add('active');
+        else t.classList.remove('active');
+      });
+    } else {
+      modal.classList.add('hidden');
+      window.Sound.playMenuBlip();
+    }
+  }
+
+  returnToMainMenu() {
+    this.isRunning = false;
+    this.gameOver = false;
+    this.victory = false;
+    if (this.isCCTVOpen) this.toggleCCTV();
+
+    window.Sound.stopAmbientOrgan();
+    window.Sound.stopHeartbeat();
+    window.Sound.startMenuDrone();
+
+    document.getElementById('gameover-screen')?.classList.add('hidden');
+    document.getElementById('victory-screen')?.classList.add('hidden');
+    document.getElementById('night-transition-screen')?.classList.add('hidden');
+    document.getElementById('manual-modal')?.classList.add('hidden');
+
+    const menu = document.getElementById('fnaf-main-menu');
+    if (menu) menu.classList.remove('hidden');
+
+    this.updateNightBadge();
+  }
+
+  // --- GAME START & RESTART ---
+  startGame() {
+    window.Sound.init();
+    window.Sound.resume();
+    window.Sound.startAmbientOrgan();
+    window.Sound.playChurchBell(1.0, 1);
+
+    document.getElementById('fnaf-main-menu')?.classList.add('hidden');
+    document.getElementById('night-transition-screen')?.classList.add('hidden');
+    document.getElementById('manual-modal')?.classList.add('hidden');
+    document.getElementById('gameover-screen')?.classList.add('hidden');
+    document.getElementById('victory-screen')?.classList.add('hidden');
+
+    this.isRunning = true;
+    this.gameOver = false;
+    this.victory = false;
+    this.isBlackout = false;
+    this.hour = 0;
+    this.nightTimer = 0;
+    this.power = 100.0;
+    this.updateHUD();
+
+    this.positionStatuesInitial();
+  }
+
+  restartGame() {
+    document.getElementById('gameover-screen')?.classList.add('hidden');
+    this.startNightWithTransition(this.currentNight);
+  }
+
+  advanceNight() {
+    if (this.currentNight < 5) {
+      this.currentNight++;
+    }
+    document.getElementById('victory-screen')?.classList.add('hidden');
+    this.startNightWithTransition(this.currentNight);
+  }
+
+  updateNightDifficulty() {
+    const nightMap = {
+      1: { angel: 2, saint: 1, mourner: 0 },
+      2: { angel: 4, saint: 3, mourner: 2 },
+      3: { angel: 7, saint: 6, mourner: 5 },
+      4: { angel: 11, saint: 9, mourner: 8 },
+      5: { angel: 15, saint: 14, mourner: 13 }
+    };
+
+    const cfg = nightMap[this.currentNight] || nightMap[1];
+    this.aiConfig.weepingAngel.level = cfg.angel;
+    this.aiConfig.haloedSaint.level = cfg.saint;
+    this.aiConfig.veiledMourner.level = cfg.mourner;
+
+    const nightEl = document.getElementById('hud-night-val');
+    if (nightEl) nightEl.textContent = `NIGHT ${this.currentNight}`;
+  }
+
+  // --- MODERN DEFENSE CONTROLS ---
+  toggleLeftDoor() {
+    if (this.isBlackout || this.gameOver || this.victory) return;
+    this.isLeftDoorClosed = !this.isLeftDoorClosed;
+    window.Sound.playDoorSound(this.isLeftDoorClosed);
+
+    // Update Maglock LED color: Red = Armed/Locked, Green = Unarmed/Open
+    if (this.world.nodes.magLedMat) {
+      this.world.nodes.magLedMat.color.setHex(this.isLeftDoorClosed ? 0xef4444 : 0x22c55e);
+    }
+
+    const btn = document.getElementById('btn-door-toggle');
+    if (btn) {
+      btn.classList.toggle('active', this.isLeftDoorClosed);
+      btn.classList.toggle('door-active', this.isLeftDoorClosed);
+    }
+
+    // If door is closed while an entity is peeking at the door threshold:
+    if (this.isLeftDoorClosed) {
+      if (this.aiConfig.weepingAngel.stage === 3) {
+        this.aiConfig.weepingAngel.attackTimer = 0;
+        setTimeout(() => {
+          if (this.isLeftDoorClosed && this.aiConfig.weepingAngel.stage === 3) {
+            window.Sound.playStoneGrind(0.85);
+            this.setAngelStage(0);
+          }
+        }, 1500);
+      }
+      if (this.aiConfig.haloedSaint.stage === 2) {
+        this.aiConfig.haloedSaint.attackTimer = 0;
+        setTimeout(() => {
+          if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 2) {
+            window.Sound.playStoneGrind(0.85);
+            this.setSaintStage(0);
+          }
+        }, 1500);
+      }
+    }
+  }
+
+  toggleLeftDoorLight() {
+    if (this.isBlackout || this.gameOver || this.victory) return;
+    this.isLeftDoorLightOn = !this.isLeftDoorLightOn;
+    window.Sound.playLightClick();
+
+    if (this.world.lights.doorLight) {
+      this.world.lights.doorLight.intensity = this.isLeftDoorLightOn ? 3.8 : 0;
+    }
+
+    const btn = document.getElementById('btn-door-light');
+    if (btn) {
+      btn.classList.toggle('active', this.isLeftDoorLightOn);
+      btn.classList.toggle('light-active', this.isLeftDoorLightOn);
+    }
+  }
+
+  toggleVent() {
+    if (this.isBlackout || this.gameOver || this.victory) return;
+    this.isVentClosed = !this.isVentClosed;
+    window.Sound.playVentSound(this.isVentClosed);
+
+    const btn = document.getElementById('btn-vent-toggle');
+    if (btn) {
+      btn.classList.toggle('active', this.isVentClosed);
+      btn.classList.toggle('door-active', this.isVentClosed);
+    }
+
+    // If vent shutter is closed while Mourner is peeking at the duct opening:
+    if (this.isVentClosed) {
+      if (this.aiConfig.veiledMourner.stage === 3) {
+        this.aiConfig.veiledMourner.attackTimer = 0;
+        setTimeout(() => {
+          if (this.isVentClosed && this.aiConfig.veiledMourner.stage === 3) {
+            window.Sound.playStoneGrind(0.7);
+            this.setMournerStage(0);
+          }
+        }, 1500);
+      }
+    }
+  }
+
+  toggleVentLight() {
+    if (this.isBlackout || this.gameOver || this.victory) return;
+    this.isVentLightOn = !this.isVentLightOn;
+    window.Sound.playLightClick();
+
+    if (this.world.lights.ventLight) {
+      this.world.lights.ventLight.intensity = this.isVentLightOn ? 3.5 : 0;
+    }
+
+    const btn = document.getElementById('btn-vent-light');
+    if (btn) {
+      btn.classList.toggle('active', this.isVentLightOn);
+      btn.classList.toggle('light-active', this.isVentLightOn);
+    }
+  }
+
+  toggleWindowSpot() {
+    if (this.isBlackout || this.gameOver || this.victory) return;
+    this.isWindowSpotOn = !this.isWindowSpotOn;
+    
+    // Play realistic heavy toggle click & halogen surge
+    window.Sound.playFlashlightSwitch(this.isWindowSpotOn);
+
+    if (this.isWindowSpotOn) {
+      this.windowSpotIntensity = 1.0;
+      window.Sound.startFlashlightHum();
+    } else {
+      // INSTANTLY DARK WHEN CLOSED! Zero fade, zero delay
+      this.windowSpotIntensity = 0.0;
+      window.Sound.stopFlashlightHum();
+      if (this.world.nodes.windowBackdropMat && this.world.nodes.windowBackdropMat.uniforms) {
+        this.world.nodes.windowBackdropMat.uniforms.lightIntensity.value = 0.0;
+      }
+      if (this.world.lights.windowSpot) {
+        this.world.lights.windowSpot.intensity = 0.0;
+      }
+    }
+
+    const btn = document.getElementById('btn-window-spot');
+    if (btn) {
+      btn.classList.toggle('active', this.isWindowSpotOn);
+      btn.classList.toggle('light-active', this.isWindowSpotOn);
+    }
+
+    this.updateWindowHallwayView();
+
+    // When spotlight illuminates hallway corridor outside window:
+    if (this.isWindowSpotOn) {
+      const angelInHallway = this.aiConfig.weepingAngel.location === 'CAM_05';
+      const saintInHallway = this.aiConfig.haloedSaint.location === 'CAM_05';
+      const mournerInHallway = this.aiConfig.veiledMourner.location === 'CAM_05';
+
+      if (angelInHallway || saintInHallway || mournerInHallway) {
+        // Eerie warning screech & static burst when caught in spotlight beam!
+        window.Sound.playStoneGrind(0.65);
+        this.triggerAnomalyGlitch(0.25);
+
+        // Keep entity visible in spotlight beam for 1.4s so player clearly spots them, then retreat!
+        clearTimeout(this._windowSpotRetreatTimer);
+        this._windowSpotRetreatTimer = setTimeout(() => {
+          if (this.isWindowSpotOn && !this.gameOver) {
+            window.Sound.playStoneGrind(0.9);
+            if (this.aiConfig.weepingAngel.location === 'CAM_05') this.setAngelStage(0);
+            if (this.aiConfig.haloedSaint.location === 'CAM_05') this.setSaintStage(0);
+            if (this.aiConfig.veiledMourner.location === 'CAM_05') this.setMournerStage(0);
+          }
+        }, 1400);
+      }
+    }
+  }
+
+  // --- DIGITAL CCTV SURVEILLANCE ---
+  toggleCCTV() {
+    if (this.isBlackout || this.gameOver || this.victory) return;
+    this.isCCTVOpen = !this.isCCTVOpen;
+    window.Sound.playCameraFlip(this.isCCTVOpen);
+
+    const overlay = document.getElementById('cctv-overlay');
+    if (overlay) {
+      overlay.classList.toggle('active', this.isCCTVOpen);
+    }
+
+    if (this.isCCTVOpen) {
+      this.triggerStatic(0.18);
+      this.switchCamera(this.activeCameraId);
+    } else {
+      document.getElementById('cctv-anomaly-badge')?.classList.remove('active');
+      document.getElementById('cctv-anomaly-burst')?.classList.remove('active');
+    }
+  }
+
+  getCCTVImage(camId) {
+    const angelLoc = this.aiConfig.weepingAngel.location;
+    const saintLoc = this.aiConfig.haloedSaint.location;
+    const mournerLoc = this.aiConfig.veiledMourner.location;
+
+    if (camId === 1) {
+      // Priority 1: Entity visiting CAM 01
+      if (mournerLoc === 'CAM_01') {
+        return 'assets/cctv/church_cam_01_mary_altar.png';
+      }
+      if (saintLoc === 'CAM_01') {
+        return 'assets/cctv/church_cam_01_saint_nave.png';
+      }
+      // Priority 2: Home entity status
+      if (angelLoc === 'CAM_01') {
+        return 'assets/cctv/church_cam_normal.png'; // Angel on altar
+      }
+      // Angel has left CAM 01 and no visitor is here -> Altar pedestal is completely EMPTY!
+      return 'assets/cctv/church_cam_01_empty.png';
+    }
+
+    if (camId === 2) {
+      // Priority 1: Entity visiting CAM 02
+      if (angelLoc === 'CAM_02') {
+        return 'assets/cctv/church_cam_02_angel_crypt.png';
+      }
+      // Priority 2: Home entity status
+      if (mournerLoc === 'CAM_02') {
+        return 'assets/cctv/church_cam_02_columbarium.png'; // Mary in columbarium
+      }
+      // Mary has left CAM 02 and Angel is not in crypt -> Columbarium is completely EMPTY!
+      return 'assets/cctv/church_cam_02_empty.png';
+    }
+
+    if (camId === 3) {
+      // Priority 1: Entity visiting CAM 03
+      if (mournerLoc === 'CAM_03') {
+        return 'assets/cctv/church_cam_03_mary_chapel.png';
+      }
+      // Priority 2: Home entity status
+      if (saintLoc === 'CAM_03') {
+        return 'assets/cctv/church_cam_03_confessional.png'; // Saint in confessional
+      }
+      // Saint has left CAM 03 and Mary is not visiting -> Stone alcove is completely EMPTY!
+      return 'assets/cctv/church_cam_03_empty.png';
+    }
+
+    if (camId === 4) {
+      // CAM 04: Return air duct interior
+      if (mournerLoc === 'CAM_04') {
+        return 'assets/cctv/church_cam_04_vent_anomaly.png'; // Mourner crawling in duct
+      }
+      return 'assets/cctv/church_cam_04_vent.png'; // Duct clear
+    }
+
+    if (camId === 5) {
+      // Priority: Entity visiting CAM 05 corridor outside office
+      if (mournerLoc === 'CAM_05') {
+        return 'assets/cctv/church_cam_05_mary_hallway.png';
+      }
+      if (saintLoc === 'CAM_05') {
+        return 'assets/cctv/church_cam_05_saint_hallway.png';
+      }
+      if (angelLoc === 'CAM_05') {
+        return 'assets/cctv/church_cam_05_narthex_anomaly.png';
+      }
+      return 'assets/cctv/church_cam_05_narthex.png'; // Corridor empty
+    }
+
+    return 'assets/cctv/church_cam_normal.png';
+  }
+
+  isCamAnomaly(camId) {
+    const normalFeeds = {
+      1: 'assets/cctv/church_cam_normal.png',
+      2: 'assets/cctv/church_cam_02_columbarium.png',
+      3: 'assets/cctv/church_cam_03_confessional.png',
+      4: 'assets/cctv/church_cam_04_vent.png',
+      5: 'assets/cctv/church_cam_05_narthex.png'
+    };
+    return this.getCCTVImage(camId) !== normalFeeds[camId];
+  }
+
+  updateCCTVFeed(triggerGlitch = false) {
+    if (!this.isCCTVOpen || this.isBlackout) return;
+    const camId = this.activeCameraId;
+    const isAnomaly = this.isCamAnomaly(camId);
+    const imgSrc = this.getCCTVImage(camId);
+
+    // 1. Direct Image Element update - 100% solid camera feed!
+    const imgEl = document.getElementById('cctv-screen-img');
+    if (imgEl) {
+      if (imgEl.getAttribute('src') !== imgSrc) {
+        imgEl.src = imgSrc;
+      }
+      imgEl.classList.toggle('anomaly-jitter', isAnomaly);
+    }
+
+    // 2. Anomaly Static Glitch Storm whenever an anomaly is present or state changes
+    if (isAnomaly || triggerGlitch) {
+      this.triggerAnomalyGlitch(isAnomaly ? 0.38 : 0.18);
+    }
+
+    // 3. Anomaly Badge Alert
+    const badge = document.getElementById('cctv-anomaly-badge');
+    if (badge) {
+      badge.classList.toggle('active', isAnomaly);
+    }
+
+    // 4. Sync live feed onto the 3D retro CRT TV monitor sitting on the office desk!
+    if (this.world.nodes.crtTvScreenMat) {
+      if (!this._camTextures) this._camTextures = {};
+      if (!this._camTextures[imgSrc]) {
+        this._camTextures[imgSrc] = new THREE.TextureLoader().load(imgSrc);
+      }
+      this.world.nodes.crtTvScreenMat.map = this._camTextures[imgSrc];
+      this.world.nodes.crtTvScreenMat.needsUpdate = true;
+    }
+  }
+
+  triggerAnomalyGlitch(duration = 0.35) {
+    const storm = document.getElementById('cctv-anomaly-burst');
+    if (storm) {
+      storm.classList.add('active');
+      clearTimeout(this.anomalyStormTimeout);
+      this.anomalyStormTimeout = setTimeout(() => {
+        storm.classList.remove('active');
+      }, duration * 1000);
+    }
+    window.Sound.playCameraStatic(duration, 0.45);
+  }
+
+  switchCamera(camId) {
+    if (this.isBlackout) return;
+    this.activeCameraId = camId;
+    window.Sound.playCameraBeep();
+
+    document.querySelectorAll('.map-cam-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`cam-btn-${camId}`)?.classList.add('active');
+
+    const camName = document.getElementById('cctv-current-name');
+    if (camName && this.cctvViews[camId]) {
+      camName.textContent = this.cctvViews[camId].name;
+    }
+
+    const isAnomaly = this.isCamAnomaly(camId);
+    if (isAnomaly) {
+      this.triggerAnomalyGlitch(0.42);
+    } else {
+      this.triggerStatic(0.15);
+    }
+
+    this.updateCCTVFeed(false);
+  }
+
+  toggleNightVision() {
+    this.isNightVisionBW = !this.isNightVisionBW;
+    const imgEl = document.getElementById('cctv-screen-img');
+    if (imgEl) imgEl.classList.toggle('bw-mode', this.isNightVisionBW);
+
+    const nvLayer = document.getElementById('cctv-nightvision-layer');
+    if (nvLayer) nvLayer.classList.toggle('bw-mode', this.isNightVisionBW);
+
+    const nvBadge = document.getElementById('cctv-nv-badge');
+    if (nvBadge) {
+      nvBadge.innerHTML = this.isNightVisionBW
+        ? '<span class="nv-dot"></span>IR B&W INFRARED'
+        : '<span class="nv-dot"></span>IR NIGHT VISION [ACTIVE]';
+    }
+    this.triggerStatic(0.12);
+  }
+
+  triggerStatic(duration = 0.15) {
+    const staticEl = document.getElementById('static-screen');
+    if (staticEl) {
+      staticEl.classList.add('active');
+      clearTimeout(this.staticTimeout);
+      this.staticTimeout = setTimeout(() => {
+        staticEl.classList.remove('active');
+      }, duration * 1000);
+    }
+    window.Sound.playCameraStatic(duration, 0.28);
+  }
+
+  // --- POWER & BACKUP GENERATOR SYSTEM ---
+  updatePower(delta) {
+    if (this.isBlackout || this.gameOver || this.victory) return;
+
+    let usageBars = 1; // Base server & building systems
+    if (this.isLeftDoorClosed) usageBars++;
+    if (this.isLeftDoorLightOn) usageBars++;
+    if (this.isVentClosed) usageBars++;
+    if (this.isVentLightOn) usageBars++;
+    if (this.isCCTVOpen) usageBars++;
+    if (this.isWindowSpotOn) usageBars++;
+    usageBars = Math.min(5, usageBars);
+
+    const drainRates = [0, 0.12, 0.26, 0.45, 0.70, 1.05];
+    const drain = drainRates[usageBars] * delta;
+    this.power = Math.max(0, this.power - drain);
+
+    const barEls = document.querySelectorAll('.usage-bar');
+    barEls.forEach((bar, idx) => {
+      bar.classList.toggle('active', idx < usageBars);
+    });
+
+    const valEl = document.getElementById('hud-power-val');
+    if (valEl) {
+      valEl.textContent = `${Math.ceil(this.power)}%`;
+      valEl.classList.toggle('low', this.power <= 20 && this.power > 10);
+      valEl.classList.toggle('critical', this.power <= 10);
+    }
+
+    if (this.power <= 0) {
+      this.triggerBlackout();
+    }
+  }
+
+  triggerBlackout() {
+    this.isBlackout = true;
+    window.Sound.playPowerShutdown();
+
+    if (this.isLeftDoorClosed) this.toggleLeftDoor();
+    if (this.isLeftDoorLightOn) this.toggleLeftDoorLight();
+    if (this.isVentClosed) this.toggleVent();
+    if (this.isVentLightOn) this.toggleVentLight();
+    if (this.isWindowSpotOn) this.toggleWindowSpot();
+
+    if (this.isCCTVOpen) {
+      this.isCCTVOpen = false;
+      document.getElementById('cctv-overlay')?.classList.remove('active');
+    }
+
+    if (this.world.lights.candleLight) this.world.lights.candleLight.intensity = 0.05;
+
+    setTimeout(() => {
+      if (!this.gameOver && !this.victory) {
+        this.triggerJumpscare('haloedSaint', 'BACKUP POWER DEPLETED — THE MARTYR ENTERED IN THE DARK');
+      }
+    }, 4500 + Math.random() * 3000);
+  }
+
+  // --- TIME & CLOCK PROGRESSION ---
+  updateTime(delta) {
+    if (!this.isRunning || this.gameOver || this.victory) return;
+
+    // Apply speed multiplier
+    const effectiveDelta = delta * this.timeSpeed;
+    this.nightTimer += effectiveDelta;
+
+    // Total in-game hours from 0.0 to 6.0
+    const totalHoursFloat = Math.min(6.0, this.nightTimer / this.hourDuration);
+    const currentHourIndex = Math.floor(totalHoursFloat); // 0, 1, 2, 3, 4, 5, 6
+    const minuteFraction = totalHoursFloat % 1;
+    const currentMinute = Math.min(59, Math.floor(minuteFraction * 60));
+    const currentSecond = Math.min(59, Math.floor((minuteFraction * 3600) % 60));
+
+    // Modern 12-hour digital display format: 0 -> 12, 1 -> 01, ..., 6 -> 06
+    const displayHour = currentHourIndex === 0 ? 12 : currentHourIndex;
+    const hourPad = displayHour < 10 ? `0${displayHour}` : `${displayHour}`;
+    const minPad = currentMinute < 10 ? `0${currentMinute}` : `${currentMinute}`;
+    const secPad = currentSecond < 10 ? `0${currentSecond}` : `${currentSecond}`;
+
+    const timeString = `${hourPad}:${minPad} AM`;
+    const fullTimeString = `${hourPad}:${minPad}:${secPad} AM`;
+
+    // 1. Update HUD Digital Clock (ticks every in-game minute in real time)
+    const timeEl = document.getElementById('hud-time-val');
+    if (timeEl && timeEl.textContent !== timeString) {
+      timeEl.textContent = timeString;
+    }
+
+    // 2. Update HUD Shift Elapsed Readout
+    const subEl = document.getElementById('hud-time-sub-val');
+    if (subEl) {
+      const elapsedHrPad = currentHourIndex < 10 ? `0${currentHourIndex}` : `${currentHourIndex}`;
+      subEl.textContent = `${elapsedHrPad}:${minPad} / 06:00`;
+    }
+
+    // 3. Update Shift Progress Bar (0% to 100%)
+    const progressFill = document.getElementById('shift-progress-fill');
+    if (progressFill) {
+      const progressPercent = Math.min(100, (totalHoursFloat / 6.0) * 100);
+      progressFill.style.width = `${progressPercent.toFixed(1)}%`;
+    }
+
+    // 4. Update CCTV Live Timestamp in CCTV Feed
+    const cctvTimeEl = document.getElementById('cctv-live-timestamp');
+    if (cctvTimeEl) {
+      cctvTimeEl.textContent = fullTimeString;
+    }
+
+    // 5. Hourly Church Carillon Bell Toll
+    if (currentHourIndex > this.hour && currentHourIndex <= 6) {
+      this.hour = currentHourIndex;
+      window.Sound.playChurchBell(1.0, 1);
+
+      if (this.hour === 6) {
+        this.triggerVictory();
+      }
+    }
+  }
+
+  triggerVictory() {
+    this.victory = true;
+    this.isRunning = false;
+    window.Sound.playVictoryFanfare();
+
+    const vicScreen = document.getElementById('victory-screen');
+    if (vicScreen) vicScreen.classList.remove('hidden');
+  }
+
+  // --- AI STATUE MOVEMENT ENGINE ---
+  updateAI(delta) {
+    if (!this.isRunning || this.isBlackout || this.gameOver || this.victory) return;
+
+    this.updateAngelAI(delta);
+    this.updateSaintAI(delta);
+    this.updateMournerAI(delta);
+  }
+
+  updateAngelAI(delta) {
+    const ai = this.aiConfig.weepingAngel;
+    if (ai.level <= 0) return;
+
+    ai.timer += delta;
+    if (ai.timer >= 4.0) {
+      ai.timer = 0;
+
+      const isWatchedOnCam = this.isCCTVOpen && (
+        (ai.location === 'CAM_01' && this.activeCameraId === 1) ||
+        (ai.location === 'CAM_02' && this.activeCameraId === 2) ||
+        (ai.location === 'CAM_05' && this.activeCameraId === 5)
+      );
+
+      if (isWatchedOnCam) return; // Quantum Locked by CCTV
+
+      const roll = Math.floor(Math.random() * 20) + 1;
+      if (roll <= ai.level) {
+        if (ai.stage < 3) {
+          this.setAngelStage(ai.stage + 1);
+          window.Sound.playStoneGrind(0.7);
+        } else if (ai.stage === 3) {
+          if (this.isLeftDoorClosed) {
+            window.Sound.playStoneGrind(0.9);
+            window.Sound.playMechanicalClick();
+            this.setAngelStage(0);
+          } else {
+            ai.attackTimer += 1.5;
+            if (ai.attackTimer >= 4.5) {
+              this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  updateSaintAI(delta) {
+    const ai = this.aiConfig.haloedSaint;
+    if (ai.level <= 0) return;
+
+    ai.timer += delta;
+    if (ai.timer >= 5.0) {
+      ai.timer = 0;
+
+      const isWatchedOnCam = this.isCCTVOpen && (
+        (ai.location === 'CAM_03' && this.activeCameraId === 3) ||
+        (ai.location === 'CAM_01' && this.activeCameraId === 1) ||
+        (ai.location === 'CAM_05' && this.activeCameraId === 5)
+      );
+
+      if (isWatchedOnCam) return;
+
+      const roll = Math.floor(Math.random() * 20) + 1;
+      if (roll <= ai.level) {
+        if (ai.stage < 3) {
+          this.setSaintStage(ai.stage + 1);
+          window.Sound.playStoneGrind(0.8);
+        } else if (ai.stage === 3) {
+          if (this.isLeftDoorClosed) {
+            window.Sound.playStoneGrind(0.9);
+            window.Sound.playMechanicalClick();
+            this.setSaintStage(0);
+          } else {
+            ai.attackTimer += 1.5;
+            if (ai.attackTimer >= 4.5) {
+              this.triggerJumpscare('haloedSaint', 'SANCTUS MICHAEL INFILTRATED THE PARISH SECURITY OFFICE');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  updateMournerAI(delta) {
+    const ai = this.aiConfig.veiledMourner;
+    if (ai.level <= 0) return;
+
+    ai.timer += delta;
+    if (ai.timer >= 4.5) {
+      ai.timer = 0;
+
+      const isWatchedOnCam = this.isCCTVOpen && (
+        (ai.location === 'CAM_02' && this.activeCameraId === 2) ||
+        (ai.location === 'CAM_01' && this.activeCameraId === 1) ||
+        (ai.location === 'CAM_04' && this.activeCameraId === 4)
+      );
+
+      if (isWatchedOnCam) return;
+
+      const roll = Math.floor(Math.random() * 20) + 1;
+      if (roll <= ai.level) {
+        if (ai.stage < 3) {
+          this.setMournerStage(ai.stage + 1);
+          window.Sound.playStoneGrind(0.6);
+        } else if (ai.stage === 3) {
+          if (this.isVentClosed) {
+            window.Sound.playVentSound(false);
+            this.setMournerStage(0);
+          } else {
+            ai.attackTimer += 1.5;
+            if (ai.attackTimer >= 4.0) {
+              this.triggerJumpscare('veiledMourner', 'THE MEMORIAL PENITENT CRAWLED THROUGH THE UNSEALED HVAC DUCT');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // --- 3D JUMPSCARE SEQUENCE ---
+  triggerJumpscare(entityName, reason = 'ANOMALY INFILTRATION') {
+    if (this.gameOver) return;
+    this.gameOver = true;
+    this.jumpscareActive = true;
+    this.jumpscareTimer = 0;
+
+    if (this.isCCTVOpen) {
+      this.isCCTVOpen = false;
+      document.getElementById('cctv-overlay')?.classList.remove('active');
+    }
+
+    window.Sound.playJumpscare();
+
+    const flash = document.getElementById('jumpscare-flash');
+    if (flash) flash.classList.add('active');
+
+    const statue = this.world.statues[entityName];
+    if (statue) {
+      statue.visible = true;
+      statue.position.set(0, 1.35, -0.65);
+      statue.rotation.set(0, Math.PI, 0);
+      this.jumpscareEntity = statue;
+    }
+
+    setTimeout(() => {
+      this.jumpscareActive = false;
+      const goScreen = document.getElementById('gameover-screen');
+      const goReason = document.getElementById('gameover-reason-val');
+      if (goReason) goReason.textContent = reason;
+      if (goScreen) goScreen.classList.remove('hidden');
+    }, 1300);
+  }
+
+  // --- RENDER & ANIMATION LOOP ---
+  renderLoop() {
+    requestAnimationFrame(() => this.renderLoop());
+
+    const delta = 0.016;
+
+    if (this.isRunning && !this.isPaused) {
+      this.updateTime(delta);
+      this.updatePower(delta);
+      this.updateAI(delta);
+    }
+
+    // Keyboard look (faster responsive speed)
+    if (!this.isCCTVOpen && !this.gameOver) {
+      if (this.keysDown['a'] || this.keysDown['arrowleft']) this.targetYaw += 0.08;
+      if (this.keysDown['d'] || this.keysDown['arrowright']) this.targetYaw -= 0.08;
+      this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.45, Math.PI * 0.45);
+    }
+
+    // Responsive camera damping (0.28 for instant fluid control)
+    this.cameraYaw += (this.targetYaw - this.cameraYaw) * 0.28;
+    this.cameraPitch += (this.targetPitch - this.cameraPitch) * 0.28;
+
+    // Heavy Gothic Church Arched Door Hinge animation (swings outward into cloister corridor)
+    if (this.world.nodes.doorPivot) {
+      const targetDoorRot = this.isLeftDoorClosed ? 0.0 : -Math.PI * 0.45;
+      this.world.nodes.doorPivot.rotation.y += (targetDoorRot - this.world.nodes.doorPivot.rotation.y) * 0.15;
+    }
+
+    // Heavy Industrial Vent Shutter Damper slide animation (drops flush with duct sill at 0.58)
+    if (this.world.nodes.ventShutter) {
+      const targetVentY = this.isVentClosed ? 0.58 : 1.85;
+      this.world.nodes.ventShutter.position.y += (targetVentY - this.world.nodes.ventShutter.position.y) * 0.18;
+    }
+
+    // Desk Task Lamp gentle flicker
+    if (this.world.lights.candleLight && !this.isBlackout) {
+      this.world.lights.candleLight.intensity = 1.35 + Math.sin(Date.now() * 0.007) * 0.05;
+    }
+
+    // Observation Window Halogen Spotlight Dynamics (Instant snap to pitch-black when closed)
+    this.windowSpotIntensity = this.isWindowSpotOn ? 1.0 : 0.0;
+
+    // Update Window Backdrop Shader Material Uniforms
+    const backdropMat = this.world.nodes.windowBackdropMat;
+    if (backdropMat && backdropMat.uniforms) {
+      backdropMat.uniforms.lightIntensity.value = this.windowSpotIntensity;
+      backdropMat.uniforms.time.value += delta;
+      backdropMat.uniforms.flicker.value = this.isWindowSpotOn
+        ? (1.0 + Math.sin(Date.now() * 0.02) * 0.008)
+        : 1.0;
+    }
+
+    // Dynamic 3D Scene Spotlight on window frame & sill
+    if (this.world.lights.windowSpot) {
+      this.world.lights.windowSpot.intensity = this.windowSpotIntensity * 5.6;
+    }
+
+    // Jumpscare shake
+    if (this.jumpscareActive && this.jumpscareEntity) {
+      this.camera.position.x = (Math.random() - 0.5) * 0.15;
+      this.camera.position.y = 1.45 + (Math.random() - 0.5) * 0.15;
+      this.camera.position.z = (Math.random() - 0.5) * 0.1;
+      this.jumpscareEntity.rotation.z = (Math.random() - 0.5) * 0.2;
+      this.jumpscareEntity.position.y = 1.35 + Math.sin(Date.now() * 0.04) * 0.1;
+    } else {
+      this.camera.position.set(0, 1.45, 0);
+    }
+
+    // The 3D camera remains locked in the 1st person office at the desk at all times!
+    // The CCTV surveillance feeds are rendered 100% via the authentic high-resolution images!
+    this.camera.rotation.set(this.cameraPitch, this.cameraYaw, 0, 'YXZ');
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  updateHUD() {
+    const timeEl = document.getElementById('hud-time-val');
+    if (timeEl) timeEl.textContent = '12:00 AM';
+    const subEl = document.getElementById('hud-time-sub-val');
+    if (subEl) subEl.textContent = '00:00 / 06:00';
+    const progressFill = document.getElementById('shift-progress-fill');
+    if (progressFill) progressFill.style.width = '0%';
+    const nightEl = document.getElementById('hud-night-val');
+    if (nightEl) nightEl.textContent = `NIGHT ${this.currentNight}`;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  window.Game = new GameEngine();
+});

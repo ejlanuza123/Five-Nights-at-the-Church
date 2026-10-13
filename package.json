@@ -1,0 +1,24 @@
+{
+  "name": "five-nights-at-church",
+  "version": "1.0.0",
+  "description": "A 3D first-person horror game prototype inspired by FNAF, featuring weeping angels, haloed saints, CCTV monitoring, and church office defenses.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "fnaf",
+    "threejs",
+    "horror",
+    "game",
+    "weeping-angels",
+    "webgl",
+    "3d"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "jimp": "^1.6.1"
+  }
+}

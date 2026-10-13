@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Five Nights at the Church</title>
+  <link rel="stylesheet" href="css/style.css?v=20261013_v6">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
+</head>
+<body>
+  <div id="game-container">
+    <!-- WebGL 3D Render Canvas -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Post-Processing Screen Effects -->
+    <div id="screen-effects">
+      <div class="crt-scanlines"></div>
+      <div class="crt-vignette"></div>
+      <div class="film-grain"></div>
+      <div class="noise-overlay" id="noise-overlay"></div>
+    </div>
+
+    <!-- Digital CCTV Glitch / Static Overlay -->
+    <div id="static-screen"></div>
+
+    <!-- Red Jumpscare Strobe Flash -->
+    <div id="jumpscare-flash"></div>
+
+    <!-- In-Game 1st Person Office HUD -->
+    <div id="hud-overlay">
+      <!-- Top Header -->
+      <div class="hud-top">
+        <div class="hud-title-tag">
+          <span class="hud-church-name">ST. JUDE CATHOLIC PARISH — SECURITY</span>
+          <span class="hud-sanctuary-status" id="hud-sanctuary-status-text">FACILITY SYSTEM ACTIVE</span>
+        </div>
+
+        <div class="hud-center-actions">
+          <button class="hud-help-btn" id="btn-hud-help" title="View Security Manual & Quick Commands [H]">
+            <span class="help-icon-shield">🛡️</span>
+            <span class="help-btn-title">HOW TO PLAY</span>
+            <kbd class="help-key-chip">[H]</kbd>
+          </button>
+        </div>
+
+        <div class="hud-time-container">
+          <div class="hud-time-row">
+            <div class="hud-time" id="hud-time-val">12:00 AM</div>
+            <div class="hud-speed-ctrl" title="Simulation Speed">
+              <button class="speed-btn active" id="btn-speed-1x" data-speed="1">1x</button>
+              <button class="speed-btn" id="btn-speed-2x" data-speed="2">2x</button>
+              <button class="speed-btn" id="btn-speed-4x" data-speed="4">4x</button>
+            </div>
+          </div>
+          <div class="hud-night-row">
+            <div class="hud-night" id="hud-night-val">NIGHT 1</div>
+            <span class="hud-time-sub" id="hud-time-sub-val">00:00 / 06:00</span>
+          </div>
+          <!-- Night Shift Progress Bar -->
+          <div class="shift-progress-bg">
+            <div class="shift-progress-fill" id="shift-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Status: Generator Backup & Power Usage -->
+      <div class="hud-bottom">
+        <div class="hud-power-box">
+          <div class="power-readout">
+            <span class="power-label">BACKUP BATTERY:</span>
+            <span class="power-value" id="hud-power-val">100%</span>
+          </div>
+          <div class="usage-row">
+            <span class="usage-label">FACILITY DRAIN:</span>
+            <div class="usage-bars">
+              <div class="usage-bar active"></div>
+              <div class="usage-bar"></div>
+              <div class="usage-bar"></div>
+              <div class="usage-bar"></div>
+              <div class="usage-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modern Office Wall Interactive Overlays (Doors, Vents & Window) -->
+    <div class="office-overlay-controls">
+      <!-- Left Defense Control Panel (Arched Wooden Church Door) -->
+      <div class="door-panel-left">
+        <div class="panel-title">ARCHED DOOR</div>
+        <button class="ctrl-btn" id="btn-door-toggle" title="Lock / Unlock Heavy Wooden Church Door [Q]">
+          <span>LOCK DOOR [Q]</span>
+          <span class="btn-indicator"></span>
+        </button>
+        <button class="ctrl-btn" id="btn-door-light" title="Toggle Door Downlight [Z]">
+          <span>DOOR LIGHT [Z]</span>
+          <span class="btn-indicator"></span>
+        </button>
+      </div>
+
+      <!-- Center Window Spotlight (Observation Window Spotlight) -->
+      <div class="window-panel-center">
+        <button class="ctrl-btn" id="btn-window-spot" title="Toggle Window Halogen Spotlight [W / F]">
+          <span>WINDOW SPOTLIGHT [W]</span>
+          <span class="btn-indicator"></span>
+        </button>
+      </div>
+
+      <!-- Right Defense Control Panel (Slatted Wall Ventilation Shutter) -->
+      <div class="vent-panel-right">
+        <div class="panel-title">WALL VENT</div>
+        <button class="ctrl-btn" id="btn-vent-toggle" title="Seal / Open Steel Shutter Damper [E]">
+          <span>SEAL VENT [E]</span>
+          <span class="btn-indicator"></span>
+        </button>
+        <button class="ctrl-btn" id="btn-vent-light" title="Inspect Air Vent Grille [R / C]">
+          <span>VENT LIGHT [R]</span>
+          <span class="btn-indicator"></span>
+        </button>
+      </div>
+
+      <!-- Bottom Camera Flip Bar -->
+      <div class="camera-flip-trigger" id="cctv-flip-bar" title="Press SPACE or Click to toggle CCTV Monitor">
+        <div class="flip-icon"></div>
+        <span class="flip-text">DIGITAL SURVEILLANCE FEED</span>
+        <span class="flip-subtext">[SPACEBAR]</span>
+      </div>
+    </div>
+
+    <!-- Fullscreen Digital CCTV Surveillance Overlay -->
+    <div id="cctv-overlay">
+      <!-- High-Resolution Raw CCTV Camera Capture Layer -->
+      <img id="cctv-screen-img" class="cctv-screen-img" src="assets/cctv/church_cam_normal.png" alt="CCTV Camera Feed" />
+
+      <!-- Night Vision Infrared Phosphor Green Tint & Central Illuminator -->
+      <div class="cctv-nightvision-layer" id="cctv-nightvision-layer"></div>
+
+      <!-- Real-time Animated Analog CRT Static Noise Canvas -->
+      <canvas id="cctv-static-canvas" class="cctv-static-canvas"></canvas>
+
+      <!-- Video Glitch Scanlines & CRT Distortion -->
+      <div class="cctv-glitch-layer" id="cctv-glitch-layer"></div>
+
+      <!-- Heavy Anomaly Static Interference Burst Screen -->
+      <div class="cctv-anomaly-burst" id="cctv-anomaly-burst"></div>
+
+      <div class="cctv-header">
+        <div class="cctv-cam-tag">
+          <div class="cctv-rec-dot"></div>
+          <span class="cctv-rec-text">LIVE</span>
+          <span class="cctv-cam-name" id="cctv-current-name">CAM 01 - SANCTUARY & ALTAR</span>
+          <span class="cctv-timestamp" id="cctv-live-timestamp">12:00:00 AM</span>
+        </div>
+        <div class="cctv-header-right">
+          <div class="cctv-nv-badge" id="cctv-nv-badge"><span class="nv-dot"></span>IR NIGHT VISION [ACTIVE]</div>
+          <div class="cctv-anomaly-badge" id="cctv-anomaly-badge">⚠️ ANOMALY SPOTTED</div>
+          <div class="cctv-status-badge">1080p HD FEED  |  ENCRYPTION: SECURE</div>
+        </div>
+      </div>
+
+      <div class="cctv-bottom">
+        <div class="cctv-control-box">
+          <button class="cctv-light-btn" id="btn-cctv-light">
+            <span>IR NIGHT VISION [L]</span>
+          </button>
+        </div>
+
+        <!-- Modern Parish Architectural Blueprint Map -->
+        <div class="cctv-map-container">
+          <div class="map-title">PARISH FACILITY BLUEPRINT</div>
+          <svg class="church-map-svg" viewBox="0 0 300 210" xmlns="http://www.w3.org/2000/svg">
+            <!-- Grid Background Lines -->
+            <defs>
+              <pattern id="blueprint-grid" width="15" height="15" patternUnits="userSpaceOnUse">
+                <path d="M 15 0 L 0 0 0 15" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="300" height="210" fill="url(#blueprint-grid)" />
+
+            <!-- CAM 01: Main Sanctuary & Nave -->
+            <rect x="105" y="15" width="90" height="110" fill="rgba(30, 41, 59, 0.4)" stroke="#475569" stroke-width="2" rx="2" />
+            <!-- Altar Platform -->
+            <rect x="125" y="22" width="50" height="24" fill="rgba(51, 65, 85, 0.5)" stroke="#64748b" stroke-width="1.2" stroke-dasharray="3,2" />
+            <text x="150" y="37" font-family="'Inter', sans-serif" font-size="6.5" font-weight="600" fill="#94a3b8" text-anchor="middle">ALTAR</text>
+            <text x="150" y="80" font-family="'Inter', sans-serif" font-size="7" font-weight="bold" fill="#64748b" text-anchor="middle" letter-spacing="1">NAVE / PEWS</text>
+
+            <!-- CAM 03: West Reconciliation Chapel (Confessional) -->
+            <rect x="15" y="55" width="75" height="58" fill="rgba(30, 41, 59, 0.4)" stroke="#475569" stroke-width="2" rx="2" />
+            <text x="52" y="78" font-family="'Inter', sans-serif" font-size="6.5" font-weight="bold" fill="#94a3b8" text-anchor="middle">CONFESSIONAL</text>
+            <text x="52" y="88" font-family="'Inter', sans-serif" font-size="5.5" fill="#64748b" text-anchor="middle">CHAPEL</text>
+            <!-- West Hallway connecting Confessional to Office -->
+            <line x1="90" y1="84" x2="105" y2="84" stroke="#64748b" stroke-width="2.5" />
+            <line x1="52" y1="113" x2="52" y2="162" stroke="#475569" stroke-width="1.8" stroke-dasharray="3,2" />
+            <line x1="52" y1="162" x2="105" y2="162" stroke="#475569" stroke-width="1.8" stroke-dasharray="3,2" />
+
+            <!-- CAM 02: East Memorial Columbarium & Crypt -->
+            <rect x="210" y="55" width="75" height="58" fill="rgba(30, 41, 59, 0.4)" stroke="#475569" stroke-width="2" rx="2" />
+            <text x="247" y="78" font-family="'Inter', sans-serif" font-size="6.5" font-weight="bold" fill="#94a3b8" text-anchor="middle">COLUMBARIUM</text>
+            <text x="247" y="88" font-family="'Inter', sans-serif" font-size="5.5" fill="#64748b" text-anchor="middle">&amp; CRYPT</text>
+            <line x1="195" y1="84" x2="210" y2="84" stroke="#64748b" stroke-width="2.5" />
+
+            <!-- CAM 04: HVAC Air Return Duct Shaft (Cyan Path) -->
+            <line x1="247" y1="113" x2="247" y2="162" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4,2" />
+            <line x1="247" y1="162" x2="195" y2="162" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="4,2" />
+            <text x="228" y="172" font-family="'Inter', sans-serif" font-size="5.5" font-weight="bold" fill="#38bdf8" text-anchor="middle">HVAC DUCT</text>
+
+            <!-- CAM 05: Modern Narthex / Corridor outside Window -->
+            <text x="150" y="120" font-family="'Inter', sans-serif" font-size="6.5" font-weight="bold" fill="#38bdf8" text-anchor="middle" letter-spacing="1">NARTHEX HALL</text>
+
+            <!-- Security Office (Bottom Center) -->
+            <rect x="105" y="138" width="90" height="48" fill="rgba(15, 23, 42, 0.85)" stroke="#3b82f6" stroke-width="2" rx="3" />
+            <text x="150" y="166" font-family="'Inter', sans-serif" font-size="8" font-weight="bold" fill="#60a5fa" text-anchor="middle" letter-spacing="1">SECURITY OFFICE</text>
+
+            <!-- Left Defense: Maglock Door indicator -->
+            <rect x="103" y="152" width="4" height="20" fill="#22c55e" stroke="#16a34a" stroke-width="1" />
+            <text x="86" y="158" font-family="'Inter', sans-serif" font-size="5" font-weight="bold" fill="#22c55e">DOOR</text>
+
+            <!-- Center Defense: Observation Window indicator -->
+            <line x1="118" y1="138" x2="182" y2="138" stroke="#38bdf8" stroke-width="3" />
+            <text x="150" y="134" font-family="'Inter', sans-serif" font-size="5.5" font-weight="600" fill="#93c5fd" text-anchor="middle">OBSERVATION WINDOW</text>
+
+            <!-- Right Defense: Fire Shutter Vent indicator -->
+            <rect x="193" y="152" width="4" height="20" fill="#38bdf8" stroke="#0284c7" stroke-width="1" />
+            <text x="202" y="158" font-family="'Inter', sans-serif" font-size="5" font-weight="bold" fill="#38bdf8">VENT</text>
+          </svg>
+
+          <!-- Interactive Camera Buttons on Map -->
+          <button class="map-cam-btn active" id="cam-btn-1" data-cam="1">CAM 01</button>
+          <button class="map-cam-btn" id="cam-btn-2" data-cam="2">CAM 02</button>
+          <button class="map-cam-btn" id="cam-btn-3" data-cam="3">CAM 03</button>
+          <button class="map-cam-btn" id="cam-btn-4" data-cam="4">CAM 04</button>
+          <button class="map-cam-btn" id="cam-btn-5" data-cam="5">CAM 05</button>
+        </div>
+      </div>
+
+      <button class="cctv-flip-down" id="cctv-flip-down-btn">MINIMIZE FEED [SPACEBAR]</button>
+    </div>
+
+    <!-- Classic FNAF Style Main Title Menu -->
+    <div id="fnaf-main-menu">
+      <!-- Animated CRT TV Static Noise Canvas -->
+      <canvas id="menu-static-canvas" class="menu-static-canvas"></canvas>
+      <div class="menu-scanlines"></div>
+      <div class="menu-vignette"></div>
+
+      <!-- Spasmodic Glitching / Twitching Stone Statue Silhouette (Freddy-style title screen twitch) -->
+      <div id="menu-statue-layer" class="menu-statue-layer">
+        <div class="statue-eye eye-left"></div>
+        <div class="statue-eye eye-right"></div>
+      </div>
+
+      <!-- Retro FNAF Typography & Vertical Menu Stack -->
+      <div class="fnaf-menu-container">
+        <div class="fnaf-title-block">
+          <h1 class="fnaf-game-title">
+            <span class="title-word">FIVE</span>
+            <span class="title-word">NIGHTS</span>
+            <span class="title-word">AT THE</span>
+            <span class="title-word church-accent">CHURCH</span>
+          </h1>
+          <div class="fnaf-sub-title">ST. JUDE CATHOLIC PARISH • FACILITY SURVEILLANCE PROTOCOL</div>
+        </div>
+
+        <div class="fnaf-menu-options">
+          <button class="fnaf-menu-item" id="btn-menu-continue">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">CONTINUE</span>
+            <span class="fnaf-night-badge" id="menu-night-badge">NIGHT 1</span>
+          </button>
+
+          <button class="fnaf-menu-item" id="btn-menu-newgame">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">NEW GAME</span>
+          </button>
+
+          <button class="fnaf-menu-item" id="btn-menu-nightselect">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">NIGHT SELECTION</span>
+          </button>
+
+          <div class="fnaf-night-picker hidden" id="menu-night-picker">
+            <button class="night-chip active" data-night="1">NIGHT 1</button>
+            <button class="night-chip" data-night="2">NIGHT 2</button>
+            <button class="night-chip" data-night="3">NIGHT 3</button>
+            <button class="night-chip" data-night="4">NIGHT 4</button>
+            <button class="night-chip" data-night="5">NIGHT 5</button>
+          </div>
+
+          <button class="fnaf-menu-item fnaf-manual-btn" id="btn-menu-manual" title="View Security Manual and Controls [H]">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">HOW TO PLAY</span>
+            <span class="fnaf-guide-badge"><span class="badge-dot"></span>SECURITY PROTOCOLS</span>
+          </button>
+
+          <button class="fnaf-menu-item" id="btn-menu-fullscreen">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">FULLSCREEN [F11]</span>
+          </button>
+        </div>
+
+        <div class="fnaf-menu-footer">
+          <div>© 2026 ST. JUDE CATHOLIC PARISH • PROTOTYPE BUILD v1.0.0</div>
+          <div>WARNING: FLASHING LIGHTS &amp; JUMPSCARES • AUDIO RECOMMENDED</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Iconic FNAF 12:00 AM Night Transition Card (Shows Night Label Text First) -->
+    <div id="night-transition-screen" class="hidden">
+      <div class="night-transition-scanlines"></div>
+      <div class="night-card-box">
+        <div class="night-card-main-night" id="night-card-title-val">NIGHT 1</div>
+        <div class="night-card-clock">12:00 AM</div>
+        <div class="night-card-sub" id="night-card-sub-val">1ST NIGHT</div>
+        <div class="night-card-divider"></div>
+        <div class="night-card-tip">ST. JUDE CATHOLIC PARISH — SANCTUARY SECURED</div>
+      </div>
+    </div>
+
+    <!-- Modal: Security Manual / How to Play Instructions -->
+    <div class="screen-modal hidden" id="manual-modal">
+      <div class="start-box manual-box">
+        <div class="manual-header">
+          <div class="manual-header-top">
+            <div class="manual-seal-block">
+              <span class="manual-cross-icon">✝</span>
+              <div>
+                <span class="title-sub">ST. JUDE CATHOLIC PARISH ARCHIVES</span>
+                <div class="manual-doc-id">DOC REF: ARCH-SEC-1987 // REVISED 2026</div>
+              </div>
+            </div>
+            <button class="manual-close-x" id="btn-modal-x" title="Close Guide [ESC / H]">&times;</button>
+          </div>
+
+          <h2 class="manual-main-title">SECURITY PROTOCOLS &amp; SURVIVAL MANUAL</h2>
+          <div class="manual-title-bar">
+            <span class="manual-badge-tag"><span class="badge-dot"></span>OVERNIGHT GUARDIAN MANUAL</span>
+            <span class="manual-shift-tag">SHIFT: 12:00 AM — 06:00 AM</span>
+          </div>
+          <div class="title-divider"></div>
+
+          <!-- Quick Navigation Tabs -->
+          <div class="manual-nav-tabs">
+            <button class="manual-nav-tab active" data-target="manual-sec-objective">1. OBJECTIVE</button>
+            <button class="manual-nav-tab" data-target="manual-sec-commands">2. QUICK CONTROLS</button>
+            <button class="manual-nav-tab" data-target="manual-sec-entities">3. ENTITIES GUIDE</button>
+            <button class="manual-nav-tab" data-target="manual-sec-power">4. POWER PRESERVATION</button>
+          </div>
+        </div>
+
+        <div class="manual-scroll-content">
+          <!-- Section 1: Objective -->
+          <div class="manual-section" id="manual-sec-objective">
+            <h3 class="manual-section-title">
+              <span class="sec-num">01</span>
+              <span>MISSION OBJECTIVE &amp; SURVIVAL PROTOCOL</span>
+            </h3>
+            <div class="manual-objective-grid">
+              <div class="objective-card">
+                <div class="objective-icon">⏰</div>
+                <div class="objective-text">
+                  <strong>Survive Until 06:00 AM</strong>
+                  <p>Your night shift starts at 12:00 AM and completes when morning church carillon bells ring at 6:00 AM (approx. 6 real-time minutes at standard speed).</p>
+                </div>
+              </div>
+              <div class="objective-card">
+                <div class="objective-icon">👁️</div>
+                <div class="objective-text">
+                  <strong>Vigilant Camera Observation</strong>
+                  <p>The consecrated stone statues remain frozen while observed on surveillance feeds. If unmonitored, they will advance swiftly toward your security office!</p>
+                </div>
+              </div>
+              <div class="objective-card">
+                <div class="objective-icon">⚡</div>
+                <div class="objective-text">
+                  <strong>Generator Battery Management</strong>
+                  <p>All defenses (door maglock, halogen window beam, vent shutter, CCTV) drain backup battery. A total blackout leaves you completely defenseless in the dark!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Quick Commands & Keyboard Shortcuts -->
+          <div class="manual-section" id="manual-sec-commands">
+            <h3 class="manual-section-title">
+              <span class="sec-num">02</span>
+              <span>QUICK CONTROLS &amp; KEYBOARD SHORTCUTS</span>
+            </h3>
+            <div class="commands-grid">
+              <div class="command-card key-group-door">
+                <kbd class="key-badge badge-door">Q</kbd>
+                <div class="command-info">
+                  <span class="command-name">LOCK / UNLOCK DOOR</span>
+                  <span class="command-desc">Shuts and magnetically locks the heavy left arched church door.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-door">
+                <kbd class="key-badge badge-door">Z</kbd>
+                <div class="command-info">
+                  <span class="command-name">LEFT DOOR DOWNLIGHT</span>
+                  <span class="command-desc">Flashes the hallway downlight to spot weeping statues at the doorway.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-window">
+                <div class="key-badge-pair">
+                  <kbd class="key-badge badge-window">W</kbd>
+                  <span class="key-or">/</span>
+                  <kbd class="key-badge badge-window">F</kbd>
+                </div>
+                <div class="command-info">
+                  <span class="command-name">WINDOW SPOTLIGHT</span>
+                  <span class="command-desc">Blasts the halogen beam into the front cloister hallway to stun lurking statues!</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-vent">
+                <kbd class="key-badge badge-vent">E</kbd>
+                <div class="command-info">
+                  <span class="command-name">SEAL / OPEN VENT</span>
+                  <span class="command-desc">Lowers the motorized steel fire shutter over the right HVAC air duct.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-vent">
+                <div class="key-badge-pair">
+                  <kbd class="key-badge badge-vent">R</kbd>
+                  <span class="key-or">/</span>
+                  <kbd class="key-badge badge-vent">C</kbd>
+                </div>
+                <div class="command-info">
+                  <span class="command-name">VENT INSPECTION LIGHT</span>
+                  <span class="command-desc">Flashes the duct cavity to spot crawling entities peeking at the grille.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-cctv">
+                <kbd class="key-badge badge-cctv">SPACE</kbd>
+                <div class="command-info">
+                  <span class="command-name">SURVEILLANCE MONITOR</span>
+                  <span class="command-desc">Flips up/down the digital CCTV camera surveillance system.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-cctv">
+                <kbd class="key-badge badge-cctv">1 - 5</kbd>
+                <div class="command-info">
+                  <span class="command-name">SWITCH CAMERAS</span>
+                  <span class="command-desc">1: Altar | 2: Crypt | 3: Confessional | 4: HVAC Duct | 5: Hallway</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-cctv">
+                <kbd class="key-badge badge-cctv">L</kbd>
+                <div class="command-info">
+                  <span class="command-name">IR NIGHT VISION</span>
+                  <span class="command-desc">Toggles infrared phosphor night vision mode on the active camera feed.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-system">
+                <kbd class="key-badge badge-system">H</kbd>
+                <div class="command-info">
+                  <span class="command-name">HOW TO PLAY</span>
+                  <span class="command-desc">Opens or closes this survival guide at any point during your shift.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-system">
+                <kbd class="key-badge badge-system">ESC</kbd>
+                <div class="command-info">
+                  <span class="command-name">CLOSE / EXIT</span>
+                  <span class="command-desc">Closes active modal, closes guide, or lowers camera monitor.</span>
+                </div>
+              </div>
+
+              <div class="command-card key-group-system">
+                <kbd class="key-badge badge-system">MOUSE / A D</kbd>
+                <div class="command-info">
+                  <span class="command-name">PAN 3D OFFICE</span>
+                  <span class="command-desc">Pan view smoothly across Left Door, Center Window, and Right Vent.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Entity Survival Tactics -->
+          <div class="manual-section" id="manual-sec-entities">
+            <h3 class="manual-section-title">
+              <span class="sec-num">03</span>
+              <span>THE THREE ENTITIES &amp; SURVIVAL TACTICS</span>
+            </h3>
+            <div class="entity-cards">
+              <!-- Entity 1 -->
+              <div class="entity-guide-card entity-border-angel">
+                <div class="entity-card-header">
+                  <div class="entity-avatar angel-avatar">🕊️</div>
+                  <div class="entity-meta">
+                    <div class="entity-name-row">
+                      <h4 class="entity-title">OUR LADY / WEEPING ANGEL</h4>
+                      <span class="threat-tag threat-high">THREAT: HIGH</span>
+                    </div>
+                    <span class="entity-latin">Mater Dolorosa • Weeping Marble Effigy</span>
+                    <span class="entity-route">
+                      <strong>Route:</strong> CAM 01 (Altar) ➔ CAM 02 (Crypt) ➔ CAM 05 ➔ <strong>Left Doorway</strong>
+                    </span>
+                  </div>
+                </div>
+                <div class="entity-body">
+                  <p class="entity-behavior">
+                    <strong>Behavior:</strong> Freezes under camera observation. Check on her regularly.
+                  </p>
+                  <div class="defense-box">
+                    <span class="defense-badge badge-door">DEFENSE ACTION:</span>
+                    <span>When she reaches your <strong>Left Door</strong>, press <strong>DOOR LIGHT [Z]</strong> to catch her silhouette peering into the doorway, then immediately press <strong>LOCK DOOR [Q]</strong> until she retreats!</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Entity 2 -->
+              <div class="entity-guide-card entity-border-saint">
+                <div class="entity-card-header">
+                  <div class="entity-avatar saint-avatar">⚔️</div>
+                  <div class="entity-meta">
+                    <div class="entity-name-row">
+                      <h4 class="entity-title">THE HALOED SAINT</h4>
+                      <span class="threat-tag threat-extreme">THREAT: CRITICAL</span>
+                    </div>
+                    <span class="entity-latin">The Martyr • Haloed Stalker of the Cloister</span>
+                    <span class="entity-route">
+                      <strong>Route:</strong> CAM 03 (Confessional) ➔ CAM 01 (Nave) ➔ <strong>CAM 05 (Front Window)</strong> ➔ Left Door
+                    </span>
+                  </div>
+                </div>
+                <div class="entity-body">
+                  <p class="entity-behavior">
+                    <strong>Behavior:</strong> Stalks through the dark cloister corridor visible right outside your front observation window.
+                  </p>
+                  <div class="defense-box">
+                    <span class="defense-badge badge-window">DEFENSE ACTION:</span>
+                    <span>When he stands outside the glass in CAM 05, press <strong>WINDOW SPOTLIGHT [W]</strong>! The intense halogen beam blinds him, forcing his stone statue to retreat!</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Entity 3 -->
+              <div class="entity-guide-card entity-border-mourner">
+                <div class="entity-card-header">
+                  <div class="entity-avatar mourner-avatar">💨</div>
+                  <div class="entity-meta">
+                    <div class="entity-name-row">
+                      <h4 class="entity-title">THE VEILED MOURNER</h4>
+                      <span class="threat-tag threat-medium">THREAT: MODERATE</span>
+                    </div>
+                    <span class="entity-latin">The Duct Crawler • Shrouded Effigy</span>
+                    <span class="entity-route">
+                      <strong>Route:</strong> CAM 02 (Memorial) ➔ CAM 01 ➔ CAM 04 (Air Duct) ➔ <strong>Right Wall Vent</strong>
+                    </span>
+                  </div>
+                </div>
+                <div class="entity-body">
+                  <p class="entity-behavior">
+                    <strong>Behavior:</strong> Crawls low inside the HVAC return duct. Listen for metallic clanging.
+                  </p>
+                  <div class="defense-box">
+                    <span class="defense-badge badge-vent">DEFENSE ACTION:</span>
+                    <span>When she peeks out of the office vent opening, press <strong>VENT LIGHT [R]</strong> and immediately press <strong>SEAL VENT [E]</strong> to slam the steel fire shutter down!</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Power Management -->
+          <div class="manual-section" id="manual-sec-power">
+            <h3 class="manual-section-title">
+              <span class="sec-num">04</span>
+              <span>POWER MANAGEMENT &amp; BATTERY PRESERVATION</span>
+            </h3>
+            <div class="power-tips-box">
+              <div class="power-tip-item">
+                <span class="tip-num">1</span>
+                <div>
+                  <strong>Do not leave doors locked continuously:</strong>
+                  <p>The magnetic door lock drains power at a heavy rate every second it is sealed. Lock only when statues are actively at your doorway threshold!</p>
+                </div>
+              </div>
+              <div class="power-tip-item">
+                <span class="tip-num">2</span>
+                <div>
+                  <strong>Use lights in short pulses:</strong>
+                  <p>Spotlight and downlights consume battery rapidly. Tap keys <strong>[Z]</strong>, <strong>[W]</strong>, and <strong>[R]</strong> briefly to confirm threats rather than leaving them on.</p>
+                </div>
+              </div>
+              <div class="power-tip-item">
+                <span class="tip-num">3</span>
+                <div>
+                  <strong>Flip down CCTV monitor between camera sweeps:</strong>
+                  <p>Lower the digital monitor with <strong>[SPACE]</strong> when not scanning rooms to minimize baseline electrical drain.</p>
+                </div>
+              </div>
+              <div class="power-tip-item">
+                <span class="tip-num">4</span>
+                <div>
+                  <strong>Total Blackout = Instant Vulnerability:</strong>
+                  <p>If battery reaches 0%, all lights and motorized locks immediately disengage, leaving your office exposed in total darkness!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="manual-footer">
+          <button class="primary-btn manual-return-btn" id="btn-close-manual">
+            <span>CLOSE INSTRUCTIONS &amp; RESUME SHIFT</span>
+            <kbd class="btn-kbd-chip">[H / ESC]</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Game Over Screen -->
+    <div class="screen-modal hidden" id="gameover-screen">
+      <h2 class="gameover-title">FACILITY BREACHED</h2>
+      <p class="gameover-reason" id="gameover-reason-val">ANOMALY INFILTRATION</p>
+      <div class="title-divider"></div>
+      <div style="display: flex; gap: 16px; justify-content: center; margin-top: 10px;">
+        <button class="primary-btn" id="btn-retry-game">RELOAD SHIFT</button>
+        <button class="primary-btn" id="btn-gameover-menu" style="background: linear-gradient(180deg, #334155 0%, #1e293b 100%); border-color: #64748b;">TITLE MENU</button>
+      </div>
+    </div>
+
+    <!-- Modal: Victory 06:00:00 AM Screen -->
+    <div class="screen-modal hidden" id="victory-screen">
+      <div class="victory-clock">06:00 AM</div>
+      <h2 class="victory-title">SHIFT COMPLETED</h2>
+      <p class="victory-desc">The parish carillon bells chime for early morning Mass. The marble statues freeze once more on their consecrated pedestals. You survived the night.</p>
+      <div class="title-divider"></div>
+      <div style="display: flex; gap: 16px; justify-content: center; margin-top: 10px;">
+        <button class="primary-btn" id="btn-next-night">PROCEED TO NEXT SHIFT</button>
+        <button class="primary-btn" id="btn-victory-menu" style="background: linear-gradient(180deg, #334155 0%, #1e293b 100%); border-color: #64748b;">TITLE MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Local Three.js with CDN Fallback -->
+  <script src="libs/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+
+  <!-- Game Modules -->
+  <script src="js/audio.js?v=20261013_v6"></script>
+  <script src="js/textures.js?v=20261013_v6"></script>
+  <script src="js/models.js?v=20261013_v6"></script>
+  <script src="js/game.js?v=20261013_v6"></script>
+</body>
+</html>
