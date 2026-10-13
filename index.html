@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
-  <link rel="stylesheet" href="css/style.css?v=20261013_v6">
+  <link rel="stylesheet" href="css/style.css?v=20261013_v8">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
@@ -35,22 +39,9 @@
           <span class="hud-sanctuary-status" id="hud-sanctuary-status-text">FACILITY SYSTEM ACTIVE</span>
         </div>
 
-        <div class="hud-center-actions">
-          <button class="hud-help-btn" id="btn-hud-help" title="View Security Manual & Quick Commands [H]">
-            <span class="help-icon-shield">🛡️</span>
-            <span class="help-btn-title">HOW TO PLAY</span>
-            <kbd class="help-key-chip">[H]</kbd>
-          </button>
-        </div>
-
         <div class="hud-time-container">
           <div class="hud-time-row">
             <div class="hud-time" id="hud-time-val">12:00 AM</div>
-            <div class="hud-speed-ctrl" title="Simulation Speed">
-              <button class="speed-btn active" id="btn-speed-1x" data-speed="1">1x</button>
-              <button class="speed-btn" id="btn-speed-2x" data-speed="2">2x</button>
-              <button class="speed-btn" id="btn-speed-4x" data-speed="4">4x</button>
-            </div>
           </div>
           <div class="hud-night-row">
             <div class="hud-night" id="hud-night-val">NIGHT 1</div>
@@ -154,7 +145,6 @@
         </div>
         <div class="cctv-header-right">
           <div class="cctv-nv-badge" id="cctv-nv-badge"><span class="nv-dot"></span>IR NIGHT VISION [ACTIVE]</div>
-          <div class="cctv-anomaly-badge" id="cctv-anomaly-badge">⚠️ ANOMALY SPOTTED</div>
           <div class="cctv-status-badge">1080p HD FEED  |  ENCRYPTION: SECURE</div>
         </div>
       </div>
@@ -287,10 +277,16 @@
             <button class="night-chip" data-night="5">NIGHT 5</button>
           </div>
 
-          <button class="fnaf-menu-item fnaf-manual-btn" id="btn-menu-manual" title="View Security Manual and Controls [H]">
+          <button class="fnaf-menu-item fnaf-manual-btn" id="btn-menu-manual" title="View Security Manual and Controls">
             <span class="fnaf-arrow">&gt;&gt;</span>
             <span class="fnaf-text">HOW TO PLAY</span>
             <span class="fnaf-guide-badge"><span class="badge-dot"></span>SECURITY PROTOCOLS</span>
+          </button>
+
+          <button class="fnaf-menu-item fnaf-settings-btn" id="btn-menu-settings" title="Configure Controls, Audio & Shift Speed">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">SETTINGS</span>
+            <span class="fnaf-settings-badge"><span class="badge-dot-blue"></span>CONTROLS &amp; AUDIO</span>
           </button>
 
           <button class="fnaf-menu-item" id="btn-menu-fullscreen">
@@ -614,8 +610,204 @@
 
         <div class="manual-footer">
           <button class="primary-btn manual-return-btn" id="btn-close-manual">
-            <span>CLOSE INSTRUCTIONS &amp; RESUME SHIFT</span>
-            <kbd class="btn-kbd-chip">[H / ESC]</kbd>
+            <span>CLOSE INSTRUCTIONS</span>
+            <kbd class="btn-kbd-chip">[ESC]</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Settings & Options (Key Mapping, Sounds, Shift Speed) -->
+    <div class="screen-modal hidden" id="settings-modal">
+      <div class="start-box settings-box">
+        <div class="manual-header">
+          <div class="manual-header-top">
+            <div class="manual-seal-block">
+              <span class="manual-cross-icon">⚙️</span>
+              <div>
+                <span class="title-sub">ST. JUDE CATHOLIC PARISH ARCHIVES</span>
+                <div class="manual-doc-id">SYSTEM CONFIGURATION // FACILITY PREFERENCES</div>
+              </div>
+            </div>
+            <button class="manual-close-x" id="btn-settings-x" title="Close Settings [ESC]">&times;</button>
+          </div>
+
+          <h2 class="manual-main-title">FACILITY CONFIGURATION &amp; SETTINGS</h2>
+          <div class="manual-title-bar">
+            <span class="manual-badge-tag"><span class="badge-dot-blue"></span>PREFERENCES &amp; KEYBINDS</span>
+            <span class="manual-shift-tag">CUSTOM HOTKEYS • AUDIO CONTROLS • SHIFT SPEED</span>
+          </div>
+          <div class="title-divider"></div>
+
+          <!-- Settings Tab Navigation -->
+          <div class="manual-nav-tabs">
+            <button class="settings-nav-tab active" data-tab="tab-keybinds">1. KEY MAPPING</button>
+            <button class="settings-nav-tab" data-tab="tab-audio">2. AUDIO &amp; VOLUME</button>
+            <button class="settings-nav-tab" data-tab="tab-speed">3. SHIFT TIMER SPEED</button>
+          </div>
+        </div>
+
+        <div class="settings-scroll-content">
+          <!-- Tab 1: Key Mapping Controls -->
+          <div class="settings-tab-pane active" id="tab-keybinds">
+            <div class="settings-pane-header">
+              <h3 class="manual-section-title">
+                <span class="sec-num">KEYS</span>
+                <span>CUSTOM HOTKEY REMAPPING</span>
+              </h3>
+              <p class="settings-hint">Click any key button below, then press your desired key on your keyboard to rebind it.</p>
+            </div>
+
+            <div class="keybinds-list">
+              <div class="keybind-row">
+                <div class="keybind-info">
+                  <span class="keybind-name">Lock / Unlock Left Arched Door</span>
+                  <span class="keybind-desc">Engages the magnetic lock on the left corridor door</span>
+                </div>
+                <button class="keybind-slot-btn" data-action="doorToggle" id="keybind-doorToggle">Q</button>
+              </div>
+
+              <div class="keybind-row">
+                <div class="keybind-info">
+                  <span class="keybind-name">Left Door Downlight</span>
+                  <span class="keybind-desc">Flashes the doorway downlight to inspect the threshold</span>
+                </div>
+                <button class="keybind-slot-btn" data-action="doorLight" id="keybind-doorLight">Z</button>
+              </div>
+
+              <div class="keybind-row">
+                <div class="keybind-info">
+                  <span class="keybind-name">Window Halogen Spotlight</span>
+                  <span class="keybind-desc">Blasts the halogen beam into the front cloister hallway to stun statues</span>
+                </div>
+                <button class="keybind-slot-btn" data-action="windowSpot" id="keybind-windowSpot">W</button>
+              </div>
+
+              <div class="keybind-row">
+                <div class="keybind-info">
+                  <span class="keybind-name">Seal / Open HVAC Vent Damper</span>
+                  <span class="keybind-desc">Lowers the motorized steel fire shutter over the right air duct</span>
+                </div>
+                <button class="keybind-slot-btn" data-action="ventToggle" id="keybind-ventToggle">E</button>
+              </div>
+
+              <div class="keybind-row">
+                <div class="keybind-info">
+                  <span class="keybind-name">Vent Inspection Light</span>
+                  <span class="keybind-desc">Illuminates the air duct cavity to spot crawling statues</span>
+                </div>
+                <button class="keybind-slot-btn" data-action="ventLight" id="keybind-ventLight">R</button>
+              </div>
+
+              <div class="keybind-row">
+                <div class="keybind-info">
+                  <span class="keybind-name">Digital CCTV Surveillance Monitor</span>
+                  <span class="keybind-desc">Flips the security surveillance tablet up or down</span>
+                </div>
+                <button class="keybind-slot-btn" data-action="cctvToggle" id="keybind-cctvToggle">SPACE</button>
+              </div>
+
+              <div class="keybind-row">
+                <div class="keybind-info">
+                  <span class="keybind-name">IR Night Vision Mode</span>
+                  <span class="keybind-desc">Toggles infrared phosphor night vision on CCTV feed</span>
+                </div>
+                <button class="keybind-slot-btn" data-action="nightVision" id="keybind-nightVision">L</button>
+              </div>
+            </div>
+
+            <div class="settings-actions-bar">
+              <button class="settings-secondary-btn" id="btn-reset-keybinds">RESET TO DEFAULT HOTKEYS</button>
+            </div>
+          </div>
+
+          <!-- Tab 2: Audio & Sounds -->
+          <div class="settings-tab-pane" id="tab-audio">
+            <div class="settings-pane-header">
+              <h3 class="manual-section-title">
+                <span class="sec-num">AUDIO</span>
+                <span>SOUNDS &amp; VOLUME CONTROLS</span>
+              </h3>
+              <p class="settings-hint">Configure audio output levels for atmospheric organ music, building servos, and jumpscares.</p>
+            </div>
+
+            <div class="audio-controls-list">
+              <div class="audio-slider-row">
+                <div class="audio-label-group">
+                  <span class="audio-slider-title">MASTER VOLUME</span>
+                  <span class="audio-slider-val" id="val-master-vol">85%</span>
+                </div>
+                <input type="range" class="settings-range" id="slider-master-vol" min="0" max="100" value="85">
+              </div>
+
+              <div class="audio-slider-row">
+                <div class="audio-label-group">
+                  <span class="audio-slider-title">SFX &amp; DEFENSES (Doors, Servos, Lights)</span>
+                  <span class="audio-slider-val" id="val-sfx-vol">90%</span>
+                </div>
+                <input type="range" class="settings-range" id="slider-sfx-vol" min="0" max="100" value="90">
+              </div>
+
+              <div class="audio-slider-row">
+                <div class="audio-label-group">
+                  <span class="audio-slider-title">MUSIC &amp; AMBIENCE (Cathedral Organ &amp; Drone)</span>
+                  <span class="audio-slider-val" id="val-music-vol">80%</span>
+                </div>
+                <input type="range" class="settings-range" id="slider-music-vol" min="0" max="100" value="80">
+              </div>
+
+              <div class="audio-toggle-row">
+                <label class="audio-toggle-label">
+                  <input type="checkbox" id="chk-mute-sound" class="settings-checkbox">
+                  <span>MUTE ALL AUDIO</span>
+                </label>
+                <button class="settings-test-audio-btn" id="btn-test-sound">PLAY TEST AUDIO</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Shift Timer Speed -->
+          <div class="settings-tab-pane" id="tab-speed">
+            <div class="settings-pane-header">
+              <h3 class="manual-section-title">
+                <span class="sec-num">TIMER</span>
+                <span>NIGHT SHIFT SIMULATION SPEED</span>
+              </h3>
+              <p class="settings-hint">Select your preferred night shift pace. The clock speed is configured here in the lobby to keep the in-game HUD clean and immersive.</p>
+            </div>
+
+            <div class="speed-options-grid">
+              <div class="speed-option-card active" data-speed="1">
+                <div class="speed-card-header">
+                  <span class="speed-tag">1x</span>
+                  <span class="speed-title">STANDARD REAL-TIME</span>
+                </div>
+                <p class="speed-desc">Authentic 6-minute shift (approx. 60 seconds per in-game hour). The intended survival experience with full strategic tension.</p>
+              </div>
+
+              <div class="speed-option-card" data-speed="2">
+                <div class="speed-card-header">
+                  <span class="speed-tag">2x</span>
+                  <span class="speed-title">FAST SHIFT</span>
+                </div>
+                <p class="speed-desc">Accelerated 3-minute shift (approx. 30 seconds per hour). Fast-paced action with rapidly moving stone statues.</p>
+              </div>
+
+              <div class="speed-option-card" data-speed="4">
+                <div class="speed-card-header">
+                  <span class="speed-tag">4x</span>
+                  <span class="speed-title">TURBO SPEED</span>
+                </div>
+                <p class="speed-desc">Hyper-speed 90-second shift (approx. 15 seconds per hour). Extreme test of reflexes and lightning-quick door reactions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="manual-footer">
+          <button class="primary-btn settings-save-btn" id="btn-close-settings">
+            <span>SAVE &amp; CLOSE SETTINGS</span>
+            <kbd class="btn-kbd-chip">[ESC]</kbd>
           </button>
         </div>
       </div>
@@ -654,9 +846,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261013_v6"></script>
-  <script src="js/textures.js?v=20261013_v6"></script>
-  <script src="js/models.js?v=20261013_v6"></script>
-  <script src="js/game.js?v=20261013_v6"></script>
+  <script src="js/audio.js?v=20261013_v8"></script>
+  <script src="js/textures.js?v=20261013_v8"></script>
+  <script src="js/models.js?v=20261013_v8"></script>
+  <script src="js/game.js?v=20261013_v8"></script>
 </body>
 </html>

@@ -17,6 +17,10 @@ class SoundEngine {
     this.heartbeatTimer = null;
     this.flashlightHumGain = null;
     this.flashlightHumSources = [];
+    this.masterVolume = 0.85;
+    this.sfxVolume = 0.90;
+    this.musicVolume = 0.80;
+    this.isMuted = false;
   }
 
   init() {
@@ -26,7 +30,8 @@ class SoundEngine {
       this.ctx = new AudioCtx();
       
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+      const initialVol = this.isMuted ? 0.0 : this.masterVolume;
+      this.masterGain.gain.setValueAtTime(initialVol, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
 
       this.isInitialized = true;
@@ -41,6 +46,33 @@ class SoundEngine {
   resume() {
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
+    }
+  }
+
+  setMasterVolume(val) {
+    this.masterVolume = THREE ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
+    if (this.masterGain && this.ctx) {
+      const target = this.isMuted ? 0 : this.masterVolume;
+      this.masterGain.gain.setValueAtTime(target, this.ctx.currentTime);
+    }
+  }
+
+  setSFXVolume(val) {
+    this.sfxVolume = THREE ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
+  }
+
+  setMusicVolume(val) {
+    this.musicVolume = THREE ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
+    if (this.menuGain && this.ctx) {
+      this.menuGain.gain.setValueAtTime(0.32 * this.musicVolume, this.ctx.currentTime);
+    }
+  }
+
+  setMuted(muted) {
+    this.isMuted = !!muted;
+    if (this.masterGain && this.ctx) {
+      const target = this.isMuted ? 0 : this.masterVolume;
+      this.masterGain.gain.setValueAtTime(target, this.ctx.currentTime);
     }
   }
 
