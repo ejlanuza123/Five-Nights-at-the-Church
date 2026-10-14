@@ -626,17 +626,22 @@ class GameEngine {
     this.setupMenuStaticCanvas();
     this.setupMenuStatueTwitch();
 
-    // Start menu ambient drone upon first interaction with page
+    // Start menu ambient drone and background music upon interaction with page
     const tryStartMenuSound = () => {
+      window.Sound.init();
+      window.Sound.resume();
+      window.Sound.startBGM();
       if (!this.isRunning && !this._menuAudioStarted) {
         this._menuAudioStarted = true;
-        window.Sound.init();
-        window.Sound.resume();
         window.Sound.startMenuDrone();
       }
     };
+    // Attempt playback immediately if permitted
+    window.Sound.startBGM();
     window.addEventListener('click', tryStartMenuSound, { once: false });
     window.addEventListener('keydown', tryStartMenuSound, { once: false });
+    window.addEventListener('pointerdown', tryStartMenuSound, { once: false });
+    window.addEventListener('touchstart', tryStartMenuSound, { once: false });
     window.addEventListener('mousemove', tryStartMenuSound, { once: true });
 
     // Menu option buttons
@@ -816,6 +821,7 @@ class GameEngine {
     window.Sound.init();
     window.Sound.resume();
     window.Sound.stopMenuDrone();
+    window.Sound.startBGM();
     window.Sound.playNightTransitionChime();
 
     if (menu) menu.classList.add('hidden');
@@ -1070,6 +1076,7 @@ class GameEngine {
     window.Sound.stopAmbientOrgan();
     window.Sound.stopHeartbeat();
     window.Sound.startMenuDrone();
+    window.Sound.startBGM();
 
     document.getElementById('gameover-screen')?.classList.add('hidden');
     document.getElementById('victory-screen')?.classList.add('hidden');
@@ -1088,6 +1095,7 @@ class GameEngine {
   startGame() {
     window.Sound.init();
     window.Sound.resume();
+    window.Sound.startBGM();
     window.Sound.startAmbientOrgan();
     window.Sound.playChurchBell(1.0, 1);
 
@@ -1113,6 +1121,7 @@ class GameEngine {
 
   restartGame() {
     document.getElementById('gameover-screen')?.classList.add('hidden');
+    window.Sound.startBGM();
     this.startNightWithTransition(this.currentNight);
   }
 
@@ -1121,6 +1130,7 @@ class GameEngine {
       this.currentNight++;
     }
     document.getElementById('victory-screen')?.classList.add('hidden');
+    window.Sound.startBGM();
     this.startNightWithTransition(this.currentNight);
   }
 
@@ -1564,6 +1574,7 @@ class GameEngine {
   triggerVictory() {
     this.victory = true;
     this.isRunning = false;
+    window.Sound.stopBGM(true);
     window.Sound.playVictoryFanfare();
 
     const vicScreen = document.getElementById('victory-screen');
@@ -1699,6 +1710,7 @@ class GameEngine {
     }
 
     window.Sound.playJumpscare();
+    window.Sound.pauseBGM();
 
     const flash = document.getElementById('jumpscare-flash');
     if (flash) flash.classList.add('active');

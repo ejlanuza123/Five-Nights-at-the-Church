@@ -20,7 +20,87 @@ class SoundEngine {
     this.masterVolume = 0.85;
     this.sfxVolume = 0.90;
     this.musicVolume = 0.80;
-    this.isMuted = false;
+
+    // Background Chant & Church Ambiance Music
+    this.bgmAudio = null;
+    this.bgmBaseVolume = 0.65;
+    this.bgmPlaying = false;
+    this.initBGM();
+  }
+
+  initBGM() {
+    try {
+      if (!this.bgmAudio) {
+        this.bgmAudio = new Audio('assets/audio/church_theme_ambiance.mp3');
+        this.bgmAudio.loop = true;
+        this.bgmAudio.preload = 'auto';
+        this.updateBGMVolume();
+      }
+    } catch (e) {
+      console.warn('Could not initialize BGM audio element:', e);
+    }
+  }
+
+  updateBGMVolume() {
+    if (!this.bgmAudio) return;
+    try {
+      const vol = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume * this.bgmBaseVolume));
+      this.bgmAudio.volume = vol;
+    } catch (e) {}
+  }
+
+  startBGM() {
+    this.initBGM();
+    if (!this.bgmAudio) return;
+    this.updateBGMVolume();
+    if (this.bgmAudio.paused) {
+      const playPromise = this.bgmAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          this.bgmPlaying = true;
+        }).catch((err) => {
+          // Autoplay will be unlocked on user gesture
+          this.bgmPlaying = false;
+        });
+      }
+    }
+  }
+
+  stopBGM(fade = true) {
+    if (!this.bgmAudio || this.bgmAudio.paused) return;
+    if (fade) {
+      const startVol = this.bgmAudio.volume;
+      const startTime = performance.now();
+      const fadeDuration = 700;
+      const fadeStep = () => {
+        const elapsed = performance.now() - startTime;
+        if (elapsed < fadeDuration && !this.bgmAudio.paused) {
+          this.bgmAudio.volume = Math.max(0, startVol * (1 - elapsed / fadeDuration));
+          requestAnimationFrame(fadeStep);
+        } else {
+          this.bgmAudio.pause();
+          this.updateBGMVolume();
+          this.bgmPlaying = false;
+        }
+      };
+      requestAnimationFrame(fadeStep);
+    } else {
+      this.bgmAudio.pause();
+      this.bgmPlaying = false;
+    }
+  }
+
+  pauseBGM() {
+    if (this.bgmAudio && !this.bgmAudio.paused) {
+      this.bgmAudio.pause();
+      this.bgmPlaying = false;
+    }
+  }
+
+  resumeBGM() {
+    if (this.bgmAudio && this.bgmAudio.paused) {
+      this.startBGM();
+    }
   }
 
   init() {
@@ -50,22 +130,24 @@ class SoundEngine {
   }
 
   setMasterVolume(val) {
-    this.masterVolume = THREE ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
+    this.masterVolume = (typeof THREE !== 'undefined' && THREE.MathUtils) ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
     if (this.masterGain && this.ctx) {
       const target = this.isMuted ? 0 : this.masterVolume;
       this.masterGain.gain.setValueAtTime(target, this.ctx.currentTime);
     }
+    this.updateBGMVolume();
   }
 
   setSFXVolume(val) {
-    this.sfxVolume = THREE ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
+    this.sfxVolume = (typeof THREE !== 'undefined' && THREE.MathUtils) ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
   }
 
   setMusicVolume(val) {
-    this.musicVolume = THREE ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
+    this.musicVolume = (typeof THREE !== 'undefined' && THREE.MathUtils) ? THREE.MathUtils.clamp(val, 0, 1) : Math.max(0, Math.min(1, val));
     if (this.menuGain && this.ctx) {
       this.menuGain.gain.setValueAtTime(0.32 * this.musicVolume, this.ctx.currentTime);
     }
+    this.updateBGMVolume();
   }
 
   setMuted(muted) {
@@ -74,6 +156,7 @@ class SoundEngine {
       const target = this.isMuted ? 0 : this.masterVolume;
       this.masterGain.gain.setValueAtTime(target, this.ctx.currentTime);
     }
+    this.updateBGMVolume();
   }
 
   // --- FNAF CLASSIC TITLE MENU EERIE DRONE ---
