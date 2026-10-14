@@ -101,15 +101,96 @@ class GameEngine {
   init() {
     this.setupThreeJS();
     this.setupEventListeners();
-    this.preloadCCTVFeeds();
     this.setupStaticCanvas();
     this.setupFnafMenu();
     this.setupSettingsModal();
     this.updateNightDifficulty();
+    this.initPreloader();
     this.renderLoop();
   }
 
-  preloadCCTVFeeds() {
+  initPreloader() {
+    const preloader = document.getElementById('game-preloader');
+    const barInner = document.getElementById('preloader-bar-inner');
+    const statusText = document.getElementById('preloader-status-text');
+    const percentBadge = document.getElementById('preloader-percent-badge');
+    const btnLaunch = document.getElementById('preloader-launch-btn');
+
+    if (!preloader) {
+      this.preloadCCTVFeeds();
+      return;
+    }
+
+    let isDismissed = false;
+
+    const dismissPreloader = () => {
+      if (isDismissed) return;
+      isDismissed = true;
+      preloader.classList.add('fade-out');
+      window.Sound.init();
+      window.Sound.resume();
+      window.Sound.startBGM();
+      if (!this.isRunning && !this._menuAudioStarted) {
+        this._menuAudioStarted = true;
+        window.Sound.startMenuDrone();
+      }
+      setTimeout(() => {
+        preloader.style.display = 'none';
+      }, 850);
+    };
+
+    btnLaunch?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dismissPreloader();
+    });
+
+    const onUserKeyOrClick = (e) => {
+      if (btnLaunch && !btnLaunch.classList.contains('hidden') && !isDismissed) {
+        dismissPreloader();
+      }
+    };
+    window.addEventListener('keydown', onUserKeyOrClick);
+    preloader.addEventListener('click', onUserKeyOrClick);
+
+    // Track both audio download and image caching
+    let audioRatio = 0.0;
+    let imagesRatio = 0.0;
+    let audioStatus = 'Connecting to sacred audio server...';
+
+    const updateUI = () => {
+      // 65% weight for 5MB audio, 35% weight for textures
+      const totalRatio = Math.min(1.0, (audioRatio * 0.65) + (imagesRatio * 0.35));
+      const percent = Math.floor(totalRatio * 100);
+
+      if (barInner) barInner.style.width = `${percent}%`;
+      if (percentBadge) percentBadge.textContent = `${percent}%`;
+
+      if (totalRatio < 1.0) {
+        if (statusText) statusText.textContent = audioStatus;
+      } else {
+        if (barInner) barInner.style.width = '100%';
+        if (percentBadge) percentBadge.textContent = '100%';
+        if (statusText) statusText.textContent = 'ALL RESOURCES 100% CACHED // ZERO BUFFERING ARMED';
+        if (btnLaunch) {
+          btnLaunch.classList.remove('hidden');
+        }
+      }
+    };
+
+    // 1. Preload Audio with live progress reporting
+    const audioPromise = window.Sound.preloadBGM((ratio, text) => {
+      audioRatio = ratio;
+      audioStatus = text;
+      updateUI();
+    }).then(() => {
+      audioRatio = 1.0;
+      updateUI();
+    }).catch(() => {
+      audioRatio = 1.0;
+      updateUI();
+    });
+
+    // 2. Preload CCTV Feeds & Textures
     const feeds = [
       'assets/cctv/church_cam_normal.png',
       'assets/cctv/church_cam_anomaly.png',
@@ -140,11 +221,34 @@ class GameEngine {
       'assets/office/window_hallway_mary.jpg'
     ];
     this._preloadedImages = {};
+    let loadedCount = 0;
+    const totalImages = feeds.length;
+
     feeds.forEach(src => {
       const img = new Image();
+      img.onload = () => {
+        loadedCount++;
+        imagesRatio = loadedCount / totalImages;
+        updateUI();
+      };
+      img.onerror = () => {
+        loadedCount++;
+        imagesRatio = loadedCount / totalImages;
+        updateUI();
+      };
       img.src = src;
       this._preloadedImages[src] = img;
     });
+
+    // In case assets load instantly from cache, ensure 100% threshold check
+    Promise.all([audioPromise]).then(() => {
+      audioRatio = 1.0;
+      updateUI();
+    });
+  }
+
+  preloadCCTVFeeds() {
+    // Retained for backwards-compatibility
   }
 
   setupStaticCanvas() {
@@ -628,6 +732,10 @@ class GameEngine {
 
     // Start menu ambient drone and background music upon interaction with page
     const tryStartMenuSound = () => {
+      const preloader = document.getElementById('game-preloader');
+      if (preloader && preloader.style.display !== 'none' && !preloader.classList.contains('fade-out')) {
+        return; // Wait until user clicks "ENTER SECURITY TERMINAL" on preloader
+      }
       window.Sound.init();
       window.Sound.resume();
       window.Sound.startBGM();
@@ -636,8 +744,6 @@ class GameEngine {
         window.Sound.startMenuDrone();
       }
     };
-    // Attempt playback immediately if permitted
-    window.Sound.startBGM();
     window.addEventListener('click', tryStartMenuSound, { once: false });
     window.addEventListener('keydown', tryStartMenuSound, { once: false });
     window.addEventListener('pointerdown', tryStartMenuSound, { once: false });

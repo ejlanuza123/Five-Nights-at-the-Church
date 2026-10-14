@@ -23,6 +23,8 @@ class SoundEngine {
 
     // Background Chant & Church Ambiance Music
     this.bgmAudio = null;
+    this.bgmBlobUrl = null;
+    this.bgmLoaded = false;
     this.bgmBaseVolume = 0.65;
     this.bgmPlaying = false;
     this.initBGM();
@@ -31,13 +33,101 @@ class SoundEngine {
   initBGM() {
     try {
       if (!this.bgmAudio) {
-        this.bgmAudio = new Audio('assets/audio/church_theme_ambiance.mp3');
+        this.bgmAudio = new Audio(this.bgmBlobUrl || 'assets/audio/church_theme_ambiance.mp3');
         this.bgmAudio.loop = true;
         this.bgmAudio.preload = 'auto';
         this.updateBGMVolume();
       }
     } catch (e) {
       console.warn('Could not initialize BGM audio element:', e);
+    }
+  }
+
+  setupAudioElement(src) {
+    if (!this.bgmAudio) {
+      this.bgmAudio = new Audio();
+      this.bgmAudio.loop = true;
+      this.bgmAudio.preload = 'auto';
+    }
+    this.bgmAudio.src = src;
+    this.updateBGMVolume();
+  }
+
+  async preloadBGM(onProgress = null) {
+    if (this.bgmLoaded && this.bgmBlobUrl) {
+      if (onProgress) onProgress(1.0, 'Ambiance audio 100% cached');
+      return true;
+    }
+
+    const candidateUrls = [
+      'assets/audio/church_theme_ambiance.mp3',
+      'assets/audio/Creepy Church Choir Music.mp3',
+      'assets/audio/Creepy%20Church%20Choir%20Music.mp3'
+    ];
+
+    let response = null;
+    let chosenUrl = candidateUrls[0];
+    for (const url of candidateUrls) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          response = res;
+          chosenUrl = url;
+          break;
+        }
+      } catch (e) {}
+    }
+
+    if (!response) {
+      console.warn('[SoundEngine] Could not fetch audio track via network, falling back to direct URL');
+      this.setupAudioElement(candidateUrls[0]);
+      this.bgmLoaded = true;
+      if (onProgress) onProgress(1.0, 'Ambiance Audio Ready');
+      return false;
+    }
+
+    try {
+      const contentLengthHeader = response.headers.get('content-length');
+      const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 5121389;
+
+      if (!response.body) {
+        const blob = await response.blob();
+        this.bgmBlobUrl = URL.createObjectURL(blob);
+        this.setupAudioElement(this.bgmBlobUrl);
+        this.bgmLoaded = true;
+        if (onProgress) onProgress(1.0, 'Ambiance audio 100% cached');
+        return true;
+      }
+
+      const reader = response.body.getReader();
+      let receivedBytes = 0;
+      const chunks = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        receivedBytes += value.length;
+        const progressRatio = Math.min(1.0, receivedBytes / totalBytes);
+        if (onProgress) {
+          const mbReceived = (receivedBytes / (1024 * 1024)).toFixed(1);
+          const mbTotal = (totalBytes / (1024 * 1024)).toFixed(1);
+          onProgress(progressRatio, `Preloading Sacred Chants Audio (${mbReceived} MB / ${mbTotal} MB)`);
+        }
+      }
+
+      const blob = new Blob(chunks, { type: 'audio/mpeg' });
+      this.bgmBlobUrl = URL.createObjectURL(blob);
+      this.setupAudioElement(this.bgmBlobUrl);
+      this.bgmLoaded = true;
+      if (onProgress) onProgress(1.0, 'Sacred Chants 100% Loaded in Memory');
+      return true;
+    } catch (err) {
+      console.warn('[SoundEngine] Fetch audio preload error, fallback to direct streaming:', err);
+      this.setupAudioElement(chosenUrl);
+      this.bgmLoaded = true;
+      if (onProgress) onProgress(1.0, 'Ambiance Audio Ready');
+      return false;
     }
   }
 

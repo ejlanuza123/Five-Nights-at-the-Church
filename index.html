@@ -227,6 +227,39 @@
       <button class="cctv-flip-down" id="cctv-flip-down-btn">MINIMIZE FEED [SPACEBAR]</button>
     </div>
 
+    <!-- Fullscreen 100% Resource & Audio Preloader (Guarantees Zero In-Game Buffering) -->
+    <div id="game-preloader">
+      <div class="preloader-scanlines"></div>
+      <div class="preloader-vignette"></div>
+      <div class="preloader-container">
+        <div class="preloader-cross">☩</div>
+        <div class="preloader-parish">ST. JUDE CATHOLIC PARISH ARCHIVES</div>
+        <h1 class="preloader-title">FACILITY SURVEILLANCE PROTOCOL</h1>
+        <div class="preloader-doc-tag">AUTHENTICATING LOCAL STORAGE &amp; PRELOADING MEDIA (100% NO BUFFERING)</div>
+
+        <div class="preloader-progress-box">
+          <div class="preloader-bar-outer">
+            <div class="preloader-bar-inner" id="preloader-bar-inner"></div>
+          </div>
+          <div class="preloader-status-row">
+            <span class="preloader-status-text" id="preloader-status-text">INITIALIZING ASSET REPOSITORIES...</span>
+            <span class="preloader-percent-badge" id="preloader-percent-badge">0%</span>
+          </div>
+        </div>
+
+        <button class="preloader-launch-btn hidden" id="preloader-launch-btn" title="All assets loaded 100%. Click to enter.">
+          <span class="launch-icon">▶</span>
+          <span class="launch-text">ENTER SECURITY TERMINAL</span>
+          <kbd class="launch-kbd">[CLICK OR PRESS ANY KEY]</kbd>
+        </button>
+
+        <div class="preloader-security-note">
+          <span>● AUDIO BUFFER: IN-MEMORY RAM STREAMING ACTIVE</span>
+          <span>● SYSTEM INTEGRITY: 100% SECURE</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Classic FNAF Style Main Title Menu -->
     <div id="fnaf-main-menu">
       <!-- Animated CRT TV Static Noise Canvas -->
@@ -812,9 +845,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261014_v11"></script>
-  <script src="js/textures.js?v=20261014_v11"></script>
-  <script src="js/models.js?v=20261014_v11"></script>
-  <script src="js/game.js?v=20261014_v11"></script>
+  <script src="js/audio.js?v=20261014_v12"></script>
+  <script src="js/textures.js?v=20261014_v12"></script>
+  <script src="js/models.js?v=20261014_v12"></script>
+  <script src="js/game.js?v=20261014_v12"></script>
 </body>
 </html>
