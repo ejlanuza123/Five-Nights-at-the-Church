@@ -152,25 +152,32 @@ class GameEngine {
     window.addEventListener('keydown', onUserKeyOrClick);
     preloader.addEventListener('click', onUserKeyOrClick);
 
-    // Track both audio download and image caching
+    // Track audio, jumpscare videos, and image caching
     let audioRatio = 0.0;
+    let videoRatio = 0.0;
     let imagesRatio = 0.0;
-    let audioStatus = 'Connecting to sacred audio server...';
+    let audioStatus = 'PREPARING SACRED AUDIO ENGINE...';
 
     const updateUI = () => {
-      // 65% weight for 5MB audio, 35% weight for textures
-      const totalRatio = Math.min(1.0, (audioRatio * 0.65) + (imagesRatio * 0.35));
+      // 40% audio, 40% video jumpscares, 20% textures
+      const totalRatio = Math.min(1.0, (audioRatio * 0.40) + (videoRatio * 0.40) + (imagesRatio * 0.20));
       const percent = Math.floor(totalRatio * 100);
 
       if (barInner) barInner.style.width = `${percent}%`;
       if (percentBadge) percentBadge.textContent = `${percent}%`;
 
       if (totalRatio < 1.0) {
-        if (statusText) statusText.textContent = audioStatus;
+        if (statusText) {
+          if (videoRatio < 1.0 && audioRatio >= 1.0) {
+            statusText.textContent = 'CACHING HIGH-DEF JUMPSCARE SEQUENCES...';
+          } else {
+            statusText.textContent = audioStatus;
+          }
+        }
       } else {
         if (barInner) barInner.style.width = '100%';
         if (percentBadge) percentBadge.textContent = '100%';
-        if (statusText) statusText.textContent = 'ALL RESOURCES 100% CACHED // ZERO BUFFERING ARMED';
+        if (statusText) statusText.textContent = 'ALL SACRED ARCHIVES 100% SYNCHRONIZED — READY';
         if (btnLaunch) {
           btnLaunch.classList.remove('hidden');
         }
@@ -190,7 +197,37 @@ class GameEngine {
       updateUI();
     });
 
-    // 2. Preload CCTV Feeds & Textures
+    // 2. Preload Jumpscare MP4 Videos into in-memory Blobs for zero latency
+    const jumpscareVideos = [
+      { key: 'weepingAngel', src: 'assets/jumpscares/angel_jumpscare.mp4' },
+      { key: 'haloedSaint', src: 'assets/jumpscares/michael_jumpscare.mp4' },
+      { key: 'veiledMourner', src: 'assets/jumpscares/mary_jumpscare.mp4' }
+    ];
+    this.jumpscareUrls = {};
+    let loadedVideos = 0;
+
+    const videoPromises = jumpscareVideos.map(item => {
+      return fetch(item.src)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.blob();
+        })
+        .then(blob => {
+          this.jumpscareUrls[item.key] = URL.createObjectURL(blob);
+          loadedVideos++;
+          videoRatio = loadedVideos / jumpscareVideos.length;
+          updateUI();
+        })
+        .catch(err => {
+          console.warn(`Fallback direct url for jumpscare ${item.key}:`, err);
+          this.jumpscareUrls[item.key] = item.src;
+          loadedVideos++;
+          videoRatio = loadedVideos / jumpscareVideos.length;
+          updateUI();
+        });
+    });
+
+    // 3. Preload CCTV Feeds & Textures
     const feeds = [
       'assets/cctv/church_cam_normal.png',
       'assets/cctv/church_cam_anomaly.png',
@@ -243,8 +280,9 @@ class GameEngine {
     });
 
     // In case assets load instantly from cache, ensure 100% threshold check
-    Promise.all([audioPromise]).then(() => {
+    Promise.all([audioPromise, ...videoPromises]).then(() => {
       audioRatio = 1.0;
+      videoRatio = 1.0;
       updateUI();
     });
   }
@@ -1205,6 +1243,16 @@ class GameEngine {
     document.getElementById('settings-modal')?.classList.add('hidden');
     document.getElementById('options-modal')?.classList.add('hidden');
 
+    const videoContainer = document.getElementById('jumpscare-video-container');
+    if (videoContainer) videoContainer.classList.add('hidden');
+    const videoEl = document.getElementById('jumpscare-video');
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.currentTime = 0;
+    }
+    const hud = document.getElementById('hud-overlay');
+    if (hud) hud.style.display = '';
+
     const menu = document.getElementById('fnaf-main-menu');
     if (menu) menu.classList.remove('hidden');
 
@@ -1226,6 +1274,16 @@ class GameEngine {
     document.getElementById('options-modal')?.classList.add('hidden');
     document.getElementById('gameover-screen')?.classList.add('hidden');
     document.getElementById('victory-screen')?.classList.add('hidden');
+
+    const videoContainer = document.getElementById('jumpscare-video-container');
+    if (videoContainer) videoContainer.classList.add('hidden');
+    const videoEl = document.getElementById('jumpscare-video');
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.currentTime = 0;
+    }
+    const hud = document.getElementById('hud-overlay');
+    if (hud) hud.style.display = '';
 
     this.isRunning = true;
     this.gameOver = false;
@@ -1817,25 +1875,34 @@ class GameEngine {
     }
   }
 
-  // --- 3D JUMPSCARE SEQUENCE ---
+  // --- CINEMATIC VIDEO & 3D JUMPSCARE SEQUENCE ---
   triggerJumpscare(entityName, reason = 'ANOMALY INFILTRATION') {
     if (this.gameOver) return;
     this.gameOver = true;
     this.jumpscareActive = true;
     this.jumpscareTimer = 0;
 
+    // Immediately shut down CCTV monitor overlay if active
     if (this.isCCTVOpen) {
       this.isCCTVOpen = false;
       document.getElementById('cctv-overlay')?.classList.remove('active');
     }
 
-    window.Sound.playJumpscare();
-    window.Sound.pauseBGM();
+    // Hide HUD overlay during jumpscare for raw cinematic terror
+    const hud = document.getElementById('hud-overlay');
+    if (hud) hud.style.display = 'none';
 
+    // Pause background music & halt ambient organ/heartbeat
+    window.Sound.pauseBGM();
+    window.Sound.stopHeartbeat();
+    window.Sound.playJumpscare();
+
+    // Red horror strobe flash
     const flash = document.getElementById('jumpscare-flash');
     if (flash) flash.classList.add('active');
 
-    const statue = this.world.statues[entityName];
+    // 3D Statue fallback in case video is unsupported
+    const statue = this.world?.statues ? this.world.statues[entityName] : null;
     if (statue) {
       statue.visible = true;
       statue.position.set(0, 1.35, -0.65);
@@ -1843,13 +1910,69 @@ class GameEngine {
       this.jumpscareEntity = statue;
     }
 
-    setTimeout(() => {
+    // Resolve MP4 video source for the attacking entity
+    const videoMap = {
+      weepingAngel: 'assets/jumpscares/angel_jumpscare.mp4',
+      haloedSaint: 'assets/jumpscares/michael_jumpscare.mp4',
+      veiledMourner: 'assets/jumpscares/mary_jumpscare.mp4'
+    };
+    const videoSrc = (this.jumpscareUrls && this.jumpscareUrls[entityName])
+      ? this.jumpscareUrls[entityName]
+      : (videoMap[entityName] || videoMap.haloedSaint);
+
+    const videoContainer = document.getElementById('jumpscare-video-container');
+    const videoEl = document.getElementById('jumpscare-video');
+
+    let isFinished = false;
+    const finishJumpscare = () => {
+      if (isFinished) return;
+      isFinished = true;
+      if (videoContainer) videoContainer.classList.add('hidden');
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.onended = null;
+        videoEl.onerror = null;
+      }
       this.jumpscareActive = false;
       const goScreen = document.getElementById('gameover-screen');
       const goReason = document.getElementById('gameover-reason-val');
       if (goReason) goReason.textContent = reason;
       if (goScreen) goScreen.classList.remove('hidden');
-    }, 1300);
+    };
+
+    if (videoContainer && videoEl && videoSrc) {
+      videoEl.src = videoSrc;
+      videoEl.currentTime = 0;
+
+      // Adjust volume to match SFX & Master sliders
+      const sfxVol = (window.Sound && window.Sound.sfxVolume !== undefined) ? window.Sound.sfxVolume : 0.8;
+      const masterVol = (window.Sound && window.Sound.masterVolume !== undefined) ? window.Sound.masterVolume : 0.8;
+      videoEl.volume = Math.max(0, Math.min(1, sfxVol * masterVol));
+
+      videoContainer.classList.remove('hidden');
+
+      const playPromise = videoEl.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('Video play interrupted, fallback to muted or timer:', err);
+          videoEl.muted = true;
+          videoEl.play().catch(() => {});
+        });
+      }
+
+      videoEl.onended = () => {
+        finishJumpscare();
+      };
+
+      videoEl.onerror = () => {
+        finishJumpscare();
+      };
+
+      // Fallback timer matching video duration (~3.2s)
+      setTimeout(finishJumpscare, 3400);
+    } else {
+      setTimeout(finishJumpscare, 1300);
+    }
   }
 
   // --- RENDER & ANIMATION LOOP ---
