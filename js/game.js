@@ -216,7 +216,9 @@ class GameEngine {
       'assets/entities/mary_cutout.png',
       'assets/entities/mourner_vent_cutout.png',
       'assets/office/window_hallway_empty.jpg',
+      'assets/office/window_hallway_angel_far.jpg',
       'assets/office/window_hallway_angel.jpg',
+      'assets/office/window_hallway_saint_far.jpg',
       'assets/office/window_hallway_saint.jpg',
       'assets/office/window_hallway_mary.jpg'
     ];
@@ -308,6 +310,10 @@ class GameEngine {
     const texLoader = new THREE.TextureLoader();
     this.windowTextures = {
       empty: texLoader.load('assets/office/window_hallway_empty.jpg'),
+      angel_far: texLoader.load('assets/office/window_hallway_angel_far.jpg'),
+      angel_close: texLoader.load('assets/office/window_hallway_angel.jpg'),
+      saint_far: texLoader.load('assets/office/window_hallway_saint_far.jpg'),
+      saint_close: texLoader.load('assets/office/window_hallway_saint.jpg'),
       angel: texLoader.load('assets/office/window_hallway_angel.jpg'),
       saint: texLoader.load('assets/office/window_hallway_saint.jpg'),
       mary: texLoader.load('assets/office/window_hallway_mary.jpg')
@@ -448,14 +454,22 @@ class GameEngine {
     if (!this.world || !this.world.nodes || !this.world.nodes.windowBackdropMat || !this.windowTextures) return;
 
     const angelLoc = this.aiConfig.weepingAngel.location;
+    const angelStage = this.aiConfig.weepingAngel.stage;
     const saintLoc = this.aiConfig.haloedSaint.location;
+    const saintStage = this.aiConfig.haloedSaint.stage;
     const mournerLoc = this.aiConfig.veiledMourner.location;
 
     let targetTex = this.windowTextures.empty;
-    if (angelLoc === 'CAM_05') {
-      targetTex = this.windowTextures.angel;
-    } else if (saintLoc === 'CAM_05') {
-      targetTex = this.windowTextures.saint;
+    // Multi-stage Cloister Hallway Distance Progression:
+    // Priority: Stage 2 (Directly outside window in bright spotlight) > Stage 1 (Distant corridor silhouette)
+    if (angelLoc === 'CAM_05' && angelStage === 2) {
+      targetTex = this.windowTextures.angel_close;
+    } else if (saintLoc === 'CAM_05' && saintStage === 2) {
+      targetTex = this.windowTextures.saint_close;
+    } else if (angelLoc === 'CAM_05' && angelStage === 1) {
+      targetTex = this.windowTextures.angel_far;
+    } else if (saintLoc === 'CAM_05' && saintStage === 1) {
+      targetTex = this.windowTextures.saint_far;
     } else if (mournerLoc === 'CAM_05') {
       targetTex = this.windowTextures.mary;
     }
