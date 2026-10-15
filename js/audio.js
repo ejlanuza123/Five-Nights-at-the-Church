@@ -1268,6 +1268,7 @@ class SoundEngine {
 
     this.isCassettePlaying = true;
     this.activeCassetteNight = night;
+    this._cassetteEndCallback = onEndCallback;
 
     // 1. Heavy physical tape deck engagement CLACK
     this.playTapeDeckClick(true);
@@ -1281,7 +1282,6 @@ class SoundEngine {
     const speakNextLine = () => {
       if (!this.isCassettePlaying || lineIdx >= script.length) {
         this.stopCassetteTape();
-        if (onEndCallback) onEndCallback();
         return;
       }
 
@@ -1292,30 +1292,42 @@ class SoundEngine {
         onSubtitleCallback(phrase);
       }
 
+      let advanced = false;
+      const advanceLine = () => {
+        if (advanced) return;
+        advanced = true;
+        if (this._cassetteLineTimer) {
+          clearTimeout(this._cassetteLineTimer);
+          this._cassetteLineTimer = null;
+        }
+        if (this.isCassettePlaying) {
+          this._cassetteLineTimer = setTimeout(speakNextLine, 650);
+        }
+      };
+
+      // Watchdog fallback timer (in case speech synthesis is blocked, muted, or stalls)
+      const fallbackMs = Math.max(3200, phrase.length * 85);
+      this._cassetteLineTimer = setTimeout(advanceLine, fallbackMs);
+
       if ('speechSynthesis' in window && !this.isMuted) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(phrase);
-        utter.rate = 0.88;
-        utter.pitch = 0.82;
-        utter.volume = Math.min(1.0, this.masterVolume * this.sfxVolume * 0.95);
+        try {
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(phrase);
+          utter.rate = 0.88;
+          utter.pitch = 0.82;
+          utter.volume = Math.min(1.0, this.masterVolume * this.sfxVolume * 0.95);
 
-        // Pick deep male or natural voice if available
-        const voices = window.speechSynthesis.getVoices();
-        const priestlyVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('George') || v.name.includes('Natural')));
-        if (priestlyVoice) utter.voice = priestlyVoice;
+          // Pick deep male or natural voice if available
+          const voices = window.speechSynthesis.getVoices();
+          const priestlyVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('George') || v.name.includes('Natural')));
+          if (priestlyVoice) utter.voice = priestlyVoice;
 
-        utter.onend = () => {
-          if (this.isCassettePlaying) {
-            setTimeout(speakNextLine, 650);
-          }
-        };
-        utter.onerror = () => {
-          setTimeout(speakNextLine, 2800);
-        };
-        window.speechSynthesis.speak(utter);
-      } else {
-        // Fallback timer if speech synth unavailable or muted
-        setTimeout(speakNextLine, Math.max(2500, phrase.length * 75));
+          utter.onend = () => advanceLine();
+          utter.onerror = () => advanceLine();
+          window.speechSynthesis.speak(utter);
+        } catch (e) {
+          // Fallback timer will advance line
+        }
       }
     };
 
@@ -1383,11 +1395,20 @@ class SoundEngine {
   stopCassetteTape() {
     this.isCassettePlaying = false;
     this.activeCassetteNight = null;
+    if (this._cassetteLineTimer) {
+      clearTimeout(this._cassetteLineTimer);
+      this._cassetteLineTimer = null;
+    }
     if ('speechSynthesis' in window) {
       try { window.speechSynthesis.cancel(); } catch (e) {}
     }
     this.stopCassetteHiss();
     this.playTapeDeckClick(false);
+    if (this._cassetteEndCallback) {
+      const cb = this._cassetteEndCallback;
+      this._cassetteEndCallback = null;
+      try { cb(); } catch (e) {}
+    }
   }
 }
 

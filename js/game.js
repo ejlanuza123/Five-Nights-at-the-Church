@@ -1663,7 +1663,10 @@ class GameEngine {
   muteCassette() {
     window.Sound.stopCassetteTape();
     const widget = document.getElementById('cassette-call-widget');
-    if (widget) widget.classList.add('hidden');
+    if (widget) {
+      widget.classList.add('hidden');
+      widget.style.display = 'none';
+    }
   }
 
   // --- GAME START & RESTART ---
@@ -1712,7 +1715,10 @@ class GameEngine {
     const cassetteWidget = document.getElementById('cassette-call-widget');
     const cassetteSub = document.getElementById('cassette-subtitle-text');
     if (!this.isCustomNight && this.currentNight <= 4) {
-      if (cassetteWidget) cassetteWidget.classList.remove('hidden');
+      if (cassetteWidget) {
+        cassetteWidget.classList.remove('hidden');
+        cassetteWidget.style.display = 'block';
+      }
       if (cassetteSub) cassetteSub.textContent = 'CONNECTING CASSETTE PLAYBACK...';
       window.Sound.playCassetteTape(
         this.currentNight,
@@ -1720,11 +1726,17 @@ class GameEngine {
           if (cassetteSub) cassetteSub.textContent = sub;
         },
         () => {
-          if (cassetteWidget) cassetteWidget.classList.add('hidden');
+          if (cassetteWidget) {
+            cassetteWidget.classList.add('hidden');
+            cassetteWidget.style.display = 'none';
+          }
         }
       );
     } else {
-      if (cassetteWidget) cassetteWidget.classList.add('hidden');
+      if (cassetteWidget) {
+        cassetteWidget.classList.add('hidden');
+        cassetteWidget.style.display = 'none';
+      }
     }
   }
 
@@ -2553,7 +2565,7 @@ class GameEngine {
 
     // Desk Task Lamp gentle flicker
     if (this.world.lights.candleLight && !this.isBlackout) {
-      this.world.lights.candleLight.intensity = 1.35 + Math.sin(Date.now() * 0.007) * 0.05;
+      this.world.lights.candleLight.intensity = 3.2 + Math.sin(Date.now() * 0.007) * 0.15;
     }
 
     // Observation Window Halogen Spotlight Dynamics (Instant snap to pitch-black when closed)
