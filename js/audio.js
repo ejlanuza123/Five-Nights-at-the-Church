@@ -33,7 +33,7 @@ class SoundEngine {
   initBGM() {
     try {
       if (!this.bgmAudio) {
-        this.bgmAudio = new Audio(this.bgmBlobUrl || 'assets/audio/church_theme_ambiance.mp3');
+        this.bgmAudio = new Audio(this.bgmBlobUrl || 'assets/audio/Dark Ambient - Horror.mp3');
         this.bgmAudio.loop = true;
         this.bgmAudio.preload = 'auto';
         this.updateBGMVolume();
@@ -60,6 +60,8 @@ class SoundEngine {
     }
 
     const candidateUrls = [
+      'assets/audio/Dark Ambient - Horror.mp3',
+      'assets/audio/Dark%20Ambient%20-%20Horror.mp3',
       'assets/audio/church_theme_ambiance.mp3',
       'assets/audio/Creepy Church Choir Music.mp3',
       'assets/audio/Creepy%20Church%20Choir%20Music.mp3'
@@ -88,7 +90,7 @@ class SoundEngine {
 
     try {
       const contentLengthHeader = response.headers.get('content-length');
-      const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 5121389;
+      const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 24005622;
 
       if (!response.body) {
         const blob = await response.blob();
@@ -112,7 +114,7 @@ class SoundEngine {
         if (onProgress) {
           const mbReceived = (receivedBytes / (1024 * 1024)).toFixed(1);
           const mbTotal = (totalBytes / (1024 * 1024)).toFixed(1);
-          onProgress(progressRatio, `Preloading Sacred Chants Audio (${mbReceived} MB / ${mbTotal} MB)`);
+          onProgress(progressRatio, `Preloading Dark Ambient Horror Track (${mbReceived} MB / ${mbTotal} MB)`);
         }
       }
 
@@ -120,7 +122,7 @@ class SoundEngine {
       this.bgmBlobUrl = URL.createObjectURL(blob);
       this.setupAudioElement(this.bgmBlobUrl);
       this.bgmLoaded = true;
-      if (onProgress) onProgress(1.0, 'Sacred Chants 100% Loaded in Memory');
+      if (onProgress) onProgress(1.0, 'Dark Horror Ambience 100% Loaded in Memory');
       return true;
     } catch (err) {
       console.warn('[SoundEngine] Fetch audio preload error, fallback to direct streaming:', err);

@@ -267,7 +267,11 @@ class GameEngine {
       'assets/office/window_hallway_angel.jpg',
       'assets/office/window_hallway_saint_far.jpg',
       'assets/office/window_hallway_saint.jpg',
-      'assets/office/window_hallway_mary.jpg'
+      'assets/office/window_hallway_mary.jpg',
+      'assets/entities/door_peeking_angel_clean.png',
+      'assets/entities/door_peeking_saint_clean.png',
+      'assets/office/door_peeking_angel.jpg',
+      'assets/office/door_peeking_saint.jpg'
     ];
     this._preloadedImages = {};
     let loadedCount = 0;
@@ -367,8 +371,15 @@ class GameEngine {
       mary: texLoader.load('assets/office/window_hallway_mary.jpg')
     };
 
+    // Preload photorealistic door peeking textures
+    this.doorTextures = {
+      angel: texLoader.load('assets/entities/door_peeking_angel_clean.png'),
+      saint: texLoader.load('assets/entities/door_peeking_saint_clean.png')
+    };
+
     this.positionStatuesInitial();
     this.updateWindowHallwayView();
+    this.updateDoorPeekingView();
   }
 
   // --- STATUE PLACEMENT & STAGES ---
@@ -400,7 +411,7 @@ class GameEngine {
       case 3: // Peeking directly around Left Arched Church Doorway threshold!
         angel.position.set(-3.45, 0.0, -0.62);
         angel.rotation.set(0, Math.PI * 0.44, 0); // Angled into office towards player desk
-        angel.visible = true;
+        angel.visible = false; // Photorealistically rendered on doorPeekingGroup cutout!
         break;
       case 4: // Inside Office - Attack position
         angel.position.set(-1.2, 0.5, -0.8);
@@ -410,6 +421,7 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
+    this.updateDoorPeekingView();
 
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
@@ -438,7 +450,7 @@ class GameEngine {
       case 3: // Peeking directly around Left Arched Church Doorway threshold!
         saint.position.set(-3.48, 0.0, -0.58);
         saint.rotation.set(0, Math.PI * 0.42, 0); // Angled into office
-        saint.visible = true;
+        saint.visible = false; // Photorealistically rendered on doorPeekingGroup cutout!
         break;
       case 4: // Inside Office - Attack position
         saint.position.set(-0.8, 0.6, -0.7);
@@ -448,6 +460,7 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
+    this.updateDoorPeekingView();
 
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
@@ -511,6 +524,7 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
+    this.updateDoorPeekingView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
     }
@@ -529,6 +543,7 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
+    this.updateDoorPeekingView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
     }
@@ -590,6 +605,75 @@ class GameEngine {
     }
   }
 
+  updateDoorPeekingView() {
+    if (!this.world || !this.world.nodes || !this.world.nodes.doorPeekingGroup) return;
+
+    const group = this.world.nodes.doorPeekingGroup;
+    const mat = this.world.nodes.doorPeekingMat;
+    const mesh = this.world.nodes.doorPeekingMesh;
+    const eyeMat = this.world.nodes.doorEyeMat;
+    const eye1 = this.world.nodes.doorEye1;
+    const eye2 = this.world.nodes.doorEye2;
+
+    const angelStage = this.aiConfig.weepingAngel.stage;
+    const saintStage = this.aiConfig.haloedSaint.stage;
+
+    const isAngel = (angelStage === 3);
+    const isSaint = (saintStage === 3);
+
+    // Occluded by closed wooden door or not present at doorway threshold
+    if (this.isLeftDoorClosed || (!isAngel && !isSaint)) {
+      group.visible = false;
+      return;
+    }
+
+    group.visible = true;
+
+    if (isAngel) {
+      if (mat && this.doorTextures?.angel && mat.map !== this.doorTextures.angel) {
+        mat.map = this.doorTextures.angel;
+        mat.needsUpdate = true;
+      }
+      if (mesh) {
+        mesh.scale.set(1.0, 1.0, 1.0);
+        mesh.position.set(0, 1.15, 0);
+      }
+      if (eyeMat) eyeMat.color.setHex(0x88d4ff);
+      if (eye1) eye1.position.set(-0.05, 1.82, 0.04);
+      if (eye2) eye2.position.set(0.03, 1.82, 0.04);
+    } else if (isSaint) {
+      if (mat && this.doorTextures?.saint && mat.map !== this.doorTextures.saint) {
+        mat.map = this.doorTextures.saint;
+        mat.needsUpdate = true;
+      }
+      if (mesh) {
+        mesh.scale.set(0.95, 1.0, 1.0);
+        mesh.position.set(0, 1.15, 0);
+      }
+      if (eyeMat) eyeMat.color.setHex(0xffaa22);
+      if (eye1) eye1.position.set(-0.04, 1.88, 0.04);
+      if (eye2) eye2.position.set(0.05, 1.88, 0.04);
+    }
+
+    // Dynamic corridor lighting response:
+    // When Left Door Light is ON (Z): statue is illuminated brilliantly in warm tungsten security glow
+    // When Left Door Light is OFF: corridor is plunged in pitch-black gloom, glowing ember eyes peer outward
+    if (mat) {
+      if (this.isLeftDoorLightOn) {
+        mat.color.setHex(0xffffff);
+        mat.emissive.setHex(0x282420);
+      } else {
+        mat.color.setHex(0x181a1f);
+        mat.emissive.setHex(0x020406);
+      }
+    }
+
+    if (eye1 && eye2) {
+      eye1.visible = !this.isLeftDoorLightOn;
+      eye2.visible = !this.isLeftDoorLightOn;
+    }
+  }
+
   // --- CONTROLS & INTERACTION ---
   setupEventListeners() {
     window.addEventListener('resize', () => this.onWindowResize());
@@ -630,11 +714,11 @@ class GameEngine {
         // Natural FNAF-style screen cursor tracking: moving cursor left/right turns view directly
         const normX = (e.clientX / window.innerWidth - 0.5) * 2; // -1 (left) to +1 (right)
         const normY = (e.clientY / window.innerHeight - 0.5) * 2;
-        this.targetYaw = -normX * (Math.PI * 0.44); // Full 79° pan across door, center window, and vent!
+        this.targetYaw = -normX * (Math.PI * 0.50); // Full 90° pan across door, center window, and vent!
         this.targetPitch = -normY * (Math.PI * 0.12);
       }
 
-      this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.45, Math.PI * 0.45);
+      this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.52, Math.PI * 0.52);
       this.targetPitch = THREE.MathUtils.clamp(this.targetPitch, -Math.PI * 0.12, Math.PI * 0.12);
     });
 
@@ -671,7 +755,7 @@ class GameEngine {
         const deltaY = e.touches[0].clientY - touchStartY;
         this.targetYaw -= deltaX * 0.0075;
         this.targetPitch -= deltaY * 0.0045;
-        this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.45, Math.PI * 0.45);
+        this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.52, Math.PI * 0.52);
         this.targetPitch = THREE.MathUtils.clamp(this.targetPitch, -Math.PI * 0.12, Math.PI * 0.12);
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
@@ -1417,6 +1501,8 @@ class GameEngine {
       btn.classList.toggle('door-active', this.isLeftDoorClosed);
     }
 
+    this.updateDoorPeekingView();
+
     // If door is closed while an entity is peeking at the door threshold:
     if (this.isLeftDoorClosed) {
       if (this.aiConfig.weepingAngel.stage === 3) {
@@ -1448,6 +1534,8 @@ class GameEngine {
     if (this.world.lights.doorLight) {
       this.world.lights.doorLight.intensity = this.isLeftDoorLightOn ? 3.8 : 0;
     }
+
+    this.updateDoorPeekingView();
 
     const btn = document.getElementById('btn-door-light');
     if (btn) {
@@ -2103,7 +2191,7 @@ class GameEngine {
     if (!this.isCCTVOpen && !this.gameOver) {
       if (this.keysDown['a'] || this.keysDown['arrowleft']) this.targetYaw += 0.08;
       if (this.keysDown['d'] || this.keysDown['arrowright']) this.targetYaw -= 0.08;
-      this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.45, Math.PI * 0.45);
+      this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -Math.PI * 0.52, Math.PI * 0.52);
     }
 
     // Responsive camera damping (0.28 for instant fluid control)
