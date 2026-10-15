@@ -832,6 +832,70 @@ class SoundEngine {
     osc.stop(now + 0.06);
   }
 
+  // --- AUTHENTIC FNAF CAMERA MOTION DISRUPTION & ERROR STATIC ---
+  playCameraErrorStatic(duration = 3.2, volume = 0.45) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    // 1. Harsh high-density White & Pink Noise burst with electrical pops
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      // Pink filter algorithm
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      const pink = b0 + b1 + b2 + white * 0.5362;
+      const pop = Math.random() < 0.003 ? (Math.random() * 2 - 1) * 2.2 : 0.0;
+      data[i] = (pink * 0.45 + pop) * 0.65;
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Resonant bandpass filter for telephone/CRT antenna interference
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1800, now);
+    filter.frequency.linearRampToValueAtTime(2600, now + duration * 0.5);
+    filter.frequency.linearRampToValueAtTime(1600, now + duration);
+    filter.Q.setValueAtTime(1.4, now);
+
+    // 2. 60Hz Electrical AC interference hum
+    const hum = this.ctx.createOscillator();
+    hum.type = 'sawtooth';
+    hum.frequency.setValueAtTime(60, now);
+    const humGain = this.ctx.createGain();
+    humGain.gain.setValueAtTime(0.09, now);
+
+    // 3. Stuttering Glitch Gain Envelope (amplitude modulation for VHS/CCTV packet loss flutter)
+    const masterGain = this.ctx.createGain();
+    masterGain.gain.setValueAtTime(volume * 1.1, now);
+    masterGain.gain.setValueAtTime(volume * 0.7, now + 0.15);
+    masterGain.gain.setValueAtTime(volume * 1.0, now + 0.35);
+    masterGain.gain.setValueAtTime(volume * 0.6, now + 0.65);
+    masterGain.gain.setValueAtTime(volume * 0.95, now + 1.2);
+    masterGain.gain.setValueAtTime(volume * 0.8, now + 2.0);
+    masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    hum.connect(humGain);
+    humGain.connect(masterGain);
+    noise.connect(filter);
+    filter.connect(masterGain);
+    masterGain.connect(this.masterGain);
+
+    hum.start(now);
+    hum.stop(now + duration);
+    noise.start(now);
+    noise.stop(now + duration);
+
+    // Initial alert chirp
+    this.playCameraBeep();
+  }
+
   // --- MODERN PARISH CARILLON BELLS ---
   playChurchBell(pitch = 1.0, count = 1) {
     if (!this.ctx) return;

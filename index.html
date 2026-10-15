@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
-  <link rel="stylesheet" href="css/style.css?v=20261015_v21">
+  <link rel="stylesheet" href="css/style.css?v=20261015_v22">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
@@ -163,16 +163,28 @@
       <!-- Heavy Anomaly Static Interference Burst Screen -->
       <div class="cctv-anomaly-burst" id="cctv-anomaly-burst"></div>
 
+      <!-- Authentic FNAF Camera Motion "VIDEO ERROR / STATIC" Screen -->
+      <div class="cctv-error-screen hidden" id="cctv-error-screen">
+        <div class="cctv-error-glitch-lines"></div>
+        <div class="cctv-error-box">
+          <div class="cctv-error-badge-icon">▲</div>
+          <div class="cctv-error-title">VIDEO ERROR</div>
+          <div class="cctv-error-desc">CAMERA FEED INTERRUPTED</div>
+          <div class="cctv-error-code">ERR_SIGNAL_LOST // ANOMALY_MOTION</div>
+          <div class="cctv-error-sub">RECONNECTING FEED...</div>
+        </div>
+      </div>
+
       <div class="cctv-header">
         <div class="cctv-cam-tag">
-          <div class="cctv-rec-dot"></div>
-          <span class="cctv-rec-text">LIVE</span>
+          <div class="cctv-rec-dot" id="cctv-rec-dot"></div>
+          <span class="cctv-rec-text" id="cctv-rec-status-text">LIVE</span>
           <span class="cctv-cam-name" id="cctv-current-name">CAM 01 - SANCTUARY & ALTAR</span>
           <span class="cctv-timestamp" id="cctv-live-timestamp">12:00:00 AM</span>
         </div>
         <div class="cctv-header-right">
           <div class="cctv-nv-badge" id="cctv-nv-badge"><span class="nv-dot"></span>IR NIGHT VISION [ACTIVE]</div>
-          <div class="cctv-status-badge">1080p HD FEED  |  ENCRYPTION: SECURE</div>
+          <div class="cctv-status-badge" id="cctv-status-badge">1080p HD FEED  |  ENCRYPTION: SECURE</div>
         </div>
       </div>
 
@@ -980,9 +992,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261015_v21"></script>
-  <script src="js/textures.js?v=20261015_v21"></script>
-  <script src="js/models.js?v=20261015_v21"></script>
-  <script src="js/game.js?v=20261015_v21"></script>
+  <script src="js/audio.js?v=20261015_v22"></script>
+  <script src="js/textures.js?v=20261015_v22"></script>
+  <script src="js/models.js?v=20261015_v22"></script>
+  <script src="js/game.js?v=20261015_v22"></script>
 </body>
 </html>

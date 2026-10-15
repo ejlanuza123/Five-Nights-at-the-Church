@@ -49,6 +49,10 @@ class GameEngine {
     this.isCCTVOpen = false;
     this.activeCameraId = 1;
     this.cameraStaticTimer = 0;
+    this.cameraErrorTimers = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    this._lastAngelStage = 0;
+    this._lastSaintStage = 0;
+    this._lastMournerStage = 0;
 
     // AI Entities & Levels (Strictly tracked unique locations)
     this.aiConfig = {
@@ -404,21 +408,102 @@ class GameEngine {
     this.updateVentPeekingView();
   }
 
-  // --- STATUE PLACEMENT & STAGES ---
+  // --- STATUE PLACEMENT, STAGES & CAMERA MOTION ERROR SYSTEM ---
   positionStatuesInitial() {
+    this.cameraErrorTimers = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    this._lastAngelStage = undefined;
+    this._lastSaintStage = undefined;
+    this._lastMournerStage = undefined;
     this.setAngelStage(0);
     this.setSaintStage(0);
     this.setMournerStage(0);
+    this._lastAngelStage = 0;
+    this._lastSaintStage = 0;
+    this._lastMournerStage = 0;
+  }
+
+  camLocToId(loc) {
+    if (loc === 'CAM_01') return 1;
+    if (loc === 'CAM_02') return 2;
+    if (loc === 'CAM_03') return 3;
+    if (loc === 'CAM_04') return 4;
+    if (loc === 'CAM_05') return 5;
+    return null;
+  }
+
+  triggerCameraMotionError(camId, duration = 3.2) {
+    if (!camId || camId < 1 || camId > 5) return;
+    this.cameraErrorTimers[camId] = duration;
+
+    // If player is currently viewing this camera on CCTV, immediately trigger violent static burst & error!
+    if (this.isCCTVOpen && this.activeCameraId === camId) {
+      window.Sound.playCameraErrorStatic(duration, 0.45);
+      this.updateCCTVFeed();
+    }
+  }
+
+  handleEntityMovement(fromLoc, toLoc, entityName) {
+    const fromCam = this.camLocToId(fromLoc);
+    const toCam = this.camLocToId(toLoc);
+
+    const affected = new Set();
+    if (fromCam) affected.add(fromCam);
+    if (toCam) affected.add(toCam);
+
+    affected.forEach(camId => {
+      this.triggerCameraMotionError(camId, 3.2);
+    });
+  }
+
+  handleEntityStageMovement(fromLoc, toLoc, entityName, oldStage, newStage) {
+    const fromCam = this.camLocToId(fromLoc);
+    const toCam = this.camLocToId(toLoc);
+
+    const affected = new Set();
+    if (fromCam) affected.add(fromCam);
+    if (toCam) affected.add(toCam);
+
+    affected.forEach(camId => {
+      this.triggerCameraMotionError(camId, 3.2);
+    });
+  }
+
+  onCameraErrorResolved(camId) {
+    if (!this.isCCTVOpen || this.activeCameraId !== camId) return;
+    const errorScreen = document.getElementById('cctv-error-screen');
+    const anomalyBurst = document.getElementById('cctv-anomaly-burst');
+    const imgEl = document.getElementById('cctv-screen-img');
+    const recDot = document.getElementById('cctv-rec-dot');
+    const recText = document.getElementById('cctv-rec-status-text');
+    const statusBadge = document.getElementById('cctv-status-badge');
+
+    if (errorScreen) errorScreen.classList.add('hidden');
+    if (anomalyBurst) anomalyBurst.classList.remove('active');
+    if (imgEl) imgEl.classList.remove('cam-error-hidden');
+    if (recDot) recDot.classList.remove('error-mode');
+    if (recText) recText.textContent = 'LIVE';
+    if (statusBadge) statusBadge.textContent = '1080p HD FEED  |  ENCRYPTION: SECURE';
+
+    window.Sound.playCameraBeep();
+    this.updateCCTVFeed();
   }
 
   setAngelStage(stage) {
-    const angel = this.world.statues.weepingAngel;
+    const angel = this.world?.statues?.weepingAngel;
     if (!angel) return;
+    const prevLoc = this.aiConfig.weepingAngel.location;
+    const prevStage = this.aiConfig.weepingAngel.stage;
     this.aiConfig.weepingAngel.stage = stage;
 
     // Strict Unique Location mapping (Angel is only ever in ONE place)
     const locMap = { 0: 'CAM_01', 1: 'CAM_05', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
-    this.aiConfig.weepingAngel.location = locMap[stage] || 'CAM_01';
+    const newLoc = locMap[stage] || 'CAM_01';
+    this.aiConfig.weepingAngel.location = newLoc;
+
+    if (this._lastAngelStage !== undefined && (prevStage !== stage || prevLoc !== newLoc)) {
+      this.handleEntityStageMovement(prevLoc, newLoc, 'weepingAngel', prevStage, stage);
+    }
+    this._lastAngelStage = stage;
 
     switch (stage) {
       case 0: // CAM 01 - Sanctuary Altar (Home base)
@@ -451,13 +536,21 @@ class GameEngine {
   }
 
   setSaintStage(stage) {
-    const saint = this.world.statues.haloedSaint;
+    const saint = this.world?.statues?.haloedSaint;
     if (!saint) return;
+    const prevLoc = this.aiConfig.haloedSaint.location;
+    const prevStage = this.aiConfig.haloedSaint.stage;
     this.aiConfig.haloedSaint.stage = stage;
 
     // Strict Unique Location mapping (Saint is only ever in ONE place)
     const locMap = { 0: 'CAM_03', 1: 'CAM_05', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
-    this.aiConfig.haloedSaint.location = locMap[stage] || 'CAM_03';
+    const newLoc = locMap[stage] || 'CAM_03';
+    this.aiConfig.haloedSaint.location = newLoc;
+
+    if (this._lastSaintStage !== undefined && (prevStage !== stage || prevLoc !== newLoc)) {
+      this.handleEntityStageMovement(prevLoc, newLoc, 'haloedSaint', prevStage, stage);
+    }
+    this._lastSaintStage = stage;
 
     switch (stage) {
       case 0: // CAM 03 - Reconciliation Chapel (Home base)
@@ -490,13 +583,21 @@ class GameEngine {
   }
 
   setMournerStage(stage) {
-    const mourner = this.world.statues.veiledMourner;
+    const mourner = this.world?.statues?.veiledMourner;
     if (!mourner) return;
+    const prevLoc = this.aiConfig.veiledMourner.location;
+    const prevStage = this.aiConfig.veiledMourner.stage;
     this.aiConfig.veiledMourner.stage = stage;
 
     // Strict Unique Location mapping (Mourner is only ever in ONE place)
     const locMap = { 0: 'CAM_02', 1: 'CAM_04', 2: 'CAM_04', 3: 'RIGHT_VENT', 4: 'OFFICE' };
-    this.aiConfig.veiledMourner.location = locMap[stage] || 'CAM_02';
+    const newLoc = locMap[stage] || 'CAM_02';
+    this.aiConfig.veiledMourner.location = newLoc;
+
+    if (this._lastMournerStage !== undefined && (prevStage !== stage || prevLoc !== newLoc)) {
+      this.handleEntityStageMovement(prevLoc, newLoc, 'veiledMourner', prevStage, stage);
+    }
+    this._lastMournerStage = stage;
 
     switch (stage) {
       case 0: // CAM 02 - Memorial Columbarium Stand (Home base)
@@ -536,10 +637,13 @@ class GameEngine {
 
   banishAngel() {
     const ai = this.aiConfig.weepingAngel;
+    const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_02 Crypt)
     ai.location = 'CAM_02';
     ai.attackTimer = 0;
     ai.timer = 0;
+    this._lastAngelStage = -1;
+    this.handleEntityMovement(prevLoc, 'CAM_02', 'weepingAngel');
 
     const angel = this.world?.statues?.weepingAngel;
     if (angel) {
@@ -555,10 +659,13 @@ class GameEngine {
 
   banishSaint() {
     const ai = this.aiConfig.haloedSaint;
+    const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_01 Sanctuary Nave)
     ai.location = 'CAM_01';
     ai.attackTimer = 0;
     ai.timer = 0;
+    this._lastSaintStage = -1;
+    this.handleEntityMovement(prevLoc, 'CAM_01', 'haloedSaint');
 
     const saint = this.world?.statues?.haloedSaint;
     if (saint) {
@@ -574,10 +681,13 @@ class GameEngine {
 
   banishMourner() {
     const ai = this.aiConfig.veiledMourner;
+    const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_03 Reconciliation Chapel)
     ai.location = 'CAM_03';
     ai.attackTimer = 0;
     ai.timer = 0;
+    this._lastMournerStage = -1;
+    this.handleEntityMovement(prevLoc, 'CAM_03', 'veiledMourner');
 
     const mourner = this.world?.statues?.veiledMourner;
     if (mourner) {
@@ -1685,6 +1795,8 @@ class GameEngine {
     document.getElementById('custom-night-modal')?.classList.add('hidden');
     document.getElementById('gameover-screen')?.classList.add('hidden');
     document.getElementById('victory-screen')?.classList.add('hidden');
+    document.getElementById('cctv-error-screen')?.classList.add('hidden');
+    document.getElementById('cctv-anomaly-burst')?.classList.remove('active');
 
     const videoContainer = document.getElementById('jumpscare-video-container');
     if (videoContainer) videoContainer.classList.add('hidden');
@@ -2045,10 +2157,34 @@ class GameEngine {
   updateCCTVFeed() {
     if (!this.isCCTVOpen || this.isBlackout) return;
     const camId = this.activeCameraId;
+    const isError = (this.cameraErrorTimers && (this.cameraErrorTimers[camId] || 0) > 0);
+
+    const errorScreen = document.getElementById('cctv-error-screen');
+    const anomalyBurst = document.getElementById('cctv-anomaly-burst');
+    const imgEl = document.getElementById('cctv-screen-img');
+    const recDot = document.getElementById('cctv-rec-dot');
+    const recText = document.getElementById('cctv-rec-status-text');
+    const statusBadge = document.getElementById('cctv-status-badge');
+
+    if (isError) {
+      if (errorScreen) errorScreen.classList.remove('hidden');
+      if (anomalyBurst) anomalyBurst.classList.add('active');
+      if (imgEl) imgEl.classList.add('cam-error-hidden');
+      if (recDot) recDot.classList.add('error-mode');
+      if (recText) recText.textContent = 'ERROR';
+      if (statusBadge) statusBadge.textContent = 'VIDEO ERROR — SIGNAL LOST';
+    } else {
+      if (errorScreen) errorScreen.classList.add('hidden');
+      if (anomalyBurst) anomalyBurst.classList.remove('active');
+      if (imgEl) imgEl.classList.remove('cam-error-hidden');
+      if (recDot) recDot.classList.remove('error-mode');
+      if (recText) recText.textContent = 'LIVE';
+      if (statusBadge) statusBadge.textContent = '1080p HD FEED  |  ENCRYPTION: SECURE';
+    }
+
     const imgSrc = this.getCCTVImage(camId);
 
     // 1. Direct Image Element update - smooth, clear camera feed without glitch storm spoilers!
-    const imgEl = document.getElementById('cctv-screen-img');
     if (imgEl && imgEl.getAttribute('src') !== imgSrc) {
       imgEl.src = imgSrc;
     }
@@ -2077,8 +2213,14 @@ class GameEngine {
       camName.textContent = this.cctvViews[camId].name;
     }
 
-    // Standard camera switch scanline static (pure, authentic, no anomaly storm)
-    this.triggerStatic(0.12);
+    const isError = (this.cameraErrorTimers && (this.cameraErrorTimers[camId] || 0) > 0);
+    if (isError) {
+      // Camera is in motion error state! Play harsh glitch static!
+      window.Sound.playCameraErrorStatic(this.cameraErrorTimers[camId], 0.4);
+    } else {
+      // Standard camera switch scanline static (pure, authentic, no anomaly storm)
+      this.triggerStatic(0.12);
+    }
 
     this.updateCCTVFeed();
   }
@@ -2540,6 +2682,19 @@ class GameEngine {
       this.updateTime(effectiveDelta);
       this.updatePower(effectiveDelta);
       this.updateAI(effectiveDelta);
+
+      // Decrement CCTV Camera Motion Error Timers
+      for (let cam = 1; cam <= 5; cam++) {
+        if (this.cameraErrorTimers && this.cameraErrorTimers[cam] > 0) {
+          this.cameraErrorTimers[cam] -= rawDelta;
+          if (this.cameraErrorTimers[cam] <= 0) {
+            this.cameraErrorTimers[cam] = 0;
+            if (this.isCCTVOpen && this.activeCameraId === cam) {
+              this.onCameraErrorResolved(cam);
+            }
+          }
+        }
+      }
     }
 
     // Keyboard look (faster responsive speed)
