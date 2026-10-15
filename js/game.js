@@ -102,6 +102,11 @@ class GameEngine {
 
     this.activeRebindingAction = null;
 
+    // Shift Progression, Night 6 & Custom Night (20/20/20 Mode)
+    this.isCustomNight = false;
+    this.customAI = { angel: 10, saint: 10, mourner: 10 };
+    this.stars = { night5: false, night6: false, mode20: false };
+
     this.init();
   }
 
@@ -110,7 +115,9 @@ class GameEngine {
     this.setupEventListeners();
     this.setupStaticCanvas();
     this.setupFnafMenu();
+    this.setupCustomNightModal();
     this.setupSettingsModal();
+    this.loadStars();
     this.updateNightDifficulty();
     this.initPreloader();
     this.renderLoop();
@@ -859,6 +866,10 @@ class GameEngine {
         return k === bind.toLowerCase();
       };
 
+      if (k === 'm') {
+        this.muteCassette();
+      }
+
       if (isKey('cctvToggle')) {
         e.preventDefault();
         this.toggleCCTV();
@@ -884,6 +895,10 @@ class GameEngine {
 
       // Escape key closes modals if open
       if (e.key === 'Escape') {
+        const customModal = document.getElementById('custom-night-modal');
+        if (customModal && !customModal.classList.contains('hidden')) {
+          this.toggleCustomNightModal(false);
+        }
         const optModal = document.getElementById('options-modal') || document.getElementById('settings-modal');
         if (optModal && !optModal.classList.contains('hidden')) {
           this.toggleOptionsModal(false);
@@ -898,6 +913,9 @@ class GameEngine {
     window.addEventListener('keyup', (e) => {
       this.keysDown[e.key.toLowerCase()] = false;
     });
+
+    // Father Thomas Cassette Mute Button
+    document.getElementById('btn-mute-cassette')?.addEventListener('click', () => this.muteCassette());
 
     // Modern Pushbutton Wall Controls
     document.getElementById('btn-door-toggle')?.addEventListener('click', () => this.toggleLeftDoor());
@@ -1013,6 +1031,8 @@ class GameEngine {
     // Menu option buttons
     const btnContinue = document.getElementById('btn-menu-continue');
     const btnNewGame = document.getElementById('btn-menu-newgame');
+    const btnNight6 = document.getElementById('btn-menu-night6');
+    const btnCustomNight = document.getElementById('btn-menu-customnight');
     const btnNightSelect = document.getElementById('btn-menu-nightselect');
     const nightPicker = document.getElementById('menu-night-picker');
     const btnManual = document.getElementById('btn-menu-manual');
@@ -1022,20 +1042,33 @@ class GameEngine {
     const btnVictoryMenu = document.getElementById('btn-victory-menu');
 
     // Button sound effects on hover
-    document.querySelectorAll('.fnaf-menu-item, .night-chip').forEach(el => {
+    document.querySelectorAll('.fnaf-menu-item, .night-chip, .star-icon').forEach(el => {
       el.addEventListener('mouseenter', () => {
         window.Sound.playMenuBlip();
       });
     });
 
     btnContinue?.addEventListener('click', () => {
+      this.isCustomNight = false;
       this.startNightWithTransition(this.currentNight);
     });
 
     btnNewGame?.addEventListener('click', () => {
+      this.isCustomNight = false;
       this.currentNight = 1;
       this.updateNightBadge();
       this.startNightWithTransition(1);
+    });
+
+    btnNight6?.addEventListener('click', () => {
+      this.isCustomNight = false;
+      this.currentNight = 6;
+      this.updateNightBadge();
+      this.startNightWithTransition(6);
+    });
+
+    btnCustomNight?.addEventListener('click', () => {
+      this.toggleCustomNightModal(true);
     });
 
     btnNightSelect?.addEventListener('click', () => {
@@ -1048,6 +1081,7 @@ class GameEngine {
         const night = parseInt(e.currentTarget.dataset.night, 10);
         document.querySelectorAll('.night-chip').forEach(c => c.classList.remove('active'));
         e.currentTarget.classList.add('active');
+        this.isCustomNight = false;
         this.currentNight = night;
         this.updateNightBadge();
         this.startNightWithTransition(night);
@@ -1112,9 +1146,141 @@ class GameEngine {
     });
   }
 
+  loadStars() {
+    try {
+      const saved = localStorage.getItem('fnaf_church_stars');
+      if (saved) {
+        this.stars = Object.assign(this.stars, JSON.parse(saved));
+      }
+    } catch (e) {}
+    this.updateStarsUI();
+  }
+
+  saveStars() {
+    try {
+      localStorage.setItem('fnaf_church_stars', JSON.stringify(this.stars));
+    } catch (e) {}
+  }
+
+  updateStarsUI() {
+    const s5 = document.getElementById('star-5');
+    const s6 = document.getElementById('star-6');
+    const s20 = document.getElementById('star-20');
+    if (s5) s5.classList.toggle('hidden', !this.stars.night5);
+    if (s6) s6.classList.toggle('hidden', !this.stars.night6);
+    if (s20) s20.classList.toggle('hidden', !this.stars.mode20);
+  }
+
+  setupCustomNightModal() {
+    const modal = document.getElementById('custom-night-modal');
+    const btnCustomX = document.getElementById('btn-custom-x');
+    const btnCustomBack = document.getElementById('btn-custom-back');
+    const btnCustomStart = document.getElementById('btn-custom-start');
+
+    const updateDisplay = () => {
+      const angelEl = document.getElementById('ai-val-angel');
+      const saintEl = document.getElementById('ai-val-saint');
+      const mournerEl = document.getElementById('ai-val-mourner');
+      if (angelEl) angelEl.textContent = this.customAI.angel;
+      if (saintEl) saintEl.textContent = this.customAI.saint;
+      if (mournerEl) mournerEl.textContent = this.customAI.mourner;
+    };
+
+    updateDisplay();
+
+    // Spinner adjustments (+/-)
+    const spinMap = {
+      'btn-angel-dec': () => { this.customAI.angel = Math.max(0, this.customAI.angel - 1); },
+      'btn-angel-inc': () => { this.customAI.angel = Math.min(20, this.customAI.angel + 1); },
+      'btn-saint-dec': () => { this.customAI.saint = Math.max(0, this.customAI.saint - 1); },
+      'btn-saint-inc': () => { this.customAI.saint = Math.min(20, this.customAI.saint + 1); },
+      'btn-mourner-dec': () => { this.customAI.mourner = Math.max(0, this.customAI.mourner - 1); },
+      'btn-mourner-inc': () => { this.customAI.mourner = Math.min(20, this.customAI.mourner + 1); },
+    };
+
+    for (const [id, fn] of Object.entries(spinMap)) {
+      document.getElementById(id)?.addEventListener('click', () => {
+        window.Sound.playMenuBlip();
+        fn();
+        updateDisplay();
+      });
+    }
+
+    // Quick Presets
+    document.getElementById('preset-all-0')?.addEventListener('click', () => {
+      window.Sound.playMenuBlip();
+      this.customAI.angel = 0;
+      this.customAI.saint = 0;
+      this.customAI.mourner = 0;
+      updateDisplay();
+    });
+
+    document.getElementById('preset-all-5')?.addEventListener('click', () => {
+      window.Sound.playMenuBlip();
+      this.customAI.angel = 5;
+      this.customAI.saint = 5;
+      this.customAI.mourner = 5;
+      updateDisplay();
+    });
+
+    document.getElementById('preset-all-10')?.addEventListener('click', () => {
+      window.Sound.playMenuBlip();
+      this.customAI.angel = 10;
+      this.customAI.saint = 10;
+      this.customAI.mourner = 10;
+      updateDisplay();
+    });
+
+    document.getElementById('preset-all-20')?.addEventListener('click', () => {
+      window.Sound.playMenuBlip();
+      this.customAI.angel = 20;
+      this.customAI.saint = 20;
+      this.customAI.mourner = 20;
+      updateDisplay();
+    });
+
+    btnCustomX?.addEventListener('click', () => {
+      this.toggleCustomNightModal(false);
+    });
+
+    btnCustomBack?.addEventListener('click', () => {
+      this.toggleCustomNightModal(false);
+    });
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.toggleCustomNightModal(false);
+      }
+    });
+
+    btnCustomStart?.addEventListener('click', () => {
+      this.toggleCustomNightModal(false);
+      this.isCustomNight = true;
+      this.startNightWithTransition(7);
+    });
+  }
+
+  toggleCustomNightModal(forceState = null) {
+    const modal = document.getElementById('custom-night-modal');
+    if (!modal) return;
+    const isCurrentlyHidden = modal.classList.contains('hidden');
+    const shouldOpen = forceState !== null ? forceState : isCurrentlyHidden;
+    if (shouldOpen) {
+      modal.classList.remove('hidden');
+      window.Sound.playMenuBlip();
+    } else {
+      modal.classList.add('hidden');
+      window.Sound.playMenuBlip();
+    }
+  }
+
   updateNightBadge() {
     const badge = document.getElementById('menu-night-badge');
-    if (badge) badge.textContent = `NIGHT ${this.currentNight}`;
+    if (badge) {
+      if (this.isCustomNight) badge.textContent = 'CUSTOM';
+      else if (this.currentNight === 6) badge.textContent = 'NIGHT 6';
+      else badge.textContent = `NIGHT ${this.currentNight}`;
+    }
   }
 
   setupMenuStaticCanvas() {
@@ -1168,7 +1334,9 @@ class GameEngine {
   }
 
   startNightWithTransition(night = 1) {
-    this.currentNight = night;
+    if (!this.isCustomNight) {
+      this.currentNight = night;
+    }
     this.updateNightDifficulty();
 
     const menu = document.getElementById('fnaf-main-menu');
@@ -1176,12 +1344,17 @@ class GameEngine {
     const nightTitleEl = document.getElementById('night-card-title-val');
     const subLabel = document.getElementById('night-card-sub-val');
 
-    const suffixes = ['', '1st Night', '2nd Night', '3rd Night', '4th Night', '5th Night'];
-    if (nightTitleEl) {
-      nightTitleEl.textContent = `NIGHT ${this.currentNight}`;
-    }
-    if (subLabel) {
-      subLabel.textContent = (suffixes[this.currentNight] || `Night ${this.currentNight}`).toUpperCase();
+    const suffixes = ['', '1st Night', '2nd Night', '3rd Night', '4th Night', '5th Night', 'The Consecration Vigil'];
+    if (this.isCustomNight) {
+      if (nightTitleEl) nightTitleEl.textContent = 'CUSTOM NIGHT';
+      if (subLabel) subLabel.textContent = `AI: ${this.customAI.angel} / ${this.customAI.saint} / ${this.customAI.mourner}`;
+    } else {
+      if (nightTitleEl) {
+        nightTitleEl.textContent = this.currentNight === 6 ? 'NIGHT 6' : `NIGHT ${this.currentNight}`;
+      }
+      if (subLabel) {
+        subLabel.textContent = (suffixes[this.currentNight] || `Night ${this.currentNight}`).toUpperCase();
+      }
     }
 
     window.Sound.init();
@@ -1452,6 +1625,7 @@ class GameEngine {
     this.isRunning = false;
     this.gameOver = false;
     this.victory = false;
+    this.muteCassette();
     if (this.isCCTVOpen) this.toggleCCTV();
 
     window.Sound.stopAmbientOrgan();
@@ -1465,6 +1639,7 @@ class GameEngine {
     document.getElementById('manual-modal')?.classList.add('hidden');
     document.getElementById('settings-modal')?.classList.add('hidden');
     document.getElementById('options-modal')?.classList.add('hidden');
+    document.getElementById('custom-night-modal')?.classList.add('hidden');
 
     const videoContainer = document.getElementById('jumpscare-video-container');
     if (videoContainer) videoContainer.classList.add('hidden');
@@ -1485,6 +1660,12 @@ class GameEngine {
     this.updateNightBadge();
   }
 
+  muteCassette() {
+    window.Sound.stopCassetteTape();
+    const widget = document.getElementById('cassette-call-widget');
+    if (widget) widget.classList.add('hidden');
+  }
+
   // --- GAME START & RESTART ---
   startGame() {
     window.Sound.init();
@@ -1498,6 +1679,7 @@ class GameEngine {
     document.getElementById('manual-modal')?.classList.add('hidden');
     document.getElementById('settings-modal')?.classList.add('hidden');
     document.getElementById('options-modal')?.classList.add('hidden');
+    document.getElementById('custom-night-modal')?.classList.add('hidden');
     document.getElementById('gameover-screen')?.classList.add('hidden');
     document.getElementById('victory-screen')?.classList.add('hidden');
 
@@ -1524,16 +1706,42 @@ class GameEngine {
     this.updateHUD();
 
     this.positionStatuesInitial();
+
+    // Start Father Thomas's Cassette Briefing (Nights 1 - 4 only, not on custom night)
+    this.muteCassette();
+    const cassetteWidget = document.getElementById('cassette-call-widget');
+    const cassetteSub = document.getElementById('cassette-subtitle-text');
+    if (!this.isCustomNight && this.currentNight <= 4) {
+      if (cassetteWidget) cassetteWidget.classList.remove('hidden');
+      if (cassetteSub) cassetteSub.textContent = 'CONNECTING CASSETTE PLAYBACK...';
+      window.Sound.playCassetteTape(
+        this.currentNight,
+        (sub) => {
+          if (cassetteSub) cassetteSub.textContent = sub;
+        },
+        () => {
+          if (cassetteWidget) cassetteWidget.classList.add('hidden');
+        }
+      );
+    } else {
+      if (cassetteWidget) cassetteWidget.classList.add('hidden');
+    }
   }
 
   restartGame() {
+    this.muteCassette();
     document.getElementById('gameover-screen')?.classList.add('hidden');
     window.Sound.startBGM();
-    this.startNightWithTransition(this.currentNight);
+    this.startNightWithTransition(this.isCustomNight ? 7 : this.currentNight);
   }
 
   advanceNight() {
-    if (this.currentNight < 5) {
+    this.muteCassette();
+    if (this.isCustomNight) {
+      this.returnToMainMenu();
+      return;
+    }
+    if (this.currentNight < 6) {
       this.currentNight++;
     }
     document.getElementById('victory-screen')?.classList.add('hidden');
@@ -1547,8 +1755,18 @@ class GameEngine {
       2: { angel: 4, saint: 3, mourner: 2 },
       3: { angel: 7, saint: 6, mourner: 5 },
       4: { angel: 11, saint: 9, mourner: 8 },
-      5: { angel: 15, saint: 14, mourner: 13 }
+      5: { angel: 15, saint: 14, mourner: 13 },
+      6: { angel: 18, saint: 16, mourner: 15 }
     };
+
+    if (this.isCustomNight) {
+      this.aiConfig.weepingAngel.level = this.customAI.angel;
+      this.aiConfig.haloedSaint.level = this.customAI.saint;
+      this.aiConfig.veiledMourner.level = this.customAI.mourner;
+      const nightEl = document.getElementById('hud-night-val');
+      if (nightEl) nightEl.textContent = 'CUSTOM NIGHT';
+      return;
+    }
 
     const cfg = nightMap[this.currentNight] || nightMap[1];
     this.aiConfig.weepingAngel.level = cfg.angel;
@@ -1556,7 +1774,9 @@ class GameEngine {
     this.aiConfig.veiledMourner.level = cfg.mourner;
 
     const nightEl = document.getElementById('hud-night-val');
-    if (nightEl) nightEl.textContent = `NIGHT ${this.currentNight}`;
+    if (nightEl) {
+      nightEl.textContent = this.currentNight === 6 ? 'NIGHT 6 (VIGIL)' : `NIGHT ${this.currentNight}`;
+    }
   }
 
   // --- MODERN DEFENSE CONTROLS ---
@@ -1923,6 +2143,7 @@ class GameEngine {
 
   triggerBlackout() {
     this.isBlackout = true;
+    this.muteCassette();
     window.Sound.playPowerShutdown();
 
     if (this.isLeftDoorClosed) this.toggleLeftDoor();
@@ -2008,8 +2229,25 @@ class GameEngine {
   triggerVictory() {
     this.victory = true;
     this.isRunning = false;
+    this.muteCassette();
     window.Sound.stopBGM(true);
     window.Sound.playVictoryFanfare();
+
+    // Reward Shift Victory Stars (FNAF Badges)
+    if (!this.isCustomNight) {
+      if (this.currentNight >= 5) {
+        this.stars.night5 = true;
+      }
+      if (this.currentNight >= 6) {
+        this.stars.night6 = true;
+      }
+    } else {
+      if (this.customAI.angel >= 20 && this.customAI.saint >= 20 && this.customAI.mourner >= 20) {
+        this.stars.mode20 = true;
+      }
+    }
+    this.saveStars();
+    this.updateStarsUI();
 
     const vicScreen = document.getElementById('victory-screen');
     if (vicScreen) vicScreen.classList.remove('hidden');
@@ -2047,14 +2285,19 @@ class GameEngine {
           this.setAngelStage(1);
           window.Sound.playStoneGrind(0.7);
         } else if (ai.stage < 3) {
-          this.setAngelStage(ai.stage + 1);
+          const nextStage = ai.stage + 1;
+          this.setAngelStage(nextStage);
           window.Sound.playStoneGrind(0.7);
+          if (nextStage >= 2) {
+            window.Sound.playLeftFootstep(0.85); // 3D stereo stone drag echoing down west door corridor
+          }
         } else if (ai.stage === 3) {
           if (this.isLeftDoorClosed) {
             window.Sound.playStoneGrind(0.9);
             window.Sound.playMechanicalClick();
             this.banishAngel();
           } else {
+            window.Sound.playLeftFootstep(0.7); // Directional audio warning before attack
             ai.attackTimer += 1.5;
             if (ai.attackTimer >= 4.5) {
               this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
@@ -2088,14 +2331,21 @@ class GameEngine {
           this.setSaintStage(1);
           window.Sound.playStoneGrind(0.8);
         } else if (ai.stage < 3) {
-          this.setSaintStage(ai.stage + 1);
+          const nextStage = ai.stage + 1;
+          this.setSaintStage(nextStage);
           window.Sound.playStoneGrind(0.8);
+          if (nextStage === 2) {
+            window.Sound.playWindowWhisper(0.85); // Chilling Latin prayer chant outside center window!
+          } else if (nextStage === 3) {
+            window.Sound.playLeftFootstep(0.92); // Heavy grinding footsteps at left door!
+          }
         } else if (ai.stage === 3) {
           if (this.isLeftDoorClosed) {
             window.Sound.playStoneGrind(0.9);
             window.Sound.playMechanicalClick();
             this.banishSaint();
           } else {
+            window.Sound.playLeftFootstep(0.72);
             ai.attackTimer += 1.5;
             if (ai.attackTimer >= 4.5) {
               this.triggerJumpscare('haloedSaint', 'SANCTUS MICHAEL INFILTRATED THE PARISH SECURITY OFFICE');
@@ -2128,14 +2378,18 @@ class GameEngine {
           // Banishment recovery: advances from CAM_03 Chapel into CAM_04 HVAC return duct
           this.setMournerStage(1);
           window.Sound.playStoneGrind(0.6);
+          window.Sound.playVentClatter(0.75);
         } else if (ai.stage < 3) {
-          this.setMournerStage(ai.stage + 1);
+          const nextStage = ai.stage + 1;
+          this.setMournerStage(nextStage);
           window.Sound.playStoneGrind(0.6);
+          window.Sound.playVentClatter(0.8 + nextStage * 0.05); // 3D stereo vent scraping clatter panned +0.88!
         } else if (ai.stage === 3) {
           if (this.isVentClosed) {
             window.Sound.playVentSound(false);
             this.banishMourner();
           } else {
+            window.Sound.playVentClatter(0.75); // Subtle acoustic warning at vent opening
             ai.attackTimer += 1.5;
             if (ai.attackTimer >= 4.0) {
               this.triggerJumpscare('veiledMourner', 'THE MEMORIAL PENITENT CRAWLED THROUGH THE UNSEALED HVAC DUCT');
@@ -2152,6 +2406,7 @@ class GameEngine {
     this.gameOver = true;
     this.jumpscareActive = true;
     this.jumpscareTimer = 0;
+    this.muteCassette();
 
     // Immediately shut down CCTV monitor overlay if active
     if (this.isCCTVOpen) {

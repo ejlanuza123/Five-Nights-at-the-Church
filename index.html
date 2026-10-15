@@ -61,6 +61,24 @@
         </div>
       </div>
 
+      <!-- Father Thomas Cassette Player / Nightly Briefing HUD Widget -->
+      <div id="cassette-call-widget" class="cassette-widget hidden">
+        <div class="cassette-header-row">
+          <div class="cassette-tape-spin">📼</div>
+          <div class="cassette-meta">
+            <span class="cassette-title">FR. THOMAS // BRIEFING TAPE</span>
+            <span class="cassette-rec-badge"><span class="rec-dot"></span>PLAYBACK</span>
+          </div>
+          <button class="cassette-mute-btn" id="btn-mute-cassette" title="Mute briefing tape [M]">
+            <span class="mute-icon">🔇</span> MUTE [M]
+          </button>
+        </div>
+        <div class="cassette-subtitles">
+          <span class="cassette-speaker">FR. THOMAS:</span>
+          <span class="cassette-text" id="cassette-subtitle-text">Playing recorded message...</span>
+        </div>
+      </div>
+
       <!-- Bottom Status: Generator Backup & Power Usage -->
       <div class="hud-bottom">
         <div class="hud-power-box">
@@ -292,6 +310,12 @@
             <span class="title-word church-accent">CHURCH</span>
           </h1>
           <div class="fnaf-sub-title">ST. JUDE CATHOLIC PARISH • FACILITY SURVEILLANCE PROTOCOL</div>
+          <!-- Unlockable Shift Victory Stars (FNAF Badges) -->
+          <div class="menu-stars-row" id="menu-stars-row">
+            <span class="star-icon hidden" id="star-5" title="⭐ Night 5 Consecrated (Standard Five Nights Completed)">★</span>
+            <span class="star-icon hidden" id="star-6" title="⭐⭐ Night 6 Consecrated (The Vigil Shift Completed)">★</span>
+            <span class="star-icon hidden" id="star-20" title="⭐⭐⭐ Consecration Vigil Master (20/20/20 Mode Conquered)">★</span>
+          </div>
         </div>
 
         <div class="fnaf-menu-options">
@@ -306,6 +330,18 @@
             <span class="fnaf-text">NEW GAME</span>
           </button>
 
+          <button class="fnaf-menu-item" id="btn-menu-night6">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">NIGHT 6</span>
+            <span class="fnaf-badge-red">THE VIGIL</span>
+          </button>
+
+          <button class="fnaf-menu-item" id="btn-menu-customnight">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">CUSTOM NIGHT</span>
+            <span class="fnaf-badge-gold">20/20/20</span>
+          </button>
+
           <button class="fnaf-menu-item" id="btn-menu-nightselect">
             <span class="fnaf-arrow">&gt;&gt;</span>
             <span class="fnaf-text">NIGHT SELECTION</span>
@@ -317,6 +353,7 @@
             <button class="night-chip" data-night="3">NIGHT 3</button>
             <button class="night-chip" data-night="4">NIGHT 4</button>
             <button class="night-chip" data-night="5">NIGHT 5</button>
+            <button class="night-chip" data-night="6">NIGHT 6 (VIGIL)</button>
           </div>
 
           <button class="fnaf-menu-item fnaf-options-btn" id="btn-menu-options" title="Game Options, Audio, Controls &amp; Survival Manual">
@@ -821,6 +858,95 @@
       </div>
     </div>
 
+    <!-- Modal: Custom Night AI Setup (20/20/20 Mode) -->
+    <div class="screen-modal hidden" id="custom-night-modal">
+      <div class="settings-box custom-night-box">
+        <div class="options-header">
+          <div class="options-header-top">
+            <div class="options-seal-block">
+              <span class="options-gear-icon">⛧</span>
+              <div>
+                <h2 class="options-main-title">CONSECRATION PROTOCOL: CUSTOM NIGHT</h2>
+                <div class="options-doc-id">CALIBRATE STATUE OBSESSION FREQUENCIES (A.I. LEVEL 0 - 20)</div>
+              </div>
+            </div>
+            <button class="options-close-x" id="btn-custom-x" title="Close Custom Night [ESC]">&times;</button>
+          </div>
+        </div>
+
+        <div class="custom-entities-grid">
+          <!-- Card 1: Weeping Angel -->
+          <div class="custom-entity-card">
+            <div class="custom-portrait-wrap">
+              <img src="assets/office/door_peeking_angel.jpg" alt="Weeping Angel" class="custom-portrait" />
+              <div class="custom-portrait-overlay"></div>
+            </div>
+            <div class="custom-entity-details">
+              <div class="custom-entity-name">WEEPING ANGEL</div>
+              <div class="custom-entity-sub">West Cloister • Door Infiltrator</div>
+              <div class="ai-spinner">
+                <button class="ai-spin-btn" id="btn-angel-dec" data-entity="angel">&lt;</button>
+                <div class="ai-num" id="ai-val-angel">10</div>
+                <button class="ai-spin-btn" id="btn-angel-inc" data-entity="angel">&gt;</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Haloed Saint (Michael) -->
+          <div class="custom-entity-card">
+            <div class="custom-portrait-wrap">
+              <img src="assets/office/door_peeking_saint.jpg" alt="Haloed Saint" class="custom-portrait" />
+              <div class="custom-portrait-overlay"></div>
+            </div>
+            <div class="custom-entity-details">
+              <div class="custom-entity-name">HALOED SAINT</div>
+              <div class="custom-entity-sub">Narthex Window • Door Intruder</div>
+              <div class="ai-spinner">
+                <button class="ai-spin-btn" id="btn-saint-dec" data-entity="saint">&lt;</button>
+                <div class="ai-num" id="ai-val-saint">10</div>
+                <button class="ai-spin-btn" id="btn-saint-inc" data-entity="saint">&gt;</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Veiled Mourner -->
+          <div class="custom-entity-card">
+            <div class="custom-portrait-wrap">
+              <img src="assets/office/vent_peeking_mourner.jpg" alt="Veiled Mourner" class="custom-portrait" />
+              <div class="custom-portrait-overlay"></div>
+            </div>
+            <div class="custom-entity-details">
+              <div class="custom-entity-name">VEILED MOURNER</div>
+              <div class="custom-entity-sub">HVAC Duct • Wall Vent Infiltrator</div>
+              <div class="ai-spinner">
+                <button class="ai-spin-btn" id="btn-mourner-dec" data-entity="mourner">&lt;</button>
+                <div class="ai-num" id="ai-val-mourner">10</div>
+                <button class="ai-spin-btn" id="btn-mourner-inc" data-entity="mourner">&gt;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick AI Presets -->
+        <div class="custom-presets-bar">
+          <span class="preset-label">QUICK PRESETS:</span>
+          <button class="preset-btn" id="preset-all-0">0 (ALL DORMANT)</button>
+          <button class="preset-btn" id="preset-all-5">5 (MEDITATION)</button>
+          <button class="preset-btn" id="preset-all-10">10 (PURGATORY)</button>
+          <button class="preset-btn preset-gold" id="preset-all-20">★ 20/20/20 (MAX CONSECRATION) ★</button>
+        </div>
+
+        <!-- Custom Night Actions -->
+        <div class="custom-footer">
+          <button class="secondary-btn" id="btn-custom-back">BACK TO MENU</button>
+          <button class="primary-btn custom-start-btn" id="btn-custom-start">
+            <span>START CUSTOM SHIFT</span>
+            <kbd>[ENTER]</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal: Game Over Screen -->
     <div class="screen-modal hidden" id="gameover-screen">
       <h2 class="gameover-title">FACILITY BREACHED</h2>
@@ -854,9 +980,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261015_v17"></script>
-  <script src="js/textures.js?v=20261015_v17"></script>
-  <script src="js/models.js?v=20261015_v17"></script>
-  <script src="js/game.js?v=20261015_v17"></script>
+  <script src="js/audio.js?v=20261015_v18"></script>
+  <script src="js/textures.js?v=20261015_v18"></script>
+  <script src="js/models.js?v=20261015_v18"></script>
+  <script src="js/game.js?v=20261015_v18"></script>
 </body>
 </html>

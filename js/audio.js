@@ -1032,6 +1032,363 @@ class SoundEngine {
       this.playChurchBell(1.0, 3);
     }, 2800);
   }
+
+  // --- 3D STEREO DIRECTIONAL ACOUSTIC WARNING CUES ---
+  createPanner(pan = 0.0) {
+    if (!this.ctx) return null;
+    if (this.ctx.createStereoPanner) {
+      const panner = this.ctx.createStereoPanner();
+      panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), this.ctx.currentTime);
+      return panner;
+    }
+    return null;
+  }
+
+  // 1. LEFT DOOR: Heavy grinding stone footsteps echoing down the west cloister corridor
+  playLeftFootstep(intensity = 0.85) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const panner = this.createPanner(-0.88); // Hard left in headphones
+
+    // Low sub-bass stone floor impact
+    const sub = this.ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(65, now);
+    sub.frequency.exponentialRampToValueAtTime(24, now + 0.35);
+
+    const subGain = this.ctx.createGain();
+    subGain.gain.setValueAtTime(0.42 * intensity, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    sub.connect(subGain);
+
+    // Gritty marble dragging friction scrape
+    const bufLen = Math.floor(this.ctx.sampleRate * 0.45);
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.5;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buf;
+
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.setValueAtTime(380, now);
+    noiseFilter.frequency.linearRampToValueAtTime(180, now + 0.45);
+    noiseFilter.Q.setValueAtTime(3.5, now);
+
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.01, now);
+    noiseGain.gain.linearRampToValueAtTime(0.35 * intensity, now + 0.08);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+
+    if (panner) {
+      subGain.connect(panner);
+      noiseGain.connect(panner);
+      panner.connect(this.masterGain);
+    } else {
+      subGain.connect(this.masterGain);
+      noiseGain.connect(this.masterGain);
+    }
+
+    sub.start(now);
+    sub.stop(now + 0.35);
+    noise.start(now);
+  }
+
+  // 2. RIGHT VENT: Metallic duct clattering and hollow scraping vibrations
+  playVentClatter(intensity = 0.85) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const panner = this.createPanner(0.88); // Hard right in headphones
+
+    // Resonant sheet metal pop/ping
+    const metalFrequencies = [280, 440, 780, 1150];
+    metalFrequencies.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'triangle';
+      const delay = idx * 0.06;
+      osc.frequency.setValueAtTime(freq, now + delay);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.45, now + delay + 0.2);
+
+      const mGain = this.ctx.createGain();
+      mGain.gain.setValueAtTime(0.18 * intensity, now + delay);
+      mGain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.2);
+
+      osc.connect(mGain);
+      if (panner) {
+        mGain.connect(panner);
+      } else {
+        mGain.connect(this.masterGain);
+      }
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.2);
+    });
+
+    // Metallic scratching / hollow duct air rumble
+    const bufLen = Math.floor(this.ctx.sampleRate * 0.35);
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.45;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buf;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1400, now);
+    filter.Q.setValueAtTime(5.0, now);
+
+    const nGain = this.ctx.createGain();
+    nGain.gain.setValueAtTime(0.24 * intensity, now);
+    nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    noise.connect(filter);
+    filter.connect(nGain);
+
+    if (panner) {
+      nGain.connect(panner);
+      panner.connect(this.masterGain);
+    } else {
+      nGain.connect(this.masterGain);
+    }
+
+    noise.start(now);
+  }
+
+  // 3. CENTER WINDOW: Haunting whispered Latin chant outside the glass
+  playWindowWhisper(intensity = 0.75) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const panner = this.createPanner(0.0); // Center
+
+    // Dual detuned eerie vocal drone
+    [218, 222, 328].forEach(freq => {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(freq * 0.96, now + 1.2);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.09 * intensity, now + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+      osc.connect(gain);
+      if (panner) gain.connect(panner);
+      else gain.connect(this.masterGain);
+
+      osc.start(now);
+      osc.stop(now + 1.2);
+    });
+
+    // Airy whispered vocal formant breath
+    const bufLen = Math.floor(this.ctx.sampleRate * 0.9);
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.35;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buf;
+
+    const formant = this.ctx.createBiquadFilter();
+    formant.type = 'bandpass';
+    formant.frequency.setValueAtTime(850, now);
+    formant.Q.setValueAtTime(6.0, now);
+
+    const nGain = this.ctx.createGain();
+    nGain.gain.setValueAtTime(0.001, now);
+    nGain.gain.linearRampToValueAtTime(0.12 * intensity, now + 0.25);
+    nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+    noise.connect(formant);
+    formant.connect(nGain);
+
+    if (panner) {
+      nGain.connect(panner);
+      panner.connect(this.masterGain);
+    } else {
+      nGain.connect(this.masterGain);
+    }
+    noise.start(now);
+  }
+
+  // --- FATHER THOMAS'S CASSETTE TAPE RECORDER ("PHONE GUY") ---
+  getCassetteScript(night) {
+    const scripts = {
+      1: [
+        "Hello? Hello! Ah, Father Thomas here.",
+        "If you're hearing this, you survived your first few minutes in the parish security office.",
+        "Now, don't worry about the rumors. The diocese has us on a strict energy quota, so keep an eye on that backup battery.",
+        "That arched door on your left? It's on a magnetic lock.",
+        "Lock it if you hear heavy stone steps in the corridor, but don't waste power leaving it shut.",
+        "Watch the altar camera. One of the statues... she likes to wander when nobody is watching.",
+        "Keep checking the cameras. God be with you tonight."
+      ],
+      2: [
+        "Hello again! Glad to see you back for Night Two.",
+        "Listen closely: you've probably noticed the big observation window right in front of your desk.",
+        "Outside is the cloister hallway. Sanctus Michael... the martyr with the halo... he stalks that corridor.",
+        "If you look through that glass and see him standing in the gloom, do NOT panic.",
+        "Hit that halogen spotlight switch right on your desk. The beam blinds him and forces his effigy back.",
+        "Keep your light usage conservative though... and check the vent. We've had strange sounds in the ductwork."
+      ],
+      3: [
+        "Uh, hello? Okay, listen. Night Three is usually when things... escalate.",
+        "The maintenance crew sealed the crypt, but the return air duct on your right connects into the sub-basement.",
+        "There's an effigy down there—the Veiled Penitent. If you hear metallic clanging in the ductwork, she's crawling inside.",
+        "Turn on that duct inspection light. If she's peeking right out of the grate... pull the emergency fire shutter immediately.",
+        "Hold it shut until you hear her stone fingers slide back. Stay calm."
+      ],
+      4: [
+        "Hello? (heavy static) Can you hear me? Listen... I don't have much time.",
+        "They're... they're moving together now. If the power cuts, the generator won't kick in.",
+        "The candles won't protect you in the dark.",
+        "If you hear Latin whispering outside your window... flash the light immediately! Don't look away from CAM 01!",
+        "(distant loud stone crash) Oh God... they're outside the archway... Lock the door! Lock the—",
+        "(harsh tape static cut)"
+      ]
+    };
+    return scripts[night] || null;
+  }
+
+  playCassetteTape(night, onSubtitleCallback, onEndCallback) {
+    this.stopCassetteTape();
+    const script = this.getCassetteScript(night);
+    if (!script || !script.length) {
+      if (onEndCallback) onEndCallback();
+      return;
+    }
+
+    this.isCassettePlaying = true;
+    this.activeCassetteNight = night;
+
+    // 1. Heavy physical tape deck engagement CLACK
+    this.playTapeDeckClick(true);
+
+    // 2. Continuous analog tape hiss and motor whir
+    this.startCassetteHiss();
+
+    // 3. Spoken voice line progression with typewriter subtitles
+    let lineIdx = 0;
+
+    const speakNextLine = () => {
+      if (!this.isCassettePlaying || lineIdx >= script.length) {
+        this.stopCassetteTape();
+        if (onEndCallback) onEndCallback();
+        return;
+      }
+
+      const phrase = script[lineIdx];
+      lineIdx++;
+
+      if (onSubtitleCallback) {
+        onSubtitleCallback(phrase);
+      }
+
+      if ('speechSynthesis' in window && !this.isMuted) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(phrase);
+        utter.rate = 0.88;
+        utter.pitch = 0.82;
+        utter.volume = Math.min(1.0, this.masterVolume * this.sfxVolume * 0.95);
+
+        // Pick deep male or natural voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const priestlyVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('George') || v.name.includes('Natural')));
+        if (priestlyVoice) utter.voice = priestlyVoice;
+
+        utter.onend = () => {
+          if (this.isCassettePlaying) {
+            setTimeout(speakNextLine, 650);
+          }
+        };
+        utter.onerror = () => {
+          setTimeout(speakNextLine, 2800);
+        };
+        window.speechSynthesis.speak(utter);
+      } else {
+        // Fallback timer if speech synth unavailable or muted
+        setTimeout(speakNextLine, Math.max(2500, phrase.length * 75));
+      }
+    };
+
+    setTimeout(speakNextLine, 800);
+  }
+
+  playTapeDeckClick(isStart = true) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(isStart ? 850 : 520, now);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.08);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.28, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  startCassetteHiss() {
+    if (!this.ctx) return;
+    this.stopCassetteHiss();
+
+    const now = this.ctx.currentTime;
+    const bufLen = this.ctx.sampleRate * 2.0;
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.2;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buf;
+    noise.loop = true;
+
+    // Vintage telephone/cassette bandpass filter (350Hz to 3200Hz)
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1600, now);
+    filter.Q.setValueAtTime(1.2, now);
+
+    this.cassetteHissGain = this.ctx.createGain();
+    this.cassetteHissGain.gain.setValueAtTime(0.001, now);
+    this.cassetteHissGain.gain.linearRampToValueAtTime(0.045, now + 0.3);
+
+    noise.connect(filter);
+    filter.connect(this.cassetteHissGain);
+    this.cassetteHissGain.connect(this.masterGain);
+    noise.start(now);
+    this.cassetteHissSource = noise;
+  }
+
+  stopCassetteHiss() {
+    if (this.cassetteHissSource) {
+      try { this.cassetteHissSource.stop(); } catch (e) {}
+      this.cassetteHissSource = null;
+    }
+    this.cassetteHissGain = null;
+  }
+
+  stopCassetteTape() {
+    this.isCassettePlaying = false;
+    this.activeCassetteNight = null;
+    if ('speechSynthesis' in window) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+    }
+    this.stopCassetteHiss();
+    this.playTapeDeckClick(false);
+  }
 }
 
 window.Sound = new SoundEngine();
