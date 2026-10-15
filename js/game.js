@@ -1709,6 +1709,7 @@ class GameEngine {
     this.updateHUD();
 
     this.positionStatuesInitial();
+    this.onWindowResize();
 
     // Start Father Thomas's Cassette Briefing (Nights 1 - 4 only, not on custom night)
     this.muteCassette();
@@ -2532,6 +2533,7 @@ class GameEngine {
     // Safeguard clamp against background tab suspension or severe frame hiccups
     if (rawDelta > 0.1) rawDelta = 0.1;
     if (rawDelta < 0.001) rawDelta = 0.001;
+    const delta = rawDelta;
 
     if (this.isRunning && !this.isPaused) {
       const effectiveDelta = rawDelta * this.timeSpeed;
@@ -2552,19 +2554,19 @@ class GameEngine {
     this.cameraPitch += (this.targetPitch - this.cameraPitch) * 0.28;
 
     // Heavy Gothic Church Arched Door Hinge animation (swings outward into cloister corridor)
-    if (this.world.nodes.doorPivot) {
+    if (this.world?.nodes?.doorPivot) {
       const targetDoorRot = this.isLeftDoorClosed ? 0.0 : -Math.PI * 0.45;
       this.world.nodes.doorPivot.rotation.y += (targetDoorRot - this.world.nodes.doorPivot.rotation.y) * 0.15;
     }
 
     // Heavy Industrial Vent Shutter Damper slide animation (drops flush with duct sill at 0.58)
-    if (this.world.nodes.ventShutter) {
+    if (this.world?.nodes?.ventShutter) {
       const targetVentY = this.isVentClosed ? 0.58 : 1.85;
       this.world.nodes.ventShutter.position.y += (targetVentY - this.world.nodes.ventShutter.position.y) * 0.18;
     }
 
     // Desk Task Lamp gentle flicker
-    if (this.world.lights.candleLight && !this.isBlackout) {
+    if (this.world?.lights?.candleLight && !this.isBlackout) {
       this.world.lights.candleLight.intensity = 3.2 + Math.sin(Date.now() * 0.007) * 0.15;
     }
 
@@ -2572,7 +2574,7 @@ class GameEngine {
     this.windowSpotIntensity = this.isWindowSpotOn ? 1.0 : 0.0;
 
     // Update Window Backdrop Shader Material Uniforms
-    const backdropMat = this.world.nodes.windowBackdropMat;
+    const backdropMat = this.world?.nodes?.windowBackdropMat;
     if (backdropMat && backdropMat.uniforms) {
       backdropMat.uniforms.lightIntensity.value = this.windowSpotIntensity;
       backdropMat.uniforms.time.value += delta;
@@ -2582,7 +2584,7 @@ class GameEngine {
     }
 
     // Dynamic 3D Scene Spotlight on window frame & sill
-    if (this.world.lights.windowSpot) {
+    if (this.world?.lights?.windowSpot) {
       this.world.lights.windowSpot.intensity = this.windowSpotIntensity * 5.6;
     }
 
@@ -2601,7 +2603,11 @@ class GameEngine {
     // The CCTV surveillance feeds are rendered 100% via the authentic high-resolution images!
     this.camera.rotation.set(this.cameraPitch, this.cameraYaw, 0, 'YXZ');
 
-    this.renderer.render(this.scene, this.camera);
+    try {
+      this.renderer.render(this.scene, this.camera);
+    } catch (renderErr) {
+      console.error('ThreeJS render error:', renderErr);
+    }
   }
 
   updateHUD() {
