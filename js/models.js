@@ -425,10 +425,12 @@ class WorldBuilder {
 
     // --- PHOTOREALISTIC DOOR PEEKING ENTITY (Outside Arched Left Door) ---
     // Photorealistically displays the Weeping Angel or Haloed Saint when peeking outside
+    // Peeking strictly around the LEFT side of the doorway frame (left jamb at doorZ - doorW / 2 = -1.275)
+    // Leaving the right side open where the heavy church door swings open and closed
     const doorPeekingGroup = new THREE.Group();
     doorPeekingGroup.name = 'doorPeekingGroup';
-    doorPeekingGroup.position.set(-w / 2 - 0.16, 0, doorZ);
-    doorPeekingGroup.rotation.y = Math.PI * 0.44; // Angled slightly into office towards player desk
+    doorPeekingGroup.position.set(-w / 2 - 0.16, 0, -0.88);
+    doorPeekingGroup.rotation.y = Math.PI * 0.40; // Angled facing inward towards player desk
     doorPeekingGroup.visible = false;
 
     const doorPeekingTex = new THREE.TextureLoader().load('assets/entities/door_peeking_angel_clean.png');
@@ -441,19 +443,19 @@ class WorldBuilder {
       side: THREE.DoubleSide
     });
 
-    const doorPeekingGeo = new THREE.PlaneGeometry(1.15, 2.3);
+    const doorPeekingGeo = new THREE.PlaneGeometry(0.85, 2.25);
     const doorPeekingMesh = new THREE.Mesh(doorPeekingGeo, doorPeekingMat);
-    doorPeekingMesh.position.set(0, 1.15, 0); // Feet firmly grounded on corridor stone floor
+    doorPeekingMesh.position.set(0, 1.125, 0); // Feet firmly grounded on corridor stone floor
     doorPeekingGroup.add(doorPeekingMesh);
 
     // Glowing ember eyes peering out when corridor light is OFF
     const doorEyeMat = new THREE.MeshBasicMaterial({ color: 0x88d4ff });
     const doorEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), doorEyeMat);
-    doorEye1.position.set(-0.05, 1.82, 0.04);
+    doorEye1.position.set(0.15, 1.96, 0.04);
     doorPeekingGroup.add(doorEye1);
 
     const doorEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), doorEyeMat);
-    doorEye2.position.set(0.03, 1.82, 0.04);
+    doorEye2.position.set(0.27, 1.96, 0.04);
     doorPeekingGroup.add(doorEye2);
 
     officeGroup.add(doorPeekingGroup);

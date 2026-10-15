@@ -770,11 +770,11 @@ class GameEngine {
       }
       if (mesh) {
         mesh.scale.set(1.0, 1.0, 1.0);
-        mesh.position.set(0, 1.15, 0);
+        mesh.position.set(0, 1.125, 0);
       }
       if (eyeMat) eyeMat.color.setHex(0x88d4ff);
-      if (eye1) eye1.position.set(-0.05, 1.82, 0.04);
-      if (eye2) eye2.position.set(0.03, 1.82, 0.04);
+      if (eye1) eye1.position.set(0.15, 1.96, 0.04);
+      if (eye2) eye2.position.set(0.27, 1.96, 0.04);
     } else if (isSaint) {
       if (mat && this.doorTextures?.saint && mat.map !== this.doorTextures.saint) {
         mat.map = this.doorTextures.saint;
@@ -782,11 +782,11 @@ class GameEngine {
       }
       if (mesh) {
         mesh.scale.set(0.95, 1.0, 1.0);
-        mesh.position.set(0, 1.15, 0);
+        mesh.position.set(0, 1.125, 0);
       }
       if (eyeMat) eyeMat.color.setHex(0xffaa22);
-      if (eye1) eye1.position.set(-0.04, 1.88, 0.04);
-      if (eye2) eye2.position.set(0.05, 1.88, 0.04);
+      if (eye1) eye1.position.set(0.15, 1.96, 0.04);
+      if (eye2) eye2.position.set(0.27, 1.96, 0.04);
     }
 
     // Dynamic corridor lighting response:
