@@ -2567,7 +2567,7 @@ class GameEngine {
 
     // Desk Task Lamp gentle flicker
     if (this.world?.lights?.candleLight && !this.isBlackout) {
-      this.world.lights.candleLight.intensity = 3.2 + Math.sin(Date.now() * 0.007) * 0.15;
+      this.world.lights.candleLight.intensity = 1.35 + Math.sin(Date.now() * 0.007) * 0.05;
     }
 
     // Observation Window Halogen Spotlight Dynamics (Instant snap to pitch-black when closed)

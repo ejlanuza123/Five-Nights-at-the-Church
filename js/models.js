@@ -273,8 +273,8 @@ class WorldBuilder {
           vec4 texColor = texture2D(map, vUv);
 
           // 1. Dark Cloister Nocturnal Gloom (Flashlight OFF):
-          // Visible cold cathedral moonlight revealing the vaulted stone hallway & distant arches
-          vec3 darkAmbient = texColor.rgb * vec3(0.35, 0.38, 0.48);
+          // Authentic pitch-black church darkness with faint midnight-blue contours
+          vec3 darkAmbient = texColor.rgb * vec3(0.05, 0.055, 0.08);
 
           // 2. High-Power Halogen Spotlight Beam Projection (Flashlight ON):
           // Centered directly down the cloister corridor
@@ -849,24 +849,19 @@ class WorldBuilder {
     officeGroup.add(deskGroup);
 
     // --- MOODY RETRO ATMOSPHERIC LIGHTING RIG ---
-    // 1. Natural Greenish-Grey Ambient Fill (Illuminates room architecture & walls clearly)
-    const ambientLight = new THREE.AmbientLight(0x788a96, 0.95);
+    // 1. Desaturated Greenish-Grey Ambient Fill (Matches photo color grade)
+    const ambientLight = new THREE.AmbientLight(0x18241f, 0.55);
     officeGroup.add(ambientLight);
 
-    // 2. Warm Desk Overhead Pool Light (Illuminates documents, desk, and surrounding office)
-    const deskTaskLight = new THREE.PointLight(0xffecd0, 3.2, 14.0, 1.2);
+    // 2. Warm Desk Overhead Pool Light (Illuminates documents & flashlight)
+    const deskTaskLight = new THREE.PointLight(0xffe6b0, 1.4, 4.5);
     deskTaskLight.position.set(0.1, 2.2, -1.2);
     deskTaskLight.castShadow = true;
     officeGroup.add(deskTaskLight);
     this.lights.candleLight = deskTaskLight; // Mapped to desk task light
 
-    // 2b. High Church Clerestory Soft Moonbeam (Brings out left door arch and right wall vent)
-    const churchMoonlight = new THREE.DirectionalLight(0x6b8aa8, 0.65);
-    churchMoonlight.position.set(1.5, 4.0, 2.0);
-    officeGroup.add(churchMoonlight);
-
     // 3. Faint Green CRT Monitor Phosphor Screen Glow
-    const crtGlow = new THREE.PointLight(0x4ade80, 0.85, 3.5);
+    const crtGlow = new THREE.PointLight(0x4ade80, 0.45, 2.8);
     crtGlow.position.set(0.72, 1.1, -0.05); // Beside CRT monitor on desk
     officeGroup.add(crtGlow);
 
