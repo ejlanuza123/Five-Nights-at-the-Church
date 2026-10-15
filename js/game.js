@@ -17,7 +17,7 @@ class GameEngine {
     this.currentNight = 1;
     this.hour = 0; // 0 = 12 AM, 1 = 1 AM, ..., 6 = 6 AM
     this.nightTimer = 0;
-    this.hourDuration = 35; // 35 seconds per in-game hour
+    this.hourDuration = 60; // Standard 60 seconds per in-game hour (360s total night at 1x)
     this.timeSpeed = 1;     // Speed multiplier (1x, 2x, 4x)
     this.power = 100.0;
     this.isBlackout = false;
@@ -197,23 +197,29 @@ class GameEngine {
       updateUI();
     });
 
-    // 2. Preload Jumpscare MP4 Videos into in-memory Blobs for zero latency
+    // 2. Preload Jumpscare MP4 Videos into dedicated in-memory video elements
     const jumpscareVideos = [
-      { key: 'weepingAngel', src: 'assets/jumpscares/angel_jumpscare.mp4' },
-      { key: 'haloedSaint', src: 'assets/jumpscares/michael_jumpscare.mp4' },
-      { key: 'veiledMourner', src: 'assets/jumpscares/mary_jumpscare.mp4' }
+      { key: 'weepingAngel', id: 'jumpscare-video-angel', src: 'assets/jumpscares/angel_jumpscare.mp4' },
+      { key: 'haloedSaint', id: 'jumpscare-video-saint', src: 'assets/jumpscares/michael_jumpscare.mp4' },
+      { key: 'veiledMourner', id: 'jumpscare-video-mourner', src: 'assets/jumpscares/mary_jumpscare.mp4' }
     ];
     this.jumpscareUrls = {};
     let loadedVideos = 0;
 
     const videoPromises = jumpscareVideos.map(item => {
+      const vidEl = document.getElementById(item.id);
       return fetch(item.src)
         .then(res => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return res.blob();
         })
         .then(blob => {
-          this.jumpscareUrls[item.key] = URL.createObjectURL(blob);
+          const blobUrl = URL.createObjectURL(blob);
+          this.jumpscareUrls[item.key] = blobUrl;
+          if (vidEl) {
+            vidEl.src = blobUrl;
+            vidEl.load();
+          }
           loadedVideos++;
           videoRatio = loadedVideos / jumpscareVideos.length;
           updateUI();
@@ -221,6 +227,10 @@ class GameEngine {
         .catch(err => {
           console.warn(`Fallback direct url for jumpscare ${item.key}:`, err);
           this.jumpscareUrls[item.key] = item.src;
+          if (vidEl) {
+            vidEl.src = item.src;
+            vidEl.load();
+          }
           loadedVideos++;
           videoRatio = loadedVideos / jumpscareVideos.length;
           updateUI();
@@ -483,6 +493,60 @@ class GameEngine {
 
     this.updateWindowHallwayView();
 
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed();
+    }
+  }
+
+  banishAngel() {
+    const ai = this.aiConfig.weepingAngel;
+    ai.stage = -1; // Banished to alternate camera (CAM_02 Crypt)
+    ai.location = 'CAM_02';
+    ai.attackTimer = 0;
+    ai.timer = 0;
+
+    const angel = this.world?.statues?.weepingAngel;
+    if (angel) {
+      angel.visible = false;
+    }
+
+    this.updateWindowHallwayView();
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed();
+    }
+  }
+
+  banishSaint() {
+    const ai = this.aiConfig.haloedSaint;
+    ai.stage = -1; // Banished to alternate camera (CAM_01 Sanctuary Nave)
+    ai.location = 'CAM_01';
+    ai.attackTimer = 0;
+    ai.timer = 0;
+
+    const saint = this.world?.statues?.haloedSaint;
+    if (saint) {
+      saint.visible = false;
+    }
+
+    this.updateWindowHallwayView();
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed();
+    }
+  }
+
+  banishMourner() {
+    const ai = this.aiConfig.veiledMourner;
+    ai.stage = -1; // Banished to alternate camera (CAM_03 Reconciliation Chapel)
+    ai.location = 'CAM_03';
+    ai.attackTimer = 0;
+    ai.timer = 0;
+
+    const mourner = this.world?.statues?.veiledMourner;
+    if (mourner) {
+      mourner.visible = false;
+    }
+
+    this.updateWindowHallwayView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
     }
@@ -1245,11 +1309,14 @@ class GameEngine {
 
     const videoContainer = document.getElementById('jumpscare-video-container');
     if (videoContainer) videoContainer.classList.add('hidden');
-    const videoEl = document.getElementById('jumpscare-video');
-    if (videoEl) {
-      videoEl.pause();
-      videoEl.currentTime = 0;
-    }
+    ['jumpscare-video-angel', 'jumpscare-video-saint', 'jumpscare-video-mourner'].forEach(id => {
+      const v = document.getElementById(id);
+      if (v) {
+        v.pause();
+        v.currentTime = 0;
+        v.classList.add('hidden');
+      }
+    });
     const hud = document.getElementById('hud-overlay');
     if (hud) hud.style.display = '';
 
@@ -1277,11 +1344,14 @@ class GameEngine {
 
     const videoContainer = document.getElementById('jumpscare-video-container');
     if (videoContainer) videoContainer.classList.add('hidden');
-    const videoEl = document.getElementById('jumpscare-video');
-    if (videoEl) {
-      videoEl.pause();
-      videoEl.currentTime = 0;
-    }
+    ['jumpscare-video-angel', 'jumpscare-video-saint', 'jumpscare-video-mourner'].forEach(id => {
+      const v = document.getElementById(id);
+      if (v) {
+        v.pause();
+        v.currentTime = 0;
+        v.classList.add('hidden');
+      }
+    });
     const hud = document.getElementById('hud-overlay');
     if (hud) hud.style.display = '';
 
@@ -1354,16 +1424,16 @@ class GameEngine {
         setTimeout(() => {
           if (this.isLeftDoorClosed && this.aiConfig.weepingAngel.stage === 3) {
             window.Sound.playStoneGrind(0.85);
-            this.setAngelStage(0);
+            this.banishAngel();
           }
         }, 1500);
       }
-      if (this.aiConfig.haloedSaint.stage === 2) {
+      if (this.aiConfig.haloedSaint.stage === 3) {
         this.aiConfig.haloedSaint.attackTimer = 0;
         setTimeout(() => {
-          if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 2) {
+          if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 3) {
             window.Sound.playStoneGrind(0.85);
-            this.setSaintStage(0);
+            this.banishSaint();
           }
         }, 1500);
       }
@@ -1404,7 +1474,7 @@ class GameEngine {
         setTimeout(() => {
           if (this.isVentClosed && this.aiConfig.veiledMourner.stage === 3) {
             window.Sound.playStoneGrind(0.7);
-            this.setMournerStage(0);
+            this.banishMourner();
           }
         }, 1500);
       }
@@ -1472,9 +1542,9 @@ class GameEngine {
         this._windowSpotRetreatTimer = setTimeout(() => {
           if (this.isWindowSpotOn && !this.gameOver) {
             window.Sound.playStoneGrind(0.9);
-            if (this.aiConfig.weepingAngel.location === 'CAM_05') this.setAngelStage(0);
-            if (this.aiConfig.haloedSaint.location === 'CAM_05') this.setSaintStage(0);
-            if (this.aiConfig.veiledMourner.location === 'CAM_05') this.setMournerStage(0);
+            if (this.aiConfig.weepingAngel.location === 'CAM_05') this.banishAngel();
+            if (this.aiConfig.haloedSaint.location === 'CAM_05') this.banishSaint();
+            if (this.aiConfig.veiledMourner.location === 'CAM_05') this.banishMourner();
           }
         }, 1400);
       }
@@ -1504,7 +1574,10 @@ class GameEngine {
     const mournerLoc = this.aiConfig.veiledMourner.location;
 
     if (camId === 1) {
-      // CAM 01: Sanctuary Altar (Angel's designated place)
+      // CAM 01: Sanctuary Altar & Nave (Angel home, or Saint banished)
+      if (saintLoc === 'CAM_01') {
+        return 'assets/cctv/church_cam_01_saint_nave.png';
+      }
       if (angelLoc === 'CAM_01') {
         return 'assets/cctv/church_cam_normal.png'; // Angel on altar
       }
@@ -1512,7 +1585,10 @@ class GameEngine {
     }
 
     if (camId === 2) {
-      // CAM 02: Memorial Columbarium Crypt (Mourner's designated place)
+      // CAM 02: Memorial Columbarium Crypt (Mourner home, or Angel banished)
+      if (angelLoc === 'CAM_02') {
+        return 'assets/cctv/church_cam_02_angel_crypt.png';
+      }
       if (mournerLoc === 'CAM_02') {
         return 'assets/cctv/church_cam_02_columbarium.png'; // Mourner in crypt
       }
@@ -1520,7 +1596,10 @@ class GameEngine {
     }
 
     if (camId === 3) {
-      // CAM 03: Reconciliation Chapel Confessional (Saint's designated place)
+      // CAM 03: Reconciliation Chapel Confessional (Saint home, or Mourner banished)
+      if (mournerLoc === 'CAM_03') {
+        return 'assets/cctv/church_cam_03_mary_chapel.png';
+      }
       if (saintLoc === 'CAM_03') {
         return 'assets/cctv/church_cam_03_confessional.png'; // Saint in confessional
       }
@@ -1542,6 +1621,9 @@ class GameEngine {
       }
       if (angelLoc === 'CAM_05') {
         return 'assets/cctv/church_cam_05_narthex_anomaly.png';
+      }
+      if (mournerLoc === 'CAM_05') {
+        return 'assets/cctv/church_cam_05_mary_hallway.png';
       }
       return 'assets/cctv/church_cam_05_narthex.png';
     }
@@ -1634,16 +1716,24 @@ class GameEngine {
   updatePower(delta) {
     if (this.isBlackout || this.gameOver || this.victory) return;
 
-    let usageBars = 1; // Base server & building systems
+    let usageBars = 1; // Base server & building systems (1 bar)
     if (this.isLeftDoorClosed) usageBars++;
     if (this.isLeftDoorLightOn) usageBars++;
     if (this.isVentClosed) usageBars++;
     if (this.isVentLightOn) usageBars++;
     if (this.isCCTVOpen) usageBars++;
     if (this.isWindowSpotOn) usageBars++;
-    usageBars = Math.min(5, usageBars);
+    usageBars = Math.min(7, Math.max(1, usageBars));
 
-    const drainRates = [0, 0.24, 0.62, 1.25, 2.10, 3.20];
+    // Authentic FNAF 1 Power Drain Curve (% per in-game second)
+    // 1 bar (idle base): ~0.1042%/s (37.5% over 360s shift, leaves 62.5% if untouched)
+    // 2 bars (1 device): ~0.2083%/s (75% consumed if untouched)
+    // 3 bars (2 devices): ~0.3150%/s
+    // 4 bars (3 devices): ~0.4250%/s
+    // 5 bars (4 devices): ~0.5650%/s
+    // 6 bars (5 devices): ~0.8200%/s
+    // 7 bars (all devices): ~1.2500%/s (drains 1% every 0.8s)
+    const drainRates = [0, 0.1042, 0.2083, 0.3150, 0.4250, 0.5650, 0.8200, 1.2500];
     const drain = drainRates[usageBars] * delta;
     this.power = Math.max(0, this.power - drain);
 
@@ -1692,9 +1782,8 @@ class GameEngine {
   updateTime(delta) {
     if (!this.isRunning || this.gameOver || this.victory) return;
 
-    // Apply speed multiplier
-    const effectiveDelta = delta * this.timeSpeed;
-    this.nightTimer += effectiveDelta;
+    // delta passed from renderLoop is already scaled by timeSpeed
+    this.nightTimer += delta;
 
     // Total in-game hours from 0.0 to 6.0
     const totalHoursFloat = Math.min(6.0, this.nightTimer / this.hourDuration);
@@ -1778,6 +1867,7 @@ class GameEngine {
 
       const isWatchedOnCam = this.isCCTVOpen && (
         (ai.location === 'CAM_01' && this.activeCameraId === 1) ||
+        (ai.location === 'CAM_02' && this.activeCameraId === 2) ||
         (ai.location === 'CAM_05' && this.activeCameraId === 5)
       );
 
@@ -1785,14 +1875,18 @@ class GameEngine {
 
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
-        if (ai.stage < 3) {
+        if (ai.stage === -1) {
+          // Banishment recovery: advances from CAM_02 Crypt back to CAM_05 Hallway
+          this.setAngelStage(1);
+          window.Sound.playStoneGrind(0.7);
+        } else if (ai.stage < 3) {
           this.setAngelStage(ai.stage + 1);
           window.Sound.playStoneGrind(0.7);
         } else if (ai.stage === 3) {
           if (this.isLeftDoorClosed) {
             window.Sound.playStoneGrind(0.9);
             window.Sound.playMechanicalClick();
-            this.setAngelStage(0);
+            this.banishAngel();
           } else {
             ai.attackTimer += 1.5;
             if (ai.attackTimer >= 4.5) {
@@ -1814,6 +1908,7 @@ class GameEngine {
 
       const isWatchedOnCam = this.isCCTVOpen && (
         (ai.location === 'CAM_03' && this.activeCameraId === 3) ||
+        (ai.location === 'CAM_01' && this.activeCameraId === 1) ||
         (ai.location === 'CAM_05' && this.activeCameraId === 5)
       );
 
@@ -1821,14 +1916,18 @@ class GameEngine {
 
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
-        if (ai.stage < 3) {
+        if (ai.stage === -1) {
+          // Banishment recovery: advances from CAM_01 Nave back to CAM_05 Hallway
+          this.setSaintStage(1);
+          window.Sound.playStoneGrind(0.8);
+        } else if (ai.stage < 3) {
           this.setSaintStage(ai.stage + 1);
           window.Sound.playStoneGrind(0.8);
         } else if (ai.stage === 3) {
           if (this.isLeftDoorClosed) {
             window.Sound.playStoneGrind(0.9);
             window.Sound.playMechanicalClick();
-            this.setSaintStage(0);
+            this.banishSaint();
           } else {
             ai.attackTimer += 1.5;
             if (ai.attackTimer >= 4.5) {
@@ -1850,6 +1949,7 @@ class GameEngine {
 
       const isWatchedOnCam = this.isCCTVOpen && (
         (ai.location === 'CAM_02' && this.activeCameraId === 2) ||
+        (ai.location === 'CAM_03' && this.activeCameraId === 3) ||
         (ai.location === 'CAM_04' && this.activeCameraId === 4)
       );
 
@@ -1857,13 +1957,17 @@ class GameEngine {
 
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
-        if (ai.stage < 3) {
+        if (ai.stage === -1) {
+          // Banishment recovery: advances from CAM_03 Chapel into CAM_04 HVAC return duct
+          this.setMournerStage(1);
+          window.Sound.playStoneGrind(0.6);
+        } else if (ai.stage < 3) {
           this.setMournerStage(ai.stage + 1);
           window.Sound.playStoneGrind(0.6);
         } else if (ai.stage === 3) {
           if (this.isVentClosed) {
             window.Sound.playVentSound(false);
-            this.setMournerStage(0);
+            this.banishMourner();
           } else {
             ai.attackTimer += 1.5;
             if (ai.attackTimer >= 4.0) {
@@ -1910,28 +2014,35 @@ class GameEngine {
       this.jumpscareEntity = statue;
     }
 
-    // Resolve MP4 video source for the attacking entity
-    const videoMap = {
-      weepingAngel: 'assets/jumpscares/angel_jumpscare.mp4',
-      haloedSaint: 'assets/jumpscares/michael_jumpscare.mp4',
-      veiledMourner: 'assets/jumpscares/mary_jumpscare.mp4'
+    // Select dedicated pre-mounted video element for the attacking entity
+    const videoElements = {
+      weepingAngel: document.getElementById('jumpscare-video-angel'),
+      haloedSaint: document.getElementById('jumpscare-video-saint'),
+      veiledMourner: document.getElementById('jumpscare-video-mourner')
     };
-    const videoSrc = (this.jumpscareUrls && this.jumpscareUrls[entityName])
-      ? this.jumpscareUrls[entityName]
-      : (videoMap[entityName] || videoMap.haloedSaint);
 
+    const activeVideo = videoElements[entityName] || videoElements.haloedSaint;
     const videoContainer = document.getElementById('jumpscare-video-container');
-    const videoEl = document.getElementById('jumpscare-video');
+
+    // Hide and pause any other jumpscare videos
+    Object.values(videoElements).forEach(v => {
+      if (v) {
+        v.classList.add('hidden');
+        v.pause();
+      }
+    });
 
     let isFinished = false;
     const finishJumpscare = () => {
       if (isFinished) return;
       isFinished = true;
       if (videoContainer) videoContainer.classList.add('hidden');
-      if (videoEl) {
-        videoEl.pause();
-        videoEl.onended = null;
-        videoEl.onerror = null;
+      if (activeVideo) {
+        activeVideo.pause();
+        activeVideo.currentTime = 0;
+        activeVideo.onended = null;
+        activeVideo.onerror = null;
+        activeVideo.classList.add('hidden');
       }
       this.jumpscareActive = false;
       const goScreen = document.getElementById('gameover-screen');
@@ -1940,31 +2051,31 @@ class GameEngine {
       if (goScreen) goScreen.classList.remove('hidden');
     };
 
-    if (videoContainer && videoEl && videoSrc) {
-      videoEl.src = videoSrc;
-      videoEl.currentTime = 0;
+    if (videoContainer && activeVideo) {
+      activeVideo.classList.remove('hidden');
+      activeVideo.currentTime = 0;
 
       // Adjust volume to match SFX & Master sliders
       const sfxVol = (window.Sound && window.Sound.sfxVolume !== undefined) ? window.Sound.sfxVolume : 0.8;
       const masterVol = (window.Sound && window.Sound.masterVolume !== undefined) ? window.Sound.masterVolume : 0.8;
-      videoEl.volume = Math.max(0, Math.min(1, sfxVol * masterVol));
+      activeVideo.volume = Math.max(0, Math.min(1, sfxVol * masterVol));
 
       videoContainer.classList.remove('hidden');
 
-      const playPromise = videoEl.play();
+      const playPromise = activeVideo.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
           console.warn('Video play interrupted, fallback to muted or timer:', err);
-          videoEl.muted = true;
-          videoEl.play().catch(() => {});
+          activeVideo.muted = true;
+          activeVideo.play().catch(() => {});
         });
       }
 
-      videoEl.onended = () => {
+      activeVideo.onended = () => {
         finishJumpscare();
       };
 
-      videoEl.onerror = () => {
+      activeVideo.onerror = () => {
         finishJumpscare();
       };
 
@@ -1982,9 +2093,10 @@ class GameEngine {
     const delta = 0.016;
 
     if (this.isRunning && !this.isPaused) {
-      this.updateTime(delta);
-      this.updatePower(delta);
-      this.updateAI(delta);
+      const effectiveDelta = delta * this.timeSpeed;
+      this.updateTime(effectiveDelta);
+      this.updatePower(effectiveDelta);
+      this.updateAI(effectiveDelta);
     }
 
     // Keyboard look (faster responsive speed)
