@@ -147,7 +147,7 @@ class GameEngine {
       preloader.classList.add('fade-out');
       window.Sound.init();
       window.Sound.resume();
-      window.Sound.startBGM();
+      window.Sound.startLobbyMusic();
       if (!this.isRunning && !this._menuAudioStarted) {
         this._menuAudioStarted = true;
         window.Sound.startMenuDrone();
@@ -1126,10 +1126,14 @@ class GameEngine {
       }
       window.Sound.init();
       window.Sound.resume();
-      window.Sound.startBGM();
-      if (!this.isRunning && !this._menuAudioStarted) {
-        this._menuAudioStarted = true;
-        window.Sound.startMenuDrone();
+      if (!this.isRunning) {
+        window.Sound.startLobbyMusic();
+        if (!this._menuAudioStarted) {
+          this._menuAudioStarted = true;
+          window.Sound.startMenuDrone();
+        }
+      } else {
+        window.Sound.startGameMusic();
       }
     };
     window.addEventListener('click', tryStartMenuSound, { once: false });
@@ -1470,7 +1474,7 @@ class GameEngine {
     window.Sound.init();
     window.Sound.resume();
     window.Sound.stopMenuDrone();
-    window.Sound.startBGM();
+    window.Sound.startGameMusic();
     window.Sound.playNightTransitionChime();
 
     if (menu) menu.classList.add('hidden');
@@ -1741,7 +1745,7 @@ class GameEngine {
     window.Sound.stopAmbientOrgan();
     window.Sound.stopHeartbeat();
     window.Sound.startMenuDrone();
-    window.Sound.startBGM();
+    window.Sound.startLobbyMusic();
 
     document.getElementById('gameover-screen')?.classList.add('hidden');
     document.getElementById('victory-screen')?.classList.add('hidden');
@@ -1783,7 +1787,7 @@ class GameEngine {
   startGame() {
     window.Sound.init();
     window.Sound.resume();
-    window.Sound.startBGM();
+    window.Sound.startGameMusic();
     window.Sound.startAmbientOrgan();
     window.Sound.playChurchBell(1.0, 1);
 
@@ -1856,7 +1860,7 @@ class GameEngine {
   restartGame() {
     this.muteCassette();
     document.getElementById('gameover-screen')?.classList.add('hidden');
-    window.Sound.startBGM();
+    window.Sound.startGameMusic();
     this.startNightWithTransition(this.isCustomNight ? 7 : this.currentNight);
   }
 
@@ -1870,7 +1874,7 @@ class GameEngine {
       this.currentNight++;
     }
     document.getElementById('victory-screen')?.classList.add('hidden');
-    window.Sound.startBGM();
+    window.Sound.startGameMusic();
     this.startNightWithTransition(this.currentNight);
   }
 

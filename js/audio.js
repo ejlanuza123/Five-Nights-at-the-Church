@@ -21,177 +21,202 @@ class SoundEngine {
     this.sfxVolume = 0.90;
     this.musicVolume = 0.80;
 
-    // Background Chant & Church Ambiance Music
-    this.bgmAudio = null;
-    this.bgmBlobUrl = null;
-    this.bgmLoaded = false;
-    this.bgmBaseVolume = 0.65;
-    this.bgmPlaying = false;
-    this.initBGM();
+    // Dual Ambient Soundtracks:
+    // 1. Lobby: Sacred Church Theme Ambience (church_theme_ambiance.mp3)
+    // 2. In-Game: Dark Horror Ambience (dark_ambient_horror.mp3)
+    this.lobbyAudio = null;
+    this.gameAudio = null;
+    this.activeTrack = null; // 'lobby' | 'game' | null
+    this.lobbyBaseVolume = 0.70;
+    this.gameBaseVolume = 0.75;
+    this.audioLoaded = false;
+    this.initAudioElements();
+  }
+
+  get bgmAudio() {
+    return this.activeTrack === 'game' ? this.gameAudio : this.lobbyAudio;
+  }
+
+  initAudioElements() {
+    try {
+      if (!this.lobbyAudio) {
+        this.lobbyAudio = new Audio('assets/audio/church_theme_ambiance.mp3');
+        this.lobbyAudio.loop = true;
+        this.lobbyAudio.preload = 'auto';
+      }
+      if (!this.gameAudio) {
+        this.gameAudio = new Audio('assets/audio/Dark%20Ambient%20-%20Horror.mp3');
+        this.gameAudio.loop = true;
+        this.gameAudio.preload = 'auto';
+        this.gameAudio.addEventListener('error', () => {
+          if (this.gameAudio && !this.gameAudio.src.includes('Horror.mp3')) {
+            this.gameAudio.src = 'assets/audio/Dark Ambient - Horror.mp3';
+            this.gameAudio.load();
+          }
+        }, { once: true });
+      }
+      this.updateBGMVolume();
+    } catch (e) {
+      console.warn('Could not initialize audio elements:', e);
+    }
   }
 
   initBGM() {
-    try {
-      if (!this.bgmAudio) {
-        this.bgmAudio = new Audio(this.bgmBlobUrl || 'assets/audio/Dark Ambient - Horror.mp3');
-        this.bgmAudio.loop = true;
-        this.bgmAudio.preload = 'auto';
-        this.updateBGMVolume();
-      }
-    } catch (e) {
-      console.warn('Could not initialize BGM audio element:', e);
-    }
+    this.initAudioElements();
   }
 
   setupAudioElement(src) {
-    if (!this.bgmAudio) {
-      this.bgmAudio = new Audio();
-      this.bgmAudio.loop = true;
-      this.bgmAudio.preload = 'auto';
-    }
-    this.bgmAudio.src = src;
+    this.initAudioElements();
+    if (this.gameAudio) this.gameAudio.src = src;
     this.updateBGMVolume();
   }
 
   async preloadBGM(onProgress = null) {
-    if (this.bgmLoaded && this.bgmBlobUrl) {
-      if (onProgress) onProgress(1.0, 'Ambiance audio 100% cached');
-      return true;
-    }
-
-    const candidateUrls = [
-      'assets/audio/Dark Ambient - Horror.mp3',
-      'assets/audio/Dark%20Ambient%20-%20Horror.mp3',
-      'assets/audio/church_theme_ambiance.mp3',
-      'assets/audio/Creepy Church Choir Music.mp3',
-      'assets/audio/Creepy%20Church%20Choir%20Music.mp3'
-    ];
-
-    let response = null;
-    let chosenUrl = candidateUrls[0];
-    for (const url of candidateUrls) {
-      try {
-        const res = await fetch(url);
-        if (res.ok) {
-          response = res;
-          chosenUrl = url;
-          break;
-        }
-      } catch (e) {}
-    }
-
-    if (!response) {
-      console.warn('[SoundEngine] Could not fetch audio track via network, falling back to direct URL');
-      this.setupAudioElement(candidateUrls[0]);
-      this.bgmLoaded = true;
-      if (onProgress) onProgress(1.0, 'Ambiance Audio Ready');
-      return false;
-    }
+    this.initAudioElements();
+    if (onProgress) onProgress(0.2, 'Preparing Cathedral Ambience & Horror Audio...');
 
     try {
-      const contentLengthHeader = response.headers.get('content-length');
-      const totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 24005622;
+      if (this.lobbyAudio) this.lobbyAudio.load();
+      if (this.gameAudio) this.gameAudio.load();
+    } catch (e) {}
 
-      if (!response.body) {
-        const blob = await response.blob();
-        this.bgmBlobUrl = URL.createObjectURL(blob);
-        this.setupAudioElement(this.bgmBlobUrl);
-        this.bgmLoaded = true;
-        if (onProgress) onProgress(1.0, 'Ambiance audio 100% cached');
-        return true;
-      }
+    const audioTracks = [
+      { name: 'Cathedral Lobby Ambience', url: 'assets/audio/church_theme_ambiance.mp3' },
+      { name: 'Dark In-Game Horror Ambience', url: 'assets/audio/Dark%20Ambient%20-%20Horror.mp3' }
+    ];
 
-      const reader = response.body.getReader();
-      let receivedBytes = 0;
-      const chunks = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        receivedBytes += value.length;
-        const progressRatio = Math.min(1.0, receivedBytes / totalBytes);
+    let completed = 0;
+    for (const track of audioTracks) {
+      try {
+        await fetch(track.url, { method: 'HEAD' });
+        completed++;
         if (onProgress) {
-          const mbReceived = (receivedBytes / (1024 * 1024)).toFixed(1);
-          const mbTotal = (totalBytes / (1024 * 1024)).toFixed(1);
-          onProgress(progressRatio, `Preloading Dark Ambient Horror Track (${mbReceived} MB / ${mbTotal} MB)`);
+          onProgress(0.2 + (completed / audioTracks.length) * 0.8, `Preloaded ${track.name} (Ready)`);
+        }
+      } catch (e) {
+        completed++;
+        if (onProgress) {
+          onProgress(0.2 + (completed / audioTracks.length) * 0.8, `Buffered ${track.name}`);
         }
       }
-
-      const blob = new Blob(chunks, { type: 'audio/mpeg' });
-      this.bgmBlobUrl = URL.createObjectURL(blob);
-      this.setupAudioElement(this.bgmBlobUrl);
-      this.bgmLoaded = true;
-      if (onProgress) onProgress(1.0, 'Dark Horror Ambience 100% Loaded in Memory');
-      return true;
-    } catch (err) {
-      console.warn('[SoundEngine] Fetch audio preload error, fallback to direct streaming:', err);
-      this.setupAudioElement(chosenUrl);
-      this.bgmLoaded = true;
-      if (onProgress) onProgress(1.0, 'Ambiance Audio Ready');
-      return false;
     }
+
+    this.audioLoaded = true;
+    if (onProgress) onProgress(1.0, 'Cathedral & In-Game Soundtracks Ready');
+    return true;
   }
 
   updateBGMVolume() {
-    if (!this.bgmAudio) return;
     try {
-      const vol = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume * this.bgmBaseVolume));
-      this.bgmAudio.volume = vol;
+      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume));
+      if (this.lobbyAudio) {
+        this.lobbyAudio.volume = masterMult * this.lobbyBaseVolume;
+      }
+      if (this.gameAudio) {
+        this.gameAudio.volume = masterMult * this.gameBaseVolume;
+      }
     } catch (e) {}
   }
 
-  startBGM() {
-    this.initBGM();
-    if (!this.bgmAudio) return;
+  startLobbyMusic() {
+    this.initAudioElements();
+    this.activeTrack = 'lobby';
     this.updateBGMVolume();
-    if (this.bgmAudio.paused) {
-      const playPromise = this.bgmAudio.play();
+
+    // Smoothly stop in-game audio if playing
+    if (this.gameAudio && !this.gameAudio.paused) {
+      this.fadeAudioOut(this.gameAudio, 400);
+    }
+
+    if (this.lobbyAudio && this.lobbyAudio.paused) {
+      const playPromise = this.lobbyAudio.play();
       if (playPromise !== undefined) {
-        playPromise.then(() => {
-          this.bgmPlaying = true;
-        }).catch((err) => {
-          // Autoplay will be unlocked on user gesture
-          this.bgmPlaying = false;
+        playPromise.catch(() => {
+          // Will unlock automatically on next user gesture
         });
       }
     }
   }
 
-  stopBGM(fade = true) {
-    if (!this.bgmAudio || this.bgmAudio.paused) return;
-    if (fade) {
-      const startVol = this.bgmAudio.volume;
-      const startTime = performance.now();
-      const fadeDuration = 700;
-      const fadeStep = () => {
-        const elapsed = performance.now() - startTime;
-        if (elapsed < fadeDuration && !this.bgmAudio.paused) {
-          this.bgmAudio.volume = Math.max(0, startVol * (1 - elapsed / fadeDuration));
-          requestAnimationFrame(fadeStep);
-        } else {
-          this.bgmAudio.pause();
-          this.updateBGMVolume();
-          this.bgmPlaying = false;
-        }
-      };
-      requestAnimationFrame(fadeStep);
+  startGameMusic() {
+    this.initAudioElements();
+    this.activeTrack = 'game';
+    this.updateBGMVolume();
+
+    // Smoothly stop lobby audio if playing
+    if (this.lobbyAudio && !this.lobbyAudio.paused) {
+      this.fadeAudioOut(this.lobbyAudio, 400);
+    }
+
+    if (this.gameAudio && this.gameAudio.paused) {
+      const playPromise = this.gameAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Will unlock automatically on next user gesture
+        });
+      }
+    }
+  }
+
+  startBGM(type) {
+    if (type === 'game') {
+      this.startGameMusic();
+    } else if (type === 'lobby') {
+      this.startLobbyMusic();
     } else {
-      this.bgmAudio.pause();
-      this.bgmPlaying = false;
+      if (this.activeTrack === 'game') {
+        this.startGameMusic();
+      } else {
+        this.startLobbyMusic();
+      }
+    }
+  }
+
+  fadeAudioOut(audioEl, duration = 400) {
+    if (!audioEl || audioEl.paused) return;
+    const startVol = audioEl.volume;
+    const startTime = performance.now();
+    const fadeStep = () => {
+      const elapsed = performance.now() - startTime;
+      if (elapsed < duration && !audioEl.paused) {
+        audioEl.volume = Math.max(0, startVol * (1 - elapsed / duration));
+        requestAnimationFrame(fadeStep);
+      } else {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+        this.updateBGMVolume();
+      }
+    };
+    requestAnimationFrame(fadeStep);
+  }
+
+  stopBGM(fade = true) {
+    this.activeTrack = null;
+    if (fade) {
+      if (this.lobbyAudio && !this.lobbyAudio.paused) this.fadeAudioOut(this.lobbyAudio, 500);
+      if (this.gameAudio && !this.gameAudio.paused) this.fadeAudioOut(this.gameAudio, 500);
+    } else {
+      if (this.lobbyAudio) {
+        this.lobbyAudio.pause();
+        this.lobbyAudio.currentTime = 0;
+      }
+      if (this.gameAudio) {
+        this.gameAudio.pause();
+        this.gameAudio.currentTime = 0;
+      }
     }
   }
 
   pauseBGM() {
-    if (this.bgmAudio && !this.bgmAudio.paused) {
-      this.bgmAudio.pause();
-      this.bgmPlaying = false;
-    }
+    if (this.lobbyAudio && !this.lobbyAudio.paused) this.lobbyAudio.pause();
+    if (this.gameAudio && !this.gameAudio.paused) this.gameAudio.pause();
   }
 
   resumeBGM() {
-    if (this.bgmAudio && this.bgmAudio.paused) {
-      this.startBGM();
+    if (this.activeTrack === 'game') {
+      this.startGameMusic();
+    } else {
+      this.startLobbyMusic();
     }
   }
 
