@@ -17,8 +17,10 @@ class GameEngine {
     this.currentNight = 1;
     this.hour = 0; // 0 = 12 AM, 1 = 1 AM, ..., 6 = 6 AM
     this.nightTimer = 0;
-    this.hourDuration = 60; // Standard 60 seconds per in-game hour (360s total night at 1x)
-    this.timeSpeed = 1;     // Speed multiplier (1x, 2x, 4x)
+    this.fnafStandardHour = 86; // Authentic FNAF 1 PC hour duration (86.0s = 516s / 8m 36s shift)
+    this.hourDuration = 86;     // Standard 86s per hour on Normal speed
+    this.timeSpeed = 1;         // Shift speed multiplier
+    this._lastFrameTime = 0;
     this.power = 100.0;
     this.isBlackout = false;
     this.gameOver = false;
@@ -87,9 +89,14 @@ class GameEngine {
     }
 
     try {
-      const savedSpeed = parseInt(localStorage.getItem('fnaf_church_speed'), 10);
-      if (savedSpeed && [1, 2, 4].includes(savedSpeed)) {
-        this.timeSpeed = savedSpeed;
+      const savedHour = parseInt(localStorage.getItem('fnaf_church_hour_duration'), 10);
+      if (savedHour && [86, 60, 30].includes(savedHour)) {
+        this.hourDuration = savedHour;
+      } else {
+        const savedSpeed = parseInt(localStorage.getItem('fnaf_church_speed'), 10);
+        if (savedSpeed === 2) this.hourDuration = 60;
+        else if (savedSpeed === 4) this.hourDuration = 30;
+        else this.hourDuration = 86;
       }
     } catch (e) {}
 
@@ -271,7 +278,9 @@ class GameEngine {
       'assets/entities/door_peeking_angel_clean.png',
       'assets/entities/door_peeking_saint_clean.png',
       'assets/office/door_peeking_angel.jpg',
-      'assets/office/door_peeking_saint.jpg'
+      'assets/office/door_peeking_saint.jpg',
+      'assets/entities/vent_peeking_mourner_clean.png',
+      'assets/office/vent_peeking_mourner.jpg'
     ];
     this._preloadedImages = {};
     let loadedCount = 0;
@@ -377,9 +386,15 @@ class GameEngine {
       saint: texLoader.load('assets/entities/door_peeking_saint_clean.png')
     };
 
+    // Preload photorealistic vent peeking texture
+    this.ventTextures = {
+      mourner: texLoader.load('assets/entities/vent_peeking_mourner_clean.png')
+    };
+
     this.positionStatuesInitial();
     this.updateWindowHallwayView();
     this.updateDoorPeekingView();
+    this.updateVentPeekingView();
   }
 
   // --- STATUE PLACEMENT & STAGES ---
@@ -495,7 +510,7 @@ class GameEngine {
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
         mourner.position.set(3.48, 0.38, 0.45);
         mourner.rotation.set(0, -Math.PI * 0.45, 0); // Crouched at duct mouth looking up at player
-        mourner.visible = true;
+        mourner.visible = false; // Photorealistically rendered on ventPeekingGroup cutout!
         break;
       case 4: // Inside Office - Attack position
         mourner.position.set(1.1, 0.5, -0.8);
@@ -505,6 +520,7 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
+    this.updateVentPeekingView();
 
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
@@ -562,6 +578,7 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
+    this.updateVentPeekingView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
     }
@@ -671,6 +688,49 @@ class GameEngine {
     if (eye1 && eye2) {
       eye1.visible = !this.isLeftDoorLightOn;
       eye2.visible = !this.isLeftDoorLightOn;
+    }
+  }
+
+  updateVentPeekingView() {
+    if (!this.world || !this.world.nodes || !this.world.nodes.ventPeekingGroup) return;
+
+    const group = this.world.nodes.ventPeekingGroup;
+    const mat = this.world.nodes.ventPeekingMat;
+    const eye1 = this.world.nodes.ventEye1;
+    const eye2 = this.world.nodes.ventEye2;
+
+    const mournerStage = this.aiConfig.veiledMourner.stage;
+    const isPeeking = (mournerStage === 3);
+
+    // Occluded by closed blast shutter or not present at vent mouth
+    if (this.isVentClosed || !isPeeking) {
+      group.visible = false;
+      return;
+    }
+
+    group.visible = true;
+
+    if (mat && this.ventTextures?.mourner && mat.map !== this.ventTextures.mourner) {
+      mat.map = this.ventTextures.mourner;
+      mat.needsUpdate = true;
+    }
+
+    // Dynamic duct lighting response:
+    // When Vent Inspection Light is ON (R): statue is brilliantly illuminated in crisp cool LED light
+    // When Vent Light is OFF: duct is plunged in pitch-black gloom, glowing crimson phantom eyes stare outward
+    if (mat) {
+      if (this.isVentLightOn) {
+        mat.color.setHex(0xffffff);
+        mat.emissive.setHex(0x22242a);
+      } else {
+        mat.color.setHex(0x121418);
+        mat.emissive.setHex(0x020204);
+      }
+    }
+
+    if (eye1 && eye2) {
+      eye1.visible = !this.isVentLightOn;
+      eye2.visible = !this.isVentLightOn;
     }
   }
 
@@ -1298,13 +1358,28 @@ class GameEngine {
     const speedCards = document.querySelectorAll('.speed-option-card');
     speedCards.forEach(card => {
       const spd = parseInt(card.dataset.speed, 10);
-      card.classList.toggle('active', spd === this.timeSpeed);
+      const isCardActive = (spd === 1 && this.hourDuration === 86) ||
+                           (spd === 2 && this.hourDuration === 60) ||
+                           (spd === 4 && this.hourDuration === 30);
+      card.classList.toggle('active', isCardActive);
       card.addEventListener('click', () => {
         window.Sound.playMenuBlip();
         speedCards.forEach(c => c.classList.remove('active'));
         card.classList.add('active');
-        this.timeSpeed = spd;
-        try { localStorage.setItem('fnaf_church_speed', spd); } catch (e) {}
+        if (spd === 1) {
+          this.hourDuration = 86; // Authentic FNAF 1 PC (86s / hr = 516s / ~8m 36s shift)
+          this.timeSpeed = 1;
+        } else if (spd === 2) {
+          this.hourDuration = 60; // Modern Fast (60s / hr = 360s / 6m shift)
+          this.timeSpeed = 1;
+        } else if (spd === 4) {
+          this.hourDuration = 30; // Turbo Speed (30s / hr = 180s / 3m shift)
+          this.timeSpeed = 1;
+        }
+        try {
+          localStorage.setItem('fnaf_church_hour_duration', this.hourDuration);
+          localStorage.setItem('fnaf_church_speed', spd);
+        } catch (e) {}
       });
     });
   }
@@ -1555,6 +1630,8 @@ class GameEngine {
       btn.classList.toggle('door-active', this.isVentClosed);
     }
 
+    this.updateVentPeekingView();
+
     // If vent shutter is closed while Mourner is peeking at the duct opening:
     if (this.isVentClosed) {
       if (this.aiConfig.veiledMourner.stage === 3) {
@@ -1577,6 +1654,8 @@ class GameEngine {
     if (this.world.lights.ventLight) {
       this.world.lights.ventLight.intensity = this.isVentLightOn ? 3.5 : 0;
     }
+
+    this.updateVentPeekingView();
 
     const btn = document.getElementById('btn-vent-light');
     if (btn) {
@@ -2178,10 +2257,17 @@ class GameEngine {
   renderLoop() {
     requestAnimationFrame(() => this.renderLoop());
 
-    const delta = 0.016;
+    const now = performance.now();
+    if (!this._lastFrameTime) this._lastFrameTime = now;
+    let rawDelta = (now - this._lastFrameTime) / 1000;
+    this._lastFrameTime = now;
+
+    // Safeguard clamp against background tab suspension or severe frame hiccups
+    if (rawDelta > 0.1) rawDelta = 0.1;
+    if (rawDelta < 0.001) rawDelta = 0.001;
 
     if (this.isRunning && !this.isPaused) {
-      const effectiveDelta = delta * this.timeSpeed;
+      const effectiveDelta = rawDelta * this.timeSpeed;
       this.updateTime(effectiveDelta);
       this.updatePower(effectiveDelta);
       this.updateAI(effectiveDelta);

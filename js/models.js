@@ -626,6 +626,50 @@ class WorldBuilder {
 
     officeGroup.add(ductTunnelGroup);
 
+    // --- PHOTOREALISTIC VENT PEEKING ENTITY (Inside HVAC Duct Mouth) ---
+    // Photorealistically displays the Veiled Mourner crawling at the vent sill
+    const ventPeekingGroup = new THREE.Group();
+    ventPeekingGroup.name = 'ventPeekingGroup';
+    // Positioned just inside the metal duct sill at x = w / 2 + 0.12 (3.62)
+    ventPeekingGroup.position.set(w / 2 + 0.12, 0, ventZ);
+    // Angled facing towards player's desk:
+    ventPeekingGroup.rotation.y = -Math.PI * 0.46;
+    ventPeekingGroup.visible = false;
+
+    const ventPeekingTex = new THREE.TextureLoader().load('assets/entities/vent_peeking_mourner_clean.png');
+    const ventPeekingMat = new THREE.MeshStandardMaterial({
+      map: ventPeekingTex,
+      transparent: true,
+      alphaTest: 0.08,
+      roughness: 0.85,
+      metalness: 0.1,
+      side: THREE.DoubleSide
+    });
+
+    const ventPeekingGeo = new THREE.PlaneGeometry(0.88, 1.05);
+    const ventPeekingMesh = new THREE.Mesh(ventPeekingGeo, ventPeekingMat);
+    ventPeekingMesh.position.set(0, 0.54, 0); // Hands resting right on the duct sill at y = 0.02
+    ventPeekingGroup.add(ventPeekingMesh);
+
+    // Ghostly piercing red-white phantom eyes deep inside the veil void when vent light is OFF
+    const ventEyeMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+    const vEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), ventEyeMat);
+    vEye1.position.set(-0.06, 0.78, 0.04);
+    ventPeekingGroup.add(vEye1);
+
+    const vEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), ventEyeMat);
+    vEye2.position.set(0.04, 0.78, 0.04);
+    ventPeekingGroup.add(vEye2);
+
+    officeGroup.add(ventPeekingGroup);
+    this.nodes.ventPeekingGroup = ventPeekingGroup;
+    this.nodes.ventPeekingMesh = ventPeekingMesh;
+    this.nodes.ventPeekingMat = ventPeekingMat;
+    this.nodes.ventEyeMat = ventEyeMat;
+    this.nodes.ventEye1 = vEye1;
+    this.nodes.ventEye2 = vEye2;
+    this.nodes.ventPeekingTex = ventPeekingTex;
+
     // Heavy Industrial Steel Duct Flange Collar around vent mouth
     const flangeMat = frameMat;
     const flangeL = new THREE.Mesh(new THREE.BoxGeometry(0.12, ventH + 0.16, 0.08), flangeMat);
