@@ -10,7 +10,8 @@
 
 :root {
   --c-bg: #090a0f;
-  --c-panel: rgba(16, 18, 26, 0.85);
+  --c-panel: rgba(10, 14, 22, 0.42);
+  --c-panel-solid: rgba(16, 18, 26, 0.90);
   --c-text: #e2e8f0;
   --c-text-muted: #94a3b8;
   --c-gold: #eab308;
@@ -145,6 +146,13 @@ body::-webkit-scrollbar,
   flex-direction: column;
   justify-content: space-between;
   padding: 24px;
+  opacity: 0.76;
+  transition: opacity 0.25s ease;
+}
+
+#hud-overlay:hover,
+#hud-overlay:focus-within {
+  opacity: 0.95;
 }
 
 .hud-top {
@@ -158,11 +166,11 @@ body::-webkit-scrollbar,
   flex-direction: column;
   gap: 4px;
   background: var(--c-panel);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
   padding: 10px 16px;
   border-radius: 6px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .hud-church-name {
@@ -205,11 +213,11 @@ body::-webkit-scrollbar,
   flex-direction: column;
   gap: 4px;
   background: var(--c-panel);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
   padding: 8px 16px;
   border-radius: 6px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
   min-width: 220px;
   pointer-events: auto;
 }
@@ -320,12 +328,12 @@ body::-webkit-scrollbar,
 
 .hud-power-box {
   background: var(--c-panel);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   padding: 12px 18px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(6px);
   min-width: 220px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
 }
 
 .power-readout {
@@ -407,6 +415,12 @@ body::-webkit-scrollbar,
   inset: 0;
   pointer-events: none;
   z-index: 12;
+  opacity: 0.78;
+  transition: opacity 0.25s ease;
+}
+
+.office-overlay-controls:hover {
+  opacity: 0.98;
 }
 
 .door-panel-left {
@@ -418,12 +432,12 @@ body::-webkit-scrollbar,
   flex-direction: column;
   gap: 12px;
   background: var(--c-panel);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 16px;
   pointer-events: auto;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
 }
 
 .vent-panel-right {
@@ -434,12 +448,12 @@ body::-webkit-scrollbar,
   flex-direction: column;
   gap: 12px;
   background: var(--c-panel);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 16px;
   pointer-events: auto;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
 }
 
 .window-panel-center {
@@ -462,8 +476,8 @@ body::-webkit-scrollbar,
 }
 
 .ctrl-btn {
-  background: #1e293b;
-  border: 1px solid #475569;
+  background: rgba(24, 34, 52, 0.55);
+  border: 1px solid rgba(100, 116, 139, 0.45);
   border-radius: 6px;
   color: #f1f5f9;
   font-family: var(--font-sans);
@@ -477,12 +491,13 @@ body::-webkit-scrollbar,
   justify-content: space-between;
   gap: 14px;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
 }
 
 .ctrl-btn:hover {
-  background: #334155;
-  border-color: #64748b;
+  background: rgba(51, 65, 85, 0.75);
+  border-color: rgba(148, 163, 184, 0.6);
 }
 
 .ctrl-btn:active {
@@ -523,7 +538,7 @@ body::-webkit-scrollbar,
   max-width: 80%;
   height: 48px;
   background: var(--c-panel);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: none;
   border-radius: 8px 8px 0 0;
   display: flex;
@@ -533,15 +548,17 @@ body::-webkit-scrollbar,
   cursor: pointer;
   pointer-events: auto;
   z-index: 16;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
+  opacity: 0.75;
   transition: all 0.2s;
-  box-shadow: 0 -4px 25px rgba(0,0,0,0.7);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
 }
 
 .camera-flip-trigger:hover {
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(30, 41, 59, 0.75);
   border-color: var(--c-blue);
   transform: translateX(-50%) translateY(-3px);
+  opacity: 0.98;
 }
 
 .flip-icon {
@@ -1161,7 +1178,7 @@ body::-webkit-scrollbar,
 }
 
 .instructions-card {
-  background: var(--c-panel);
+  background: var(--c-panel-solid);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 16px 20px;
@@ -4021,17 +4038,22 @@ kbd.key-badge {
   left: 24px;
   width: 440px;
   max-width: calc(100vw - 48px);
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(15, 23, 42, 0.52);
+  border: 1px solid rgba(245, 158, 11, 0.25);
   border-left: 4px solid #f59e0b;
   border-radius: 6px;
   padding: 10px 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(245, 158, 11, 0.12);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(245, 158, 11, 0.08);
+  backdrop-filter: blur(6px);
   z-index: 45;
+  opacity: 0.85;
   pointer-events: auto;
   transition: opacity 0.3s ease, transform 0.3s ease;
   animation: cassetteSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cassette-widget:hover {
+  opacity: 1;
 }
 
 .cassette-widget.hidden {
