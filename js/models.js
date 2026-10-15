@@ -423,48 +423,6 @@ class WorldBuilder {
 
     officeGroup.add(corridorGroup);
 
-    // --- PHOTOREALISTIC DOOR PEEKING ENTITY (Outside Arched Left Door) ---
-    // Photorealistically displays the Weeping Angel or Haloed Saint when peeking outside
-    // Peeking strictly around the LEFT side of the doorway frame (left jamb at doorZ - doorW / 2 = -1.275)
-    // Leaving the right side open where the heavy church door swings open and closed
-    const doorPeekingGroup = new THREE.Group();
-    doorPeekingGroup.name = 'doorPeekingGroup';
-    doorPeekingGroup.position.set(-w / 2 - 0.16, 0, -0.88);
-    doorPeekingGroup.rotation.y = Math.PI * 0.40; // Angled facing inward towards player desk
-    doorPeekingGroup.visible = false;
-
-    const doorPeekingTex = new THREE.TextureLoader().load('assets/entities/door_peeking_angel_clean.png');
-    const doorPeekingMat = new THREE.MeshStandardMaterial({
-      map: doorPeekingTex,
-      transparent: true,
-      alphaTest: 0.08,
-      roughness: 0.82,
-      metalness: 0.12,
-      side: THREE.DoubleSide
-    });
-
-    const doorPeekingGeo = new THREE.PlaneGeometry(0.85, 2.25);
-    const doorPeekingMesh = new THREE.Mesh(doorPeekingGeo, doorPeekingMat);
-    doorPeekingMesh.position.set(0, 1.125, 0); // Feet firmly grounded on corridor stone floor
-    doorPeekingGroup.add(doorPeekingMesh);
-
-    // Glowing ember eyes peering out when corridor light is OFF
-    const doorEyeMat = new THREE.MeshBasicMaterial({ color: 0x88d4ff });
-    const doorEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), doorEyeMat);
-    doorEye1.position.set(0.15, 1.96, 0.04);
-    doorPeekingGroup.add(doorEye1);
-
-    const doorEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), doorEyeMat);
-    doorEye2.position.set(0.27, 1.96, 0.04);
-    doorPeekingGroup.add(doorEye2);
-
-    officeGroup.add(doorPeekingGroup);
-    this.nodes.doorPeekingGroup = doorPeekingGroup;
-    this.nodes.doorPeekingMesh = doorPeekingMesh;
-    this.nodes.doorPeekingMat = doorPeekingMat;
-    this.nodes.doorEyeMat = doorEyeMat;
-    this.nodes.doorEye1 = doorEye1;
-    this.nodes.doorEye2 = doorEye2;
 
     // Arched Stone Trim around doorway (Inside Office)
     const archTrimGroup = new THREE.Group();
@@ -628,49 +586,6 @@ class WorldBuilder {
 
     officeGroup.add(ductTunnelGroup);
 
-    // --- PHOTOREALISTIC VENT PEEKING ENTITY (Inside HVAC Duct Mouth) ---
-    // Photorealistically displays the Veiled Mourner crawling at the vent sill
-    const ventPeekingGroup = new THREE.Group();
-    ventPeekingGroup.name = 'ventPeekingGroup';
-    // Positioned just inside the metal duct sill at x = w / 2 + 0.12 (3.62)
-    ventPeekingGroup.position.set(w / 2 + 0.12, 0, ventZ);
-    // Angled facing towards player's desk:
-    ventPeekingGroup.rotation.y = -Math.PI * 0.46;
-    ventPeekingGroup.visible = false;
-
-    const ventPeekingTex = new THREE.TextureLoader().load('assets/entities/vent_peeking_mourner_clean.png');
-    const ventPeekingMat = new THREE.MeshStandardMaterial({
-      map: ventPeekingTex,
-      transparent: true,
-      alphaTest: 0.08,
-      roughness: 0.85,
-      metalness: 0.1,
-      side: THREE.DoubleSide
-    });
-
-    const ventPeekingGeo = new THREE.PlaneGeometry(0.88, 1.05);
-    const ventPeekingMesh = new THREE.Mesh(ventPeekingGeo, ventPeekingMat);
-    ventPeekingMesh.position.set(0, 0.54, 0); // Hands resting right on the duct sill at y = 0.02
-    ventPeekingGroup.add(ventPeekingMesh);
-
-    // Ghostly piercing red-white phantom eyes deep inside the veil void when vent light is OFF
-    const ventEyeMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
-    const vEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), ventEyeMat);
-    vEye1.position.set(-0.06, 0.78, 0.04);
-    ventPeekingGroup.add(vEye1);
-
-    const vEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), ventEyeMat);
-    vEye2.position.set(0.04, 0.78, 0.04);
-    ventPeekingGroup.add(vEye2);
-
-    officeGroup.add(ventPeekingGroup);
-    this.nodes.ventPeekingGroup = ventPeekingGroup;
-    this.nodes.ventPeekingMesh = ventPeekingMesh;
-    this.nodes.ventPeekingMat = ventPeekingMat;
-    this.nodes.ventEyeMat = ventEyeMat;
-    this.nodes.ventEye1 = vEye1;
-    this.nodes.ventEye2 = vEye2;
-    this.nodes.ventPeekingTex = ventPeekingTex;
 
     // Heavy Industrial Steel Duct Flange Collar around vent mouth
     const flangeMat = frameMat;
