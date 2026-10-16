@@ -379,49 +379,74 @@ class WorldBuilder {
     officeGroup.add(lwTop);
 
     // --- OUTER WEST CLOISTER CORRIDOR (Visible through left open doorway) ---
+    // Deep, open vaulted gothic cloister hallway extending 24m into cathedral darkness
     const corridorGroup = new THREE.Group();
-    const corrW = 4.2;
-    const corrD = 2.8;
-    const corrH = 3.4;
+    const corrW = 24.0;
+    const corrD = 3.6;
+    const corrH = 3.8;
 
-    // Corridor stone floor
-    const corrFloor = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD), this.materials.floor);
+    // Corridor stone floor extending deep down hallway
+    const corrFloor = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD, 16, 2), this.materials.floor);
     corrFloor.rotation.x = -Math.PI / 2;
     corrFloor.position.set(-w / 2 - corrW / 2, 0.01, doorZ);
     corridorGroup.add(corrFloor);
 
-    // Corridor stone ceiling
-    const corrCeil = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD), this.materials.vaultStone);
+    // Corridor vaulted stone ceiling
+    const corrCeil = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD, 16, 2), this.materials.vaultStone);
     corrCeil.rotation.x = Math.PI / 2;
     corrCeil.position.set(-w / 2 - corrW / 2, corrH, doorZ);
     corridorGroup.add(corrCeil);
 
-    // Far west wall
+    // Far west wall (24m away, dissolved into scene darkness & fog)
     const corrFarWall = new THREE.Mesh(new THREE.PlaneGeometry(corrD, corrH), this.materials.wall);
     corrFarWall.rotation.y = Math.PI / 2;
     corrFarWall.position.set(-w / 2 - corrW, corrH / 2, doorZ);
     corridorGroup.add(corrFarWall);
 
-    // Corridor side walls with arch ribs
-    const corrSideWallL = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH), this.materials.brick);
+    // Corridor side walls (North & South)
+    const corrSideWallL = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH, 16, 2), this.materials.brick);
     corrSideWallL.position.set(-w / 2 - corrW / 2, corrH / 2, doorZ - corrD / 2);
     corridorGroup.add(corrSideWallL);
 
-    const corrSideWallR = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH), this.materials.brick);
+    const corrSideWallR = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH, 16, 2), this.materials.brick);
     corrSideWallR.rotation.y = Math.PI;
     corrSideWallR.position.set(-w / 2 - corrW / 2, corrH / 2, doorZ + corrD / 2);
     corridorGroup.add(corrSideWallR);
 
-    // Stone arch rib spanning outside hallway
-    const corrArchTorus = new THREE.Mesh(
-      new THREE.TorusGeometry(corrD / 2, 0.16, 8, 16, Math.PI),
-      this.materials.vaultStone
-    );
-    corrArchTorus.rotation.y = Math.PI / 2;
-    corrArchTorus.position.set(-w / 2 - 2.0, 2.0, doorZ);
-    corridorGroup.add(corrArchTorus);
+    // Recurring Gothic Vault Arch Ribs & Stone Pilasters along the hallway corridor
+    const archOffsets = [2.2, 5.8, 9.4, 13.0, 16.6, 20.2];
+    archOffsets.forEach((ox) => {
+      // Vaulted stone arch torus spanning the corridor
+      const archTorus = new THREE.Mesh(
+        new THREE.TorusGeometry(corrD / 2, 0.15, 8, 24, Math.PI),
+        this.materials.vaultStone
+      );
+      archTorus.rotation.y = Math.PI / 2;
+      archTorus.position.set(-w / 2 - ox, 2.2, doorZ);
+      corridorGroup.add(archTorus);
+
+      // Left & right supporting stone pilasters
+      const pilGeo = new THREE.BoxGeometry(0.24, 2.2, 0.24);
+      const pilL = new THREE.Mesh(pilGeo, this.materials.vaultStone);
+      pilL.position.set(-w / 2 - ox, 1.1, doorZ - corrD / 2 + 0.12);
+      corridorGroup.add(pilL);
+
+      const pilR = new THREE.Mesh(pilGeo, this.materials.vaultStone);
+      pilR.position.set(-w / 2 - ox, 1.1, doorZ + corrD / 2 - 0.12);
+      corridorGroup.add(pilR);
+    });
+
+    // Faint atmospheric cloister wall sconce illumination deep in the hallway
+    const corrFarLight1 = new THREE.PointLight(0x4466aa, 0.35, 8);
+    corrFarLight1.position.set(-w / 2 - 9.4, 2.4, doorZ);
+    corridorGroup.add(corrFarLight1);
+
+    const corrFarLight2 = new THREE.PointLight(0x223366, 0.22, 7);
+    corrFarLight2.position.set(-w / 2 - 16.6, 2.4, doorZ);
+    corridorGroup.add(corrFarLight2);
 
     officeGroup.add(corridorGroup);
+
 
 
     // Arched Stone Trim around doorway (Inside Office)

@@ -45,6 +45,7 @@ class GameEngine {
     this.windowSpotIntensity = 0.0;   // Dynamic light intensity (0.0 night -> 1.0 lit)
     this.windowSpotIgnitionTimer = 0.0; // Filament surge ignition timer
     this.isWindowSpotFlickering = false; // Horror halogen strobe flicker when catching entities
+    this._windowSpotPreFlickerTimer = null;
     this._windowSpotRetreatTimer = null;
 
     // Digital Surveillance Monitor (CCTV)
@@ -501,9 +502,9 @@ class GameEngine {
       case 2: // CAM 05 - Narthex Corridor outside office window
         angel.visible = false; // Photorealistically displayed on windowBackdrop!
         break;
-      case 3: // Peeking directly around Left Arched Church Doorway threshold!
-        angel.position.set(-3.55, 0.0, -0.65);
-        angel.rotation.set(0, Math.PI * 0.42, 0); // Angled into office towards player desk
+      case 3: // Standing in outer hallway corridor outside Left Arched Doorway!
+        angel.position.set(-4.85, 0.0, -0.65);
+        angel.rotation.set(0, Math.PI * 0.48, 0); // Facing slightly inward towards doorway
         angel.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
@@ -547,9 +548,9 @@ class GameEngine {
       case 2: // CAM 05 - Right outside observation window
         saint.visible = false; // Photorealistically displayed on windowBackdrop!
         break;
-      case 3: // Peeking directly around Left Arched Church Doorway threshold!
-        saint.position.set(-3.56, 0.0, -0.60);
-        saint.rotation.set(0, Math.PI * 0.40, 0); // Angled into office
+      case 3: // Standing in outer hallway corridor outside Left Arched Doorway!
+        saint.position.set(-4.85, 0.0, -0.65);
+        saint.rotation.set(0, Math.PI * 0.48, 0); // Facing slightly inward towards doorway
         saint.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
@@ -1895,11 +1896,16 @@ class GameEngine {
 
     if (this.isWindowSpotOn) {
       this.windowSpotIntensity = 1.0;
+      this.isWindowSpotFlickering = false;
       window.Sound.startFlashlightHum();
     } else {
       // INSTANTLY DARK WHEN CLOSED! Zero fade, zero delay
       this.windowSpotIntensity = 0.0;
       this.isWindowSpotFlickering = false;
+      if (this._windowSpotPreFlickerTimer) {
+        clearTimeout(this._windowSpotPreFlickerTimer);
+        this._windowSpotPreFlickerTimer = null;
+      }
       if (this._windowSpotRetreatTimer) {
         clearTimeout(this._windowSpotRetreatTimer);
         this._windowSpotRetreatTimer = null;
@@ -1928,27 +1934,45 @@ class GameEngine {
       const mournerInHallway = this.aiConfig.veiledMourner.location === 'CAM_05';
 
       if (angelInHallway || saintInHallway || mournerInHallway) {
-        // Light flickers dramatically when an entity is caught, then entity vanishes!
-        this.isWindowSpotFlickering = true;
-        window.Sound.playLightFlicker(0.85);
-        window.Sound.playStoneGrind(0.85);
-
+        // Clear any previous pending timers
+        if (this._windowSpotPreFlickerTimer) {
+          clearTimeout(this._windowSpotPreFlickerTimer);
+          this._windowSpotPreFlickerTimer = null;
+        }
         if (this._windowSpotRetreatTimer) {
           clearTimeout(this._windowSpotRetreatTimer);
+          this._windowSpotRetreatTimer = null;
         }
-        this._windowSpotRetreatTimer = setTimeout(() => {
-          if (this.isWindowSpotOn && !this.gameOver && !this.victory) {
-            // Entities vanish and flee back to camera bases
-            if (this.aiConfig.weepingAngel.location === 'CAM_05') this.banishAngel();
-            if (this.aiConfig.haloedSaint.location === 'CAM_05') this.banishSaint();
-            if (this.aiConfig.veiledMourner.location === 'CAM_05') this.banishMourner();
 
-            this.isWindowSpotFlickering = false;
-            this.windowSpotIntensity = 1.0;
-            this.updateWindowHallwayView();
-            window.Sound.playStoneGrind(0.9);
-          }
-        }, 800);
+        // 1. Initial short moment of solid illumination: player clearly sees the statue in the spotlight
+        this.isWindowSpotFlickering = false;
+        this.windowSpotIntensity = 1.0;
+        window.Sound.playStoneGrind(0.55);
+
+        // 2. Short moment (~850ms) before the light begins to flicker
+        this._windowSpotPreFlickerTimer = setTimeout(() => {
+          this._windowSpotPreFlickerTimer = null;
+          if (!this.isWindowSpotOn || this.gameOver || this.victory) return;
+
+          // Light begins to flicker dramatically
+          this.isWindowSpotFlickering = true;
+          window.Sound.playLightFlicker(0.85);
+
+          // 3. After flickering (~850ms), the entity vanishes and light stabilizes
+          this._windowSpotRetreatTimer = setTimeout(() => {
+            this._windowSpotRetreatTimer = null;
+            if (this.isWindowSpotOn && !this.gameOver && !this.victory) {
+              if (this.aiConfig.weepingAngel.location === 'CAM_05') this.banishAngel();
+              if (this.aiConfig.haloedSaint.location === 'CAM_05') this.banishSaint();
+              if (this.aiConfig.veiledMourner.location === 'CAM_05') this.banishMourner();
+
+              this.isWindowSpotFlickering = false;
+              this.windowSpotIntensity = 1.0;
+              this.updateWindowHallwayView();
+              window.Sound.playStoneGrind(0.9);
+            }
+          }, 850);
+        }, 850);
       }
     }
   }
@@ -2467,10 +2491,13 @@ class GameEngine {
     this.jumpscareTimer = 0;
     this.muteCassette();
 
-    // Immediately shut down CCTV monitor overlay if active
+    // Immediately shut down CCTV monitor overlay and spotlight if active
     if (this.isCCTVOpen) {
       this.isCCTVOpen = false;
       document.getElementById('cctv-overlay')?.classList.remove('active');
+    }
+    if (this.isWindowSpotOn) {
+      this.toggleWindowSpot();
     }
 
     // Hide HUD overlay during jumpscare for raw cinematic terror
