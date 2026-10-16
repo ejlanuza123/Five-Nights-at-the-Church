@@ -144,30 +144,68 @@ class GameEngine {
 
     let isDismissed = false;
 
-    const dismissPreloader = () => {
+    const showWarningAndEnter = () => {
       if (isDismissed) return;
       isDismissed = true;
       preloader.classList.add('fade-out');
-      window.Sound.init();
-      window.Sound.resume();
-      window.Sound.startLobbyMusic();
-      if (!this.isRunning && !this._menuAudioStarted) {
-        this._menuAudioStarted = true;
-        window.Sound.startMenuDrone();
-      }
       setTimeout(() => {
         preloader.style.display = 'none';
-      }, 850);
+      }, 500);
+
+      const warningScreen = document.getElementById('warning-screen');
+      if (warningScreen) {
+        warningScreen.classList.remove('hidden');
+        let warningDismissed = false;
+
+        const dismissWarning = () => {
+          if (warningDismissed) return;
+          warningDismissed = true;
+          window.removeEventListener('keydown', onWarningKey);
+          warningScreen.classList.add('fade-out');
+
+          window.Sound.init();
+          window.Sound.resume();
+          window.Sound.startLobbyMusic();
+          if (!this.isRunning && !this._menuAudioStarted) {
+            this._menuAudioStarted = true;
+            window.Sound.startMenuDrone();
+          }
+
+          setTimeout(() => {
+            warningScreen.style.display = 'none';
+            warningScreen.classList.add('hidden');
+          }, 600);
+        };
+
+        const onWarningKey = (e) => {
+          dismissWarning();
+        };
+
+        document.getElementById('btn-warning-continue')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dismissWarning();
+        });
+        warningScreen.addEventListener('click', dismissWarning);
+        window.addEventListener('keydown', onWarningKey);
+      } else {
+        window.Sound.init();
+        window.Sound.resume();
+        window.Sound.startLobbyMusic();
+        if (!this.isRunning && !this._menuAudioStarted) {
+          this._menuAudioStarted = true;
+          window.Sound.startMenuDrone();
+        }
+      }
     };
 
     btnLaunch?.addEventListener('click', (e) => {
       e.stopPropagation();
-      dismissPreloader();
+      showWarningAndEnter();
     });
 
     const onUserKeyOrClick = (e) => {
       if (btnLaunch && !btnLaunch.classList.contains('hidden') && !isDismissed) {
-        dismissPreloader();
+        showWarningAndEnter();
       }
     };
     window.addEventListener('keydown', onUserKeyOrClick);
@@ -862,7 +900,6 @@ class GameEngine {
         if (e.key === '4') this.switchCamera(4);
         if (e.key === '5') this.switchCamera(5);
         if (isKey('nightVision')) this.toggleNightVision();
-        if (e.key === 'Escape') this.toggleCCTV();
       } else if (this.isRunning && !this.gameOver && !this.victory) {
         // Quick Commands for Office Doors & Lights using customizable key mapping
         if (isKey('doorToggle')) this.toggleLeftDoor();
@@ -872,19 +909,30 @@ class GameEngine {
         if (isKey('ventLight')) this.toggleVentLight();
       }
 
-      // Escape key closes modals if open
+      // Escape key handles modals, CCTV, and in-game pause menu with sound controls
       if (e.key === 'Escape') {
         const customModal = document.getElementById('custom-night-modal');
         if (customModal && !customModal.classList.contains('hidden')) {
           this.toggleCustomNightModal(false);
+          return;
         }
         const optModal = document.getElementById('options-modal') || document.getElementById('settings-modal');
         if (optModal && !optModal.classList.contains('hidden')) {
           this.toggleOptionsModal(false);
+          return;
         }
         const modal = document.getElementById('manual-modal');
         if (modal && !modal.classList.contains('hidden')) {
           this.toggleManualModal(false);
+          return;
+        }
+        if (this.isCCTVOpen) {
+          this.toggleCCTV();
+          return;
+        }
+        if (this.isRunning && !this.gameOver && !this.victory) {
+          this.toggleOptionsModal(true, 'tab-audio');
+          return;
         }
       }
     });
@@ -1387,6 +1435,13 @@ class GameEngine {
       this.toggleOptionsModal(false);
     });
 
+    const btnQuit = document.getElementById('btn-quit-to-menu');
+    btnQuit?.addEventListener('click', () => {
+      window.Sound.playMechanicalClick();
+      this.toggleOptionsModal(false);
+      this.returnToMainMenu();
+    });
+
     modal?.addEventListener('click', (e) => {
       if (e.target === modal) {
         this.toggleOptionsModal(false);
@@ -1554,6 +1609,79 @@ class GameEngine {
         btn.textContent = this.formatKeyName(key);
       }
     }
+
+    const doorKey = this.formatKeyName(this.keyBindings.doorToggle || 'q');
+    const doorLightKey = this.formatKeyName(this.keyBindings.doorLight || 'z');
+    const winSpotKey = this.formatKeyName(this.keyBindings.windowSpot || 'w');
+    const ventKey = this.formatKeyName(this.keyBindings.ventToggle || 'e');
+    const ventLightKey = this.formatKeyName(this.keyBindings.ventLight || 'r');
+    const cctvKey = this.formatKeyName(this.keyBindings.cctvToggle || ' ');
+    const nvKey = this.formatKeyName(this.keyBindings.nightVision || 'l');
+
+    // Office HUD Control Buttons (Live HUD Shortcut Labels)
+    const btnDoor = document.getElementById('btn-door-toggle');
+    if (btnDoor) {
+      const span = btnDoor.querySelector('span');
+      if (span) span.textContent = `LOCK DOOR [${doorKey}]`;
+      btnDoor.title = `Lock / Unlock Heavy Wooden Church Door [${doorKey}]`;
+    }
+
+    const btnDoorLight = document.getElementById('btn-door-light');
+    if (btnDoorLight) {
+      const span = btnDoorLight.querySelector('span');
+      if (span) span.textContent = `DOOR LIGHT [${doorLightKey}]`;
+      btnDoorLight.title = `Toggle Door Downlight [${doorLightKey}]`;
+    }
+
+    const btnWinSpot = document.getElementById('btn-window-spot');
+    if (btnWinSpot) {
+      const span = btnWinSpot.querySelector('span');
+      if (span) span.textContent = `WINDOW SPOTLIGHT [${winSpotKey}]`;
+      btnWinSpot.title = `Toggle Window Spotlight [${winSpotKey}]`;
+    }
+
+    const btnVent = document.getElementById('btn-vent-toggle');
+    if (btnVent) {
+      const span = btnVent.querySelector('span');
+      if (span) span.textContent = `SEAL VENT [${ventKey}]`;
+      btnVent.title = `Seal / Open Steel Shutter Damper [${ventKey}]`;
+    }
+
+    const btnVentLight = document.getElementById('btn-vent-light');
+    if (btnVentLight) {
+      const span = btnVentLight.querySelector('span');
+      if (span) span.textContent = `VENT LIGHT [${ventLightKey}]`;
+      btnVentLight.title = `Toggle Vent Duct Light [${ventLightKey}]`;
+    }
+
+    // CCTV flip bar and minimize button
+    const cctvSubtext = document.querySelector('#cctv-flip-bar .flip-subtext');
+    if (cctvSubtext) cctvSubtext.textContent = `[${cctvKey}]`;
+
+    const cctvFlipDown = document.getElementById('cctv-flip-down-btn');
+    if (cctvFlipDown) cctvFlipDown.textContent = `MINIMIZE FEED [${cctvKey}]`;
+
+    const btnCctvLight = document.getElementById('btn-cctv-light');
+    if (btnCctvLight) {
+      const span = btnCctvLight.querySelector('span');
+      if (span) span.textContent = `IR NIGHT VISION [${nvKey}]`;
+      btnCctvLight.title = `Toggle Camera Night Vision [${nvKey}]`;
+    }
+
+    // How to Play guide badges
+    const badgesDoor = document.querySelectorAll('.badge-door');
+    if (badgesDoor.length > 0) badgesDoor[0].textContent = doorKey;
+    if (badgesDoor.length > 1) badgesDoor[1].textContent = doorLightKey;
+
+    const badgesWin = document.querySelectorAll('.badge-window');
+    if (badgesWin.length > 0) badgesWin[0].textContent = winSpotKey;
+
+    const badgesVent = document.querySelectorAll('.badge-vent');
+    if (badgesVent.length > 0) badgesVent[0].textContent = ventKey;
+    if (badgesVent.length > 1) badgesVent[1].textContent = ventLightKey;
+
+    const badgesCctv = document.querySelectorAll('.badge-cctv');
+    badgesCctv.forEach(b => { b.textContent = cctvKey; });
   }
 
   saveReboundKey(action, key) {
@@ -1581,7 +1709,17 @@ class GameEngine {
     document.querySelectorAll('.keybind-slot-btn').forEach(b => b.classList.remove('binding-active'));
     this.updateKeybindingLabels();
 
+    const quitBtn = document.getElementById('btn-quit-to-menu');
+
     if (shouldOpen) {
+      // Pause in-game simulation when options modal is displayed
+      if (this.isRunning && !this.gameOver && !this.victory) {
+        this.isPaused = true;
+        if (quitBtn) quitBtn.style.display = 'inline-flex';
+      } else {
+        if (quitBtn) quitBtn.style.display = 'none';
+      }
+
       modal.classList.remove('hidden');
       window.Sound.playMenuBlip();
       if (defaultTab) {
@@ -1597,6 +1735,11 @@ class GameEngine {
     } else {
       modal.classList.add('hidden');
       window.Sound.playMenuBlip();
+      // Resume simulation and BGM if active in-game
+      if (this.isRunning && !this.gameOver && !this.victory) {
+        this.isPaused = false;
+        window.Sound.resumeBGM();
+      }
     }
   }
 
@@ -1606,10 +1749,39 @@ class GameEngine {
 
   returnToMainMenu() {
     this.isRunning = false;
+    this.isPaused = false;
     this.gameOver = false;
     this.victory = false;
     this.muteCassette();
     if (this.isCCTVOpen) this.toggleCCTV();
+
+    // Reset active defense toggles
+    if (this.isLeftDoorClosed) {
+      this.isLeftDoorClosed = false;
+      const btn = document.getElementById('btn-door-toggle');
+      if (btn) btn.classList.remove('active', 'door-active');
+      if (this.world.nodes.magLedMat) this.world.nodes.magLedMat.color.setHex(0x22c55e);
+    }
+    if (this.isLeftDoorLightOn) {
+      this.isLeftDoorLightOn = false;
+      const btn = document.getElementById('btn-door-light');
+      if (btn) btn.classList.remove('active', 'light-active');
+      if (this.world.lights.doorLight) this.world.lights.doorLight.intensity = 0;
+    }
+    if (this.isVentClosed) {
+      this.isVentClosed = false;
+      const btn = document.getElementById('btn-vent-toggle');
+      if (btn) btn.classList.remove('active', 'door-active');
+    }
+    if (this.isVentLightOn) {
+      this.isVentLightOn = false;
+      const btn = document.getElementById('btn-vent-light');
+      if (btn) btn.classList.remove('active', 'light-active');
+      if (this.world.lights.ventLight) this.world.lights.ventLight.intensity = 0;
+    }
+    if (this.isWindowSpotOn) {
+      this.toggleWindowSpot();
+    }
 
     window.Sound.stopAmbientOrgan();
     window.Sound.stopHeartbeat();

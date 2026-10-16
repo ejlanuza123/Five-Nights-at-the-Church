@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
-  <link rel="stylesheet" href="css/style.css?v=20261016_v30">
+  <link rel="stylesheet" href="css/style.css?v=20261016_v35">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
@@ -266,6 +266,15 @@
       <button class="cctv-flip-down" id="cctv-flip-down-btn">MINIMIZE FEED [SPACEBAR]</button>
     </div>
 
+    <!-- Embedded Cathedral & Dark Ambient Music Audio Tracks -->
+    <audio id="bgm-lobby" preload="auto" loop playsinline>
+      <source src="assets/audio/church_theme_ambiance.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bgm-game" preload="auto" loop playsinline>
+      <source src="assets/audio/Dark Ambient - Horror.mp3" type="audio/mpeg">
+      <source src="assets/audio/Dark%20Ambient%20-%20Horror.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- Fullscreen 100% Resource & Audio Preloader (Guarantees Zero In-Game Buffering) -->
     <div id="game-preloader">
       <div class="preloader-scanlines"></div>
@@ -296,6 +305,29 @@
           <span>● AUDIO BUFFER: IN-MEMORY RAM STREAMING ACTIVE</span>
           <span>● SYSTEM INTEGRITY: 100% SECURE</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Classic FNAF Sensory & Content Warning Screen -->
+    <div id="warning-screen" class="hidden">
+      <div class="warning-scanlines"></div>
+      <div class="warning-vignette"></div>
+      <div class="warning-container">
+        <div class="warning-icon-box">
+          <span class="warning-symbol">⚠️</span>
+        </div>
+        <h1 class="warning-heading">WARNING</h1>
+        <div class="warning-divider"></div>
+        <p class="warning-text-primary">
+          This game contains <strong>flashing lights</strong>, <strong>loud sudden noises</strong>, and <strong>intense jumpscares</strong>.
+        </p>
+        <p class="warning-text-secondary">
+          Player discretion is advised for individuals sensitive to sudden sensory shocks, strobe effects, or photosensitive seizures.
+        </p>
+        <button id="btn-warning-continue" class="warning-continue-btn" title="Acknowledge and enter cathedral archives">
+          <span class="warning-btn-text">CONTINUE TO PARISH ARCHIVES</span>
+          <kbd class="warning-btn-kbd">[CLICK OR PRESS ANY KEY]</kbd>
+        </button>
       </div>
     </div>
 
@@ -860,9 +892,13 @@
             <span class="footer-status-text">Preferences &amp; keybindings are saved automatically</span>
           </div>
           <div class="options-footer-actions">
-            <button class="options-save-btn" id="btn-close-options" title="Save changes and close options [ESC]">
+            <button class="options-quit-btn" id="btn-quit-to-menu" title="Abandon shift and return to main menu">
+              <span class="quit-btn-icon">🚪</span>
+              <span class="quit-btn-text">QUIT TO MAIN MENU</span>
+            </button>
+            <button class="options-save-btn" id="btn-close-options" title="Save changes and resume/close options [ESC]">
               <span class="save-btn-icon">✓</span>
-              <span class="save-btn-text">SAVE &amp; CLOSE</span>
+              <span class="save-btn-text">RESUME / CLOSE</span>
               <kbd class="save-btn-key">ESC</kbd>
             </button>
           </div>
@@ -998,9 +1034,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261016_v34"></script>
-  <script src="js/textures.js?v=20261016_v34"></script>
-  <script src="js/models.js?v=20261016_v34"></script>
-  <script src="js/game.js?v=20261016_v34"></script>
+  <script src="js/audio.js?v=20261016_v35"></script>
+  <script src="js/textures.js?v=20261016_v35"></script>
+  <script src="js/models.js?v=20261016_v35"></script>
+  <script src="js/game.js?v=20261016_v35"></script>
 </body>
 </html>

@@ -40,16 +40,22 @@ class SoundEngine {
   initAudioElements() {
     try {
       if (!this.lobbyAudio) {
-        this.lobbyAudio = new Audio('assets/audio/church_theme_ambiance.mp3');
+        this.lobbyAudio = document.getElementById('bgm-lobby');
+        if (!this.lobbyAudio) {
+          this.lobbyAudio = new Audio('assets/audio/church_theme_ambiance.mp3');
+        }
         this.lobbyAudio.loop = true;
         this.lobbyAudio.preload = 'auto';
       }
       if (!this.gameAudio) {
-        this.gameAudio = new Audio('assets/audio/Dark%20Ambient%20-%20Horror.mp3');
+        this.gameAudio = document.getElementById('bgm-game');
+        if (!this.gameAudio) {
+          this.gameAudio = new Audio('assets/audio/Dark Ambient - Horror.mp3');
+        }
         this.gameAudio.loop = true;
         this.gameAudio.preload = 'auto';
         this.gameAudio.addEventListener('error', () => {
-          if (this.gameAudio && !this.gameAudio.src.includes('Horror.mp3')) {
+          if (this.gameAudio && !this.gameAudio.src.includes('Horror')) {
             this.gameAudio.src = 'assets/audio/Dark Ambient - Horror.mp3';
             this.gameAudio.load();
           }
@@ -82,13 +88,13 @@ class SoundEngine {
 
     const audioTracks = [
       { name: 'Cathedral Lobby Ambience', url: 'assets/audio/church_theme_ambiance.mp3' },
-      { name: 'Dark In-Game Horror Ambience', url: 'assets/audio/Dark%20Ambient%20-%20Horror.mp3' }
+      { name: 'Dark In-Game Horror Ambience', url: 'assets/audio/Dark Ambient - Horror.mp3' }
     ];
 
     let completed = 0;
     for (const track of audioTracks) {
       try {
-        await fetch(track.url, { method: 'HEAD' });
+        await fetch(encodeURI(track.url), { method: 'HEAD' });
         completed++;
         if (onProgress) {
           onProgress(0.2 + (completed / audioTracks.length) * 0.8, `Preloaded ${track.name} (Ready)`);
@@ -121,19 +127,37 @@ class SoundEngine {
   startLobbyMusic() {
     this.initAudioElements();
     this.activeTrack = 'lobby';
-    this.updateBGMVolume();
+
+    // Cancel active fade on lobbyAudio if any
+    if (this.lobbyAudio && this.lobbyAudio._fadeRaf) {
+      cancelAnimationFrame(this.lobbyAudio._fadeRaf);
+      this.lobbyAudio._fadeRaf = null;
+    }
 
     // Smoothly stop in-game audio if playing
     if (this.gameAudio && !this.gameAudio.paused) {
       this.fadeAudioOut(this.gameAudio, 400);
     }
 
-    if (this.lobbyAudio && this.lobbyAudio.paused) {
-      const playPromise = this.lobbyAudio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Will unlock automatically on next user gesture
-        });
+    this.updateBGMVolume();
+
+    if (this.lobbyAudio) {
+      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume));
+      this.lobbyAudio.volume = masterMult * this.lobbyBaseVolume;
+      if (this.lobbyAudio.paused) {
+        const playPromise = this.lobbyAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            const resumeLobbyAudio = () => {
+              if (this.activeTrack === 'lobby' && this.lobbyAudio && this.lobbyAudio.paused) {
+                this.updateBGMVolume();
+                this.lobbyAudio.play().catch(() => {});
+              }
+            };
+            window.addEventListener('click', resumeLobbyAudio, { once: true });
+            window.addEventListener('keydown', resumeLobbyAudio, { once: true });
+          });
+        }
       }
     }
   }
@@ -141,19 +165,38 @@ class SoundEngine {
   startGameMusic() {
     this.initAudioElements();
     this.activeTrack = 'game';
-    this.updateBGMVolume();
+
+    // Cancel active fade on gameAudio if any
+    if (this.gameAudio && this.gameAudio._fadeRaf) {
+      cancelAnimationFrame(this.gameAudio._fadeRaf);
+      this.gameAudio._fadeRaf = null;
+    }
 
     // Smoothly stop lobby audio if playing
     if (this.lobbyAudio && !this.lobbyAudio.paused) {
       this.fadeAudioOut(this.lobbyAudio, 400);
     }
 
-    if (this.gameAudio && this.gameAudio.paused) {
-      const playPromise = this.gameAudio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Will unlock automatically on next user gesture
-        });
+    this.updateBGMVolume();
+
+    if (this.gameAudio) {
+      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume));
+      this.gameAudio.volume = masterMult * this.gameBaseVolume;
+      if (this.gameAudio.paused) {
+        const playPromise = this.gameAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('In-game dark ambient play pending user gesture or buffer:', err);
+            const resumeGameAudio = () => {
+              if (this.activeTrack === 'game' && this.gameAudio && this.gameAudio.paused) {
+                this.updateBGMVolume();
+                this.gameAudio.play().catch(() => {});
+              }
+            };
+            window.addEventListener('click', resumeGameAudio, { once: true });
+            window.addEventListener('keydown', resumeGameAudio, { once: true });
+          });
+        }
       }
     }
   }
@@ -174,20 +217,25 @@ class SoundEngine {
 
   fadeAudioOut(audioEl, duration = 400) {
     if (!audioEl || audioEl.paused) return;
+    if (audioEl._fadeRaf) {
+      cancelAnimationFrame(audioEl._fadeRaf);
+      audioEl._fadeRaf = null;
+    }
     const startVol = audioEl.volume;
     const startTime = performance.now();
     const fadeStep = () => {
       const elapsed = performance.now() - startTime;
       if (elapsed < duration && !audioEl.paused) {
         audioEl.volume = Math.max(0, startVol * (1 - elapsed / duration));
-        requestAnimationFrame(fadeStep);
+        audioEl._fadeRaf = requestAnimationFrame(fadeStep);
       } else {
+        audioEl._fadeRaf = null;
         audioEl.pause();
         audioEl.currentTime = 0;
         this.updateBGMVolume();
       }
     };
-    requestAnimationFrame(fadeStep);
+    audioEl._fadeRaf = requestAnimationFrame(fadeStep);
   }
 
   stopBGM(fade = true) {
