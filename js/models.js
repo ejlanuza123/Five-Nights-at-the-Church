@@ -381,40 +381,41 @@ class WorldBuilder {
     // --- OUTER WEST CLOISTER CORRIDOR (Visible through left open doorway) ---
     const corridorGroup = new THREE.Group();
     const corrW = 4.2;
-    const corrD = 2.8;
     const corrH = 3.4;
+    const corrZBack = doorZ + 1.4; // +0.8 (corner wall behind door)
+    const corrZFront = -14.0;      // Extends forward down hallway into dark cathedral fog
+    const corrLength = corrZBack - corrZFront; // 14.8m
+    const corrCenterZ = (corrZBack + corrZFront) / 2; // -6.6m
 
-    // Corridor stone floor
-    const corrFloor = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD), this.materials.floor);
+    // Corridor stone floor extending down the hallway
+    const corrFloor = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrLength), this.materials.floor);
     corrFloor.rotation.x = -Math.PI / 2;
-    corrFloor.position.set(-w / 2 - corrW / 2, 0.01, doorZ);
+    corrFloor.position.set(-w / 2 - corrW / 2, 0.01, corrCenterZ);
     corridorGroup.add(corrFloor);
 
-    // Corridor stone ceiling
-    const corrCeil = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD), this.materials.vaultStone);
+    // Corridor stone ceiling extending down the hallway
+    const corrCeil = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrLength), this.materials.vaultStone);
     corrCeil.rotation.x = Math.PI / 2;
-    corrCeil.position.set(-w / 2 - corrW / 2, corrH, doorZ);
+    corrCeil.position.set(-w / 2 - corrW / 2, corrH, corrCenterZ);
     corridorGroup.add(corrCeil);
 
-    // Far west wall
-    const corrFarWall = new THREE.Mesh(new THREE.PlaneGeometry(corrD, corrH), this.materials.wall);
+    // Far west wall extending down the hallway
+    const corrFarWall = new THREE.Mesh(new THREE.PlaneGeometry(corrLength, corrH), this.materials.wall);
     corrFarWall.rotation.y = Math.PI / 2;
-    corrFarWall.position.set(-w / 2 - corrW, corrH / 2, doorZ);
+    corrFarWall.position.set(-w / 2 - corrW, corrH / 2, corrCenterZ);
     corridorGroup.add(corrFarWall);
 
-    // Corridor side walls with arch ribs
-    const corrSideWallL = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH), this.materials.brick);
-    corrSideWallL.position.set(-w / 2 - corrW / 2, corrH / 2, doorZ - corrD / 2);
-    corridorGroup.add(corrSideWallL);
-
-    const corrSideWallR = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH), this.materials.brick);
+    // Back corner wall (behind door, stone wall)
+    const corrSideWallR = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH), this.materials.wall);
     corrSideWallR.rotation.y = Math.PI;
-    corrSideWallR.position.set(-w / 2 - corrW / 2, corrH / 2, doorZ + corrD / 2);
+    corrSideWallR.position.set(-w / 2 - corrW / 2, corrH / 2, corrZBack);
     corridorGroup.add(corrSideWallR);
+
+    // (The red brick wall corrSideWallL blocking the way forward has been removed)
 
     // Stone arch rib spanning outside hallway
     const corrArchTorus = new THREE.Mesh(
-      new THREE.TorusGeometry(corrD / 2, 0.16, 8, 16, Math.PI),
+      new THREE.TorusGeometry(1.4, 0.16, 8, 16, Math.PI),
       this.materials.vaultStone
     );
     corrArchTorus.rotation.y = Math.PI / 2;
