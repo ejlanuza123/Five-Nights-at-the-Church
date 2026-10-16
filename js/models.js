@@ -799,11 +799,41 @@ class WorldBuilder {
     officeGroup.add(doorLight);
     this.lights.doorLight = doorLight;
 
-    // 6. Right Ventilation Inspection Light
-    const ventLight = new THREE.PointLight(0xddeeff, 0, 7);
-    ventLight.position.set(w / 2 + 1.2, 0.85, 0.45);
-    officeGroup.add(ventLight);
-    this.lights.ventLight = ventLight;
+    // 6. Right Ventilation Inspection Light Rig (Directional Beam + Frontal Flood + Duct Fill)
+    const ventLightRig = new THREE.Group();
+    ventLightRig.name = 'ventInspectionLightRig';
+
+    // 6a. Direct Frontal Inspection Spotlight (Illuminates entity face & veil directly from office opening)
+    const ventSpot = new THREE.SpotLight(0xe8f4ff, 0, 9.5, Math.PI / 2.8, 0.35, 1.2);
+    ventSpot.position.set(w / 2 - 0.25, 0.85, 0.45); // (3.35, 0.85, 0.45)
+    ventSpot.target.position.set(w / 2 + 3.2, 0.45, 0.45); // (6.80, 0.45, 0.45)
+    ventLightRig.add(ventSpot);
+    ventLightRig.add(ventSpot.target);
+
+    // 6b. Vent Mouth Inspection Point Light (Direct frontal flood on face, hands, and vent sill)
+    const ventFrontLight = new THREE.PointLight(0xddeeff, 0, 6.5, 1.2);
+    ventFrontLight.position.set(w / 2 - 0.05, 0.80, 0.45); // (3.55, 0.80, 0.45)
+    ventLightRig.add(ventFrontLight);
+
+    // 6c. Duct Tunnel Ambient Fill (Illuminates galvanized steel walls behind entity)
+    const ventFillLight = new THREE.PointLight(0xa5cbee, 0, 5.5, 1.5);
+    ventFillLight.position.set(w / 2 + 1.8, 0.85, 0.45); // (5.40, 0.85, 0.45)
+    ventLightRig.add(ventFillLight);
+
+    let _ventIntensity = 0;
+    Object.defineProperty(ventLightRig, 'intensity', {
+      get() { return _ventIntensity; },
+      set(val) {
+        _ventIntensity = val;
+        const norm = val > 0 ? val / 3.5 : 0;
+        ventSpot.intensity = 4.8 * norm;
+        ventFrontLight.intensity = 3.6 * norm;
+        ventFillLight.intensity = 1.6 * norm;
+      }
+    });
+
+    officeGroup.add(ventLightRig);
+    this.lights.ventLight = ventLightRig;
 
     this.scene.add(officeGroup);
   }
@@ -1234,6 +1264,11 @@ class WorldBuilder {
       rotY = 0,
       rotZ = 0,
       offsetY = 0,
+      materialColor = null,
+      emissiveColor = null,
+      emissiveIntensity = 0.0,
+      roughness = null,
+      metalness = null,
       onLoaded = null
     } = options;
 
@@ -1271,12 +1306,26 @@ class WorldBuilder {
             if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
-              if (child.material) {
-                child.material.side = THREE.DoubleSide;
-                if (child.material.roughness !== undefined) {
-                  child.material.roughness = Math.max(child.material.roughness, 0.4);
+              const mats = Array.isArray(child.material) ? child.material : [child.material];
+              mats.forEach((mat) => {
+                if (!mat) return;
+                mat.side = THREE.DoubleSide;
+                if (roughness !== null) {
+                  mat.roughness = roughness;
+                } else if (mat.roughness !== undefined) {
+                  mat.roughness = Math.max(mat.roughness, 0.4);
                 }
-              }
+                if (metalness !== null) {
+                  mat.metalness = metalness;
+                }
+                if (materialColor) {
+                  if (mat.color) mat.color.set(materialColor);
+                }
+                if (emissiveColor !== null) {
+                  mat.emissive = new THREE.Color(emissiveColor);
+                  mat.emissiveIntensity = emissiveIntensity;
+                }
+              });
             }
           });
 
@@ -1328,13 +1377,18 @@ class WorldBuilder {
     }
 
     // 3. The Penitent / Veiled Mourner (Saint Mary - Crawling Entity)
-    // Larger size to menacingly fill the HVAC ventilation duct
+    // Menacing crawling posture in HVAC duct with brightened stone/veil PBR
     if (this.statues.veiledMourner) {
       this.loadEntityGLB('assets/models/saint_mary_model.glb', this.statues.veiledMourner, {
-        targetHeight: 1.06,
+        targetHeight: 1.08,
         scaleX: 1.05,
         scaleZ: 1.02,
-        rotX: 0
+        rotX: 0,
+        metalness: 0.0,                              // Pure non-metallic dielectric cloth/stone
+        roughness: 0.65,                             // Matte weathered stone and drapery
+        materialColor: new THREE.Color(2.6, 2.5, 2.4), // Brightens dark charcoal map so face veil and folds pop
+        emissiveColor: 0x241d1d,                     // Soft eerie ambient rim prevents pure-black crushing
+        emissiveIntensity: 0.42
       });
     }
   }
