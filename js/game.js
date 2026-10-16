@@ -505,7 +505,7 @@ class GameEngine {
         angel.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
-        angel.position.set(-1.2, 0.5, -0.8);
+        angel.position.set(-1.2, 0.0, -0.8);
         angel.rotation.set(0, Math.PI * 0.35, 0);
         angel.visible = true;
         break;
@@ -537,7 +537,7 @@ class GameEngine {
 
     switch (stage) {
       case 0: // CAM 03 - Reconciliation Chapel (Home base)
-        saint.position.set(-35, 0, -31);
+        saint.position.set(-35, 0.0, -31);
         saint.rotation.set(0, 0, 0);
         saint.visible = true;
         break;
@@ -551,7 +551,7 @@ class GameEngine {
         saint.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
-        saint.position.set(-0.8, 0.6, -0.7);
+        saint.position.set(-0.8, 0.0, -0.7);
         saint.rotation.set(0, Math.PI * 0.2, 0);
         saint.visible = true;
         break;
@@ -583,27 +583,27 @@ class GameEngine {
 
     switch (stage) {
       case 0: // CAM 02 - Memorial Columbarium Stand (Home base)
-        mourner.position.set(38, 0.8, -32);
+        mourner.position.set(38, 0.45, -32);
         mourner.rotation.set(0, -Math.PI / 3, 0);
         mourner.visible = true;
         break;
       case 1: // CAM 04 - Entering modern HVAC Air Duct
-        mourner.position.set(6.0, 0.35, 0.45);
+        mourner.position.set(5.8, 0.02, 0.45);
         mourner.rotation.set(0, -Math.PI / 2, 0);
         mourner.visible = true;
         break;
       case 2: // CAM 04 - Crawling deep inside HVAC Air Duct
-        mourner.position.set(4.8, 0.35, 0.45);
+        mourner.position.set(4.6, 0.02, 0.45);
         mourner.rotation.set(0, -Math.PI / 2, 0);
         mourner.visible = true;
         break;
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
-        mourner.position.set(3.55, 0.38, 0.45);
-        mourner.rotation.set(0, -Math.PI * 0.45, 0); // Crouched at duct mouth looking up at player
+        mourner.position.set(3.52, 0.02, 0.45);
+        mourner.rotation.set(0, -Math.PI * 0.48, 0); // Crouched at duct mouth looking into office
         mourner.visible = !this.isVentClosed;
         break;
       case 4: // Inside Office - Attack position
-        mourner.position.set(1.1, 0.5, -0.8);
+        mourner.position.set(1.1, 0.0, -0.8);
         mourner.rotation.set(0, -Math.PI * 0.4, 0);
         mourner.visible = true;
         break;

@@ -948,36 +948,41 @@ class WorldBuilder {
     this.scene.add(confGroup);
   }
 
-  // ================= 4. MODERN SACRED STATUES (POLISHED CARRARA MARBLE) =================
+  // ================= 4. MODERN SACRED STATUES (POLISHED CARRARA MARBLE & 3D GLB MODELS) =================
+
   // --- STATUE 1: OUR LADY / WEEPING MARBLE ANGEL ("Mater Dolorosa") ---
   createWeepingAngel() {
     const angel = new THREE.Group();
     angel.name = 'WeepingAngel';
 
+    // Procedural Fallback Group (rendered immediately while 3D GLB downloads)
+    const fallback = new THREE.Group();
+    fallback.name = 'proceduralFallback';
+
     // Modern minimalist pedestal
     const base = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.52, 0.18, 24), this.materials.marble);
     base.position.y = 0.09;
-    angel.add(base);
+    fallback.add(base);
 
     // Flowing robed skirt (Sacred Marian sculpture)
     const skirt = new THREE.Mesh(new THREE.ConeGeometry(0.46, 1.45, 24), this.materials.marble);
     skirt.position.y = 0.82;
-    angel.add(skirt);
+    fallback.add(skirt);
 
     // Torso with draped cowl
     const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.32, 0.75, 16), this.materials.marble);
     torso.position.y = 1.68;
-    angel.add(torso);
+    fallback.add(torso);
 
     // Serene head with mourning veil
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 20, 20), this.materials.marble);
     head.position.y = 2.18;
-    angel.add(head);
+    fallback.add(head);
 
     // Sculpted Marian veil over head
     const veil = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.55, 16), this.materials.marble);
     veil.position.set(0, 2.22, -0.05);
-    angel.add(veil);
+    fallback.add(veil);
 
     // High-Resolution Textured Billboard Plane (Authentic CCTV Marian Sculpture)
     const angelTex = new THREE.TextureLoader().load('assets/entities/angel_cutout.png');
@@ -990,16 +995,7 @@ class WorldBuilder {
     });
     const angelBillboard = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 2.45), angelBillboardMat);
     angelBillboard.position.set(0, 1.25, 0.05);
-    angel.add(angelBillboard);
-
-    // Glowing cyan-white teardrop eye embers (pierce darkness in hallway and doorway!)
-    const eyeGlowMat = new THREE.MeshBasicMaterial({ color: 0x88d4ff });
-    const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeGlowMat);
-    eye1.position.set(-0.07, 2.15, 0.18);
-    angel.add(eye1);
-    const eye2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeGlowMat);
-    eye2.position.set(0.07, 2.15, 0.18);
-    angel.add(eye2);
+    fallback.add(angelBillboard);
 
     // Sleek Polished Marble Wings
     const wingShape = new THREE.Shape();
@@ -1016,14 +1012,14 @@ class WorldBuilder {
     const wingGroupL = new THREE.Group();
     wingGroupL.position.set(-0.22, 1.8, -0.12);
     wingGroupL.add(new THREE.Mesh(wingGeo, this.materials.marble));
-    angel.add(wingGroupL);
+    fallback.add(wingGroupL);
 
     const wingGroupR = new THREE.Group();
     wingGroupR.position.set(0.22, 1.8, -0.12);
     const wingMeshR = new THREE.Mesh(wingGeo, this.materials.marble);
     wingMeshR.scale.x = -1;
     wingGroupR.add(wingMeshR);
-    angel.add(wingGroupR);
+    fallback.add(wingGroupR);
 
     // Clasped praying hands / reaching arms
     const armGroupL = new THREE.Group();
@@ -1032,7 +1028,7 @@ class WorldBuilder {
     armL.position.set(0.12, 0.2, 0.18);
     armL.rotation.set(-1.1, 0.4, -0.6);
     armGroupL.add(armL);
-    angel.add(armGroupL);
+    fallback.add(armGroupL);
 
     const armGroupR = new THREE.Group();
     armGroupR.position.set(0.26, 1.85, 0);
@@ -1040,7 +1036,18 @@ class WorldBuilder {
     armR.position.set(-0.12, 0.2, 0.18);
     armR.rotation.set(-1.1, -0.4, 0.6);
     armGroupR.add(armR);
-    angel.add(armGroupR);
+    fallback.add(armGroupR);
+
+    angel.add(fallback);
+
+    // Glowing cyan-white teardrop eye embers (pierce darkness in hallway and doorway!)
+    const eyeGlowMat = new THREE.MeshBasicMaterial({ color: 0x88d4ff });
+    const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeGlowMat);
+    eye1.position.set(-0.07, 2.15, 0.22);
+    angel.add(eye1);
+    const eye2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeGlowMat);
+    eye2.position.set(0.07, 2.15, 0.22);
+    angel.add(eye2);
 
     this.statues.weepingAngel = angel;
     this.scene.add(angel);
@@ -1052,14 +1059,17 @@ class WorldBuilder {
     const saint = new THREE.Group();
     saint.name = 'HaloedSaint';
 
+    const fallback = new THREE.Group();
+    fallback.name = 'proceduralFallback';
+
     const base = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 0.85), this.materials.marble);
     base.position.y = 0.08;
-    saint.add(base);
+    fallback.add(base);
 
     // Elegant parish robes
     const robe = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.52, 1.95, 20), this.materials.marble);
     robe.position.y = 1.08;
-    saint.add(robe);
+    fallback.add(robe);
 
     // High-Resolution Textured Billboard Plane (Authentic Sanctus Michael)
     const saintTex = new THREE.TextureLoader().load('assets/entities/saint_cutout.png');
@@ -1072,21 +1082,12 @@ class WorldBuilder {
     });
     const saintBillboard = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 2.45), saintBillboardMat);
     saintBillboard.position.set(0, 1.25, 0.05);
-    saint.add(saintBillboard);
+    fallback.add(saintBillboard);
 
     // Carved Head
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 18), this.materials.marble);
     head.position.y = 2.2;
-    saint.add(head);
-
-    // Glowing Ember Eyes
-    const glowMat = new THREE.MeshBasicMaterial({ color: 0xffaa22 });
-    const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), glowMat);
-    eye1.position.set(-0.06, 2.22, 0.18);
-    saint.add(eye1);
-    const eye2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), glowMat);
-    eye2.position.set(0.06, 2.22, 0.18);
-    saint.add(eye2);
+    fallback.add(head);
 
     // Modern Floating Golden Halo Disc
     const haloGroup = new THREE.Group();
@@ -1102,7 +1103,7 @@ class WorldBuilder {
       blade.rotation.z = angle - Math.PI / 2;
       haloGroup.add(blade);
     }
-    saint.add(haloGroup);
+    fallback.add(haloGroup);
 
     // Modern Bronze Cross Blade
     const crossGroup = new THREE.Group();
@@ -1114,7 +1115,18 @@ class WorldBuilder {
     const crossBar = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.06), this.materials.haloGold);
     crossBar.position.y = 1.1;
     crossGroup.add(crossBar);
-    saint.add(crossGroup);
+    fallback.add(crossGroup);
+
+    saint.add(fallback);
+
+    // Glowing Ember Eyes
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xffaa22 });
+    const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), glowMat);
+    eye1.position.set(-0.06, 2.22, 0.22);
+    saint.add(eye1);
+    const eye2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), glowMat);
+    eye2.position.set(0.06, 2.22, 0.22);
+    saint.add(eye2);
 
     this.statues.haloedSaint = saint;
     this.scene.add(saint);
@@ -1126,10 +1138,13 @@ class WorldBuilder {
     const mourner = new THREE.Group();
     mourner.name = 'VeiledMourner';
 
+    const fallback = new THREE.Group();
+    fallback.name = 'proceduralFallback';
+
     // Draped white marble funeral veil
     const veil = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.25, 18), this.materials.marble);
     veil.position.y = 0.72;
-    mourner.add(veil);
+    fallback.add(veil);
 
     // High-Resolution Textured Billboard Plane (Crawling Penitent in Vent)
     const mournerTex = new THREE.TextureLoader().load('assets/entities/mourner_vent_cutout.png');
@@ -1142,33 +1157,35 @@ class WorldBuilder {
     });
     const mournerBillboard = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.1), mournerBillboardMat);
     mournerBillboard.position.set(0, 0.55, 0.15);
-    mourner.add(mournerBillboard);
-
-    // Ghostly piercing red-white phantom eyes deep inside the veil void
-    const mournerEyeMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
-    const mEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mournerEyeMat);
-    mEye1.position.set(-0.06, 0.95, 0.24);
-    mourner.add(mEye1);
-    const mEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mournerEyeMat);
-    mEye2.position.set(0.06, 0.95, 0.24);
-    mourner.add(mEye2);
+    fallback.add(mournerBillboard);
 
     // Deep hollow pitch-black void under veil
     const voidMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const voidFace = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.1), voidMat);
     voidFace.position.set(0, 0.96, 0.2);
-    mourner.add(voidFace);
+    fallback.add(voidFace);
 
     // Crawling marble limbs (HVAC duct crawl posture)
     const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.9, 8), this.materials.marble);
     armL.position.set(-0.35, 0.4, 0.3);
     armL.rotation.set(0.8, 0.2, -0.4);
-    mourner.add(armL);
+    fallback.add(armL);
 
     const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.9, 8), this.materials.marble);
     armR.position.set(0.35, 0.4, 0.3);
     armR.rotation.set(0.8, -0.2, 0.4);
-    mourner.add(armR);
+    fallback.add(armR);
+
+    mourner.add(fallback);
+
+    // Ghostly piercing red-white phantom eyes deep inside the veil void
+    const mournerEyeMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
+    const mEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mournerEyeMat);
+    mEye1.position.set(-0.06, 0.98, 0.26);
+    mourner.add(mEye1);
+    const mEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mournerEyeMat);
+    mEye2.position.set(0.06, 0.98, 0.26);
+    mourner.add(mEye2);
 
     this.statues.veiledMourner = mourner;
     this.scene.add(mourner);
@@ -1198,6 +1215,115 @@ class WorldBuilder {
     return mary;
   }
 
+  // ================= 5. ASYNC 3D GLB MODEL LOADER & INTEGRATION =================
+  loadEntityGLB(url, targetGroup, options = {}) {
+    if (typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') {
+      console.warn('[WorldBuilder] GLTFLoader not available, using procedural fallback for', targetGroup.name);
+      return;
+    }
+
+    const {
+      targetHeight = 2.4,
+      rotX = 0,
+      rotY = 0,
+      rotZ = 0,
+      offsetY = 0,
+      onLoaded = null
+    } = options;
+
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      url,
+      (gltf) => {
+        try {
+          const rawScene = gltf.scene;
+          if (!rawScene) return;
+
+          // Apply coordinate orientation transforms if needed
+          if (rotX !== 0) rawScene.rotation.x = rotX;
+          if (rotY !== 0) rawScene.rotation.y = rotY;
+          if (rotZ !== 0) rawScene.rotation.z = rotZ;
+          rawScene.updateMatrixWorld(true);
+
+          // Calculate oriented bounding box
+          const rawBox = new THREE.Box3().setFromObject(rawScene);
+          const rawSize = rawBox.getSize(new THREE.Vector3());
+          const rawCenter = rawBox.getCenter(new THREE.Vector3());
+
+          // Uniform scale to match canonical entity height
+          const scale = targetHeight / (rawSize.y || 1);
+          const container = new THREE.Group();
+          container.name = 'glbModel';
+          container.scale.set(scale, scale, scale);
+
+          // Ground feet at y = 0 and center horizontally at (0, 0)
+          rawScene.position.set(-rawCenter.x, -rawBox.min.y + offsetY, -rawCenter.z);
+          container.add(rawScene);
+
+          // Enable shadows and configure PBR materials
+          rawScene.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              if (child.material) {
+                child.material.side = THREE.DoubleSide;
+                if (child.material.roughness !== undefined) {
+                  child.material.roughness = Math.max(child.material.roughness, 0.4);
+                }
+              }
+            }
+          });
+
+          // Gracefully hide procedural fallback geometry
+          const fallback = targetGroup.getObjectByName('proceduralFallback');
+          if (fallback) {
+            fallback.visible = false;
+          }
+
+          // Add the realistic 3D model to the entity group
+          targetGroup.add(container);
+          console.log(`[WorldBuilder] Successfully loaded 3D GLB model for ${targetGroup.name} from ${url} (Height: ${targetHeight}m)`);
+
+          if (typeof onLoaded === 'function') {
+            onLoaded(container, gltf);
+          }
+        } catch (err) {
+          console.error(`[WorldBuilder] Error processing 3D GLB for ${targetGroup.name}:`, err);
+        }
+      },
+      undefined,
+      (err) => {
+        console.warn(`[WorldBuilder] Could not load 3D GLB from ${url}. Retaining procedural fallback.`, err);
+      }
+    );
+  }
+
+  load3DModels() {
+    // 1. Weeping Angel (Mater Dolorosa)
+    if (this.statues.weepingAngel) {
+      this.loadEntityGLB('assets/models/weeping_angel_model.glb', this.statues.weepingAngel, {
+        targetHeight: 2.35,
+        rotX: 0
+      });
+    }
+
+    // 2. Sanctus Michael (Haloed Saint)
+    if (this.statues.haloedSaint) {
+      this.loadEntityGLB('assets/models/saint_michael_model.glb', this.statues.haloedSaint, {
+        targetHeight: 2.45,
+        rotX: 0
+      });
+    }
+
+    // 3. The Penitent / Veiled Mourner (Saint Mary)
+    if (this.statues.veiledMourner) {
+      this.loadEntityGLB('assets/models/saint_mary_model.glb', this.statues.veiledMourner, {
+        targetHeight: 1.15,
+        rotX: -Math.PI / 2
+      });
+    }
+  }
+
   buildAll() {
     this.initMaterials();
     this.buildOffice();
@@ -1208,6 +1334,7 @@ class WorldBuilder {
     this.createWeepingAngel();
     this.createHaloedSaint();
     this.createVeiledMourner();
+    this.load3DModels();
   }
 }
 
