@@ -288,9 +288,7 @@ class GameEngine {
       'assets/office/window_hallway_mary.jpg',
       'assets/office/door_peeking_angel.jpg',
       'assets/office/door_peeking_saint.jpg',
-      'assets/office/vent_peeking_mourner.jpg',
-      'assets/office/door_empty.jpg',
-      'assets/office/vent_empty.jpg'
+      'assets/office/vent_peeking_mourner.jpg'
     ];
     this._preloadedImages = {};
     let loadedCount = 0;
@@ -390,23 +388,8 @@ class GameEngine {
       mary: texLoader.load('assets/office/window_hallway_mary.jpg')
     };
 
-    // Preload photorealistic door hallway view textures (Option 2: FNAF Camera Projection)
-    this.doorTextures = {
-      empty: texLoader.load('assets/office/door_empty.jpg'),
-      angel: texLoader.load('assets/office/door_peeking_angel.jpg'),
-      saint: texLoader.load('assets/office/door_peeking_saint.jpg')
-    };
-
-    // Preload photorealistic vent duct view textures (Option 2: FNAF Camera Projection)
-    this.ventTextures = {
-      empty: texLoader.load('assets/office/vent_empty.jpg'),
-      mourner: texLoader.load('assets/office/vent_peeking_mourner.jpg')
-    };
-
     this.positionStatuesInitial();
     this.updateWindowHallwayView();
-    this.updateDoorBackdropView();
-    this.updateVentBackdropView();
   }
 
   // --- STATUE PLACEMENT, STAGES & CAMERA MOTION ERROR SYSTEM ---
@@ -519,7 +502,7 @@ class GameEngine {
       case 3: // Peeking directly around Left Arched Church Doorway threshold!
         angel.position.set(-3.55, 0.0, -0.65);
         angel.rotation.set(0, Math.PI * 0.42, 0); // Angled into office towards player desk
-        angel.visible = false; // Photorealistically displayed on doorBackdrop!
+        angel.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
         angel.position.set(-1.2, 0.5, -0.8);
@@ -529,7 +512,6 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
-    this.updateDoorBackdropView();
 
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
@@ -566,7 +548,7 @@ class GameEngine {
       case 3: // Peeking directly around Left Arched Church Doorway threshold!
         saint.position.set(-3.56, 0.0, -0.60);
         saint.rotation.set(0, Math.PI * 0.40, 0); // Angled into office
-        saint.visible = false; // Photorealistically displayed on doorBackdrop!
+        saint.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
         saint.position.set(-0.8, 0.6, -0.7);
@@ -576,7 +558,6 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
-    this.updateDoorBackdropView();
 
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
@@ -619,7 +600,7 @@ class GameEngine {
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
         mourner.position.set(3.55, 0.38, 0.45);
         mourner.rotation.set(0, -Math.PI * 0.45, 0); // Crouched at duct mouth looking up at player
-        mourner.visible = false; // Photorealistically displayed on ventBackdrop!
+        mourner.visible = !this.isVentClosed;
         break;
       case 4: // Inside Office - Attack position
         mourner.position.set(1.1, 0.5, -0.8);
@@ -629,7 +610,6 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
-    this.updateVentBackdropView();
 
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
@@ -652,7 +632,6 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
-    this.updateDoorBackdropView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
     }
@@ -674,7 +653,6 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
-    this.updateDoorBackdropView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
     }
@@ -696,7 +674,6 @@ class GameEngine {
     }
 
     this.updateWindowHallwayView();
-    this.updateVentBackdropView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
     }
@@ -727,57 +704,6 @@ class GameEngine {
     }
 
     const mat = this.world.nodes.windowBackdropMat;
-    if (mat) {
-      if (mat.uniforms && mat.uniforms.map) {
-        if (mat.uniforms.map.value !== targetTex) {
-          mat.uniforms.map.value = targetTex;
-        }
-      }
-      if (mat.map !== targetTex) {
-        mat.map = targetTex;
-        mat.needsUpdate = true;
-      }
-    }
-  }
-
-  updateDoorBackdropView() {
-    if (!this.world || !this.world.nodes || !this.world.nodes.doorBackdropMat || !this.doorTextures) return;
-
-    const angelStage = this.aiConfig.weepingAngel.stage;
-    const saintStage = this.aiConfig.haloedSaint.stage;
-
-    let targetTex = this.doorTextures.empty;
-    if (angelStage === 3) {
-      targetTex = this.doorTextures.angel;
-    } else if (saintStage === 3) {
-      targetTex = this.doorTextures.saint;
-    }
-
-    const mat = this.world.nodes.doorBackdropMat;
-    if (mat) {
-      if (mat.uniforms && mat.uniforms.map) {
-        if (mat.uniforms.map.value !== targetTex) {
-          mat.uniforms.map.value = targetTex;
-        }
-      }
-      if (mat.map !== targetTex) {
-        mat.map = targetTex;
-        mat.needsUpdate = true;
-      }
-    }
-  }
-
-  updateVentBackdropView() {
-    if (!this.world || !this.world.nodes || !this.world.nodes.ventBackdropMat || !this.ventTextures) return;
-
-    const mournerStage = this.aiConfig.veiledMourner.stage;
-
-    let targetTex = this.ventTextures.empty;
-    if (mournerStage === 3) {
-      targetTex = this.ventTextures.mourner;
-    }
-
-    const mat = this.world.nodes.ventBackdropMat;
     if (mat) {
       if (mat.uniforms && mat.uniforms.map) {
         if (mat.uniforms.map.value !== targetTex) {
@@ -1865,9 +1791,12 @@ class GameEngine {
       btn.classList.toggle('door-active', this.isLeftDoorClosed);
     }
 
-    // Sync backdrop visibility with closed door
-    if (this.world?.nodes?.doorBackdrop) {
-      this.world.nodes.doorBackdrop.visible = !this.isLeftDoorClosed;
+    // Toggle 3D statue visibility so they don't clip through closed door
+    if (this.aiConfig.weepingAngel.stage === 3 && this.world?.statues?.weepingAngel) {
+      this.world.statues.weepingAngel.visible = !this.isLeftDoorClosed;
+    }
+    if (this.aiConfig.haloedSaint.stage === 3 && this.world?.statues?.haloedSaint) {
+      this.world.statues.haloedSaint.visible = !this.isLeftDoorClosed;
     }
 
     // If door is closed while an entity is peeking at the door threshold:
@@ -1920,9 +1849,9 @@ class GameEngine {
       btn.classList.toggle('door-active', this.isVentClosed);
     }
 
-    // Sync backdrop visibility with closed vent shutter
-    if (this.world?.nodes?.ventBackdrop) {
-      this.world.nodes.ventBackdrop.visible = !this.isVentClosed;
+    // Toggle 3D mourner visibility so it doesn't clip through closed vent shutter
+    if (this.aiConfig.veiledMourner.stage === 3 && this.world?.statues?.veiledMourner) {
+      this.world.statues.veiledMourner.visible = !this.isVentClosed;
     }
 
     // If vent shutter is closed while Mourner is peeking at the duct opening:
@@ -2687,28 +2616,6 @@ class GameEngine {
     // Dynamic 3D Scene Spotlight on window frame & sill
     if (this.world?.lights?.windowSpot) {
       this.world.lights.windowSpot.intensity = this.windowSpotIntensity * 5.6;
-    }
-
-    // Left Door Security Sconce Halogen Shader Uniforms (Option 2: FNAF Camera Projection)
-    const doorBackdropMat = this.world?.nodes?.doorBackdropMat;
-    if (doorBackdropMat && doorBackdropMat.uniforms) {
-      const doorLightIntensity = (this.isLeftDoorLightOn && !this.isBlackout) ? 1.0 : 0.0;
-      doorBackdropMat.uniforms.lightIntensity.value = doorLightIntensity;
-      doorBackdropMat.uniforms.time.value += delta;
-      doorBackdropMat.uniforms.flicker.value = this.isLeftDoorLightOn
-        ? (1.0 + Math.sin(Date.now() * 0.02) * 0.008)
-        : 1.0;
-    }
-
-    // Right Vent Inspection LED Shader Uniforms (Option 2: FNAF Camera Projection)
-    const ventBackdropMat = this.world?.nodes?.ventBackdropMat;
-    if (ventBackdropMat && ventBackdropMat.uniforms) {
-      const ventLightIntensity = (this.isVentLightOn && !this.isBlackout) ? 1.0 : 0.0;
-      ventBackdropMat.uniforms.lightIntensity.value = ventLightIntensity;
-      ventBackdropMat.uniforms.time.value += delta;
-      ventBackdropMat.uniforms.flicker.value = this.isVentLightOn
-        ? (1.0 + Math.sin(Date.now() * 0.025) * 0.006)
-        : 1.0;
     }
 
     // Jumpscare shake

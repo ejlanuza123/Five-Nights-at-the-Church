@@ -423,72 +423,8 @@ class WorldBuilder {
 
     officeGroup.add(corridorGroup);
 
-    // --- PHOTOREALISTIC PRE-RENDERED DOORWAY BACKDROP (Option 2: FNAF Camera Projection) ---
-    const initialDoorTex = new THREE.TextureLoader().load('assets/office/door_empty.jpg');
-    const doorBackdropGeo = new THREE.PlaneGeometry(doorW + 0.45, doorH + 0.35);
-    const doorBackdropMat = new THREE.ShaderMaterial({
-      uniforms: {
-        map: { value: initialDoorTex },
-        lightIntensity: { value: 0.0 }, // 0.0 (Door Light OFF) -> 1.0 (Door Light ON)
-        flicker: { value: 1.0 },
-        aspect: { value: (doorW + 0.45) / (doorH + 0.35) },
-        time: { value: 0.0 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D map;
-        uniform float lightIntensity;
-        uniform float flicker;
-        uniform float aspect;
-        uniform float time;
-        varying vec2 vUv;
 
-        void main() {
-          vec4 texColor = texture2D(map, vUv);
-
-          // 1. Dark Cloister Gloom (Door Light OFF):
-          // Authentic pitch-black church corridor with faint cold moonlight contours
-          vec3 darkAmbient = texColor.rgb * vec3(0.04, 0.045, 0.06);
-
-          // 2. High-Power Security Halogen Sconce (Door Light ON):
-          vec2 beamCenter = vec2(0.50, 0.75);
-          vec2 uvDiff = vUv - beamCenter;
-          uvDiff.x *= aspect * 0.85;
-          float dist = length(uvDiff);
-
-          float hotSpot = smoothstep(0.48, 0.08, dist);
-          float broadSpill = smoothstep(1.15, 0.25, dist);
-          float beamProfile = hotSpot * 1.5 + broadSpill * 0.75;
-
-          vec3 tungstenColor = mix(vec3(1.38, 1.25, 1.05), vec3(1.15, 1.10, 1.05), smoothstep(0.0, 0.7, dist));
-          vec3 litColor = texColor.rgb * tungstenColor * beamProfile * flicker;
-
-          vec3 finalColor = mix(darkAmbient, litColor, lightIntensity);
-
-          // Soft edge vignette
-          vec2 edge = abs(vUv - 0.5) * 2.0;
-          float edgeVignette = 1.0 - smoothstep(0.85, 1.0, max(edge.x, edge.y)) * 0.35;
-          finalColor *= edgeVignette;
-
-          gl_FragColor = vec4(finalColor, texColor.a);
-        }
-      `
-    });
-    doorBackdropMat.map = initialDoorTex;
-
-    const doorBackdrop = new THREE.Mesh(doorBackdropGeo, doorBackdropMat);
-    doorBackdrop.rotation.y = Math.PI / 2; // Facing +X into office
-    doorBackdrop.position.set(-w / 2 - 0.16, doorH / 2, doorZ);
-    officeGroup.add(doorBackdrop);
-    this.nodes.doorBackdrop = doorBackdrop;
-    this.nodes.doorBackdropMat = doorBackdropMat;
-
+    // Arched Stone Trim around doorway (Inside Office)
     const archTrimGroup = new THREE.Group();
     archTrimGroup.position.set(-w / 2 + 0.08, 0, doorZ);
     archTrimGroup.rotation.y = Math.PI / 2;
@@ -650,70 +586,8 @@ class WorldBuilder {
 
     officeGroup.add(ductTunnelGroup);
 
-    // --- PHOTOREALISTIC PRE-RENDERED VENT BACKDROP (Option 2: FNAF Camera Projection) ---
-    const initialVentTex = new THREE.TextureLoader().load('assets/office/vent_empty.jpg');
-    const ventBackdropGeo = new THREE.PlaneGeometry(ventW + 0.35, ventH + 0.25);
-    const ventBackdropMat = new THREE.ShaderMaterial({
-      uniforms: {
-        map: { value: initialVentTex },
-        lightIntensity: { value: 0.0 }, // 0.0 (Vent Light OFF) -> 1.0 (Vent Light ON)
-        flicker: { value: 1.0 },
-        aspect: { value: (ventW + 0.35) / (ventH + 0.25) },
-        time: { value: 0.0 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D map;
-        uniform float lightIntensity;
-        uniform float flicker;
-        uniform float aspect;
-        uniform float time;
-        varying vec2 vUv;
 
-        void main() {
-          vec4 texColor = texture2D(map, vUv);
-
-          // 1. Dark Duct Gloom (Vent Light OFF):
-          vec3 darkAmbient = texColor.rgb * vec3(0.03, 0.035, 0.05);
-
-          // 2. Crisp LED Inspection Lamp (Vent Light ON):
-          vec2 beamCenter = vec2(0.50, 0.65);
-          vec2 uvDiff = vUv - beamCenter;
-          uvDiff.x *= aspect * 0.90;
-          float dist = length(uvDiff);
-
-          float hotSpot = smoothstep(0.45, 0.05, dist);
-          float broadSpill = smoothstep(1.05, 0.20, dist);
-          float beamProfile = hotSpot * 1.55 + broadSpill * 0.75;
-
-          vec3 ledColor = mix(vec3(1.25, 1.30, 1.40), vec3(1.10, 1.15, 1.25), smoothstep(0.0, 0.7, dist));
-          vec3 litColor = texColor.rgb * ledColor * beamProfile * flicker;
-
-          vec3 finalColor = mix(darkAmbient, litColor, lightIntensity);
-
-          vec2 edge = abs(vUv - 0.5) * 2.0;
-          float edgeVignette = 1.0 - smoothstep(0.85, 1.0, max(edge.x, edge.y)) * 0.35;
-          finalColor *= edgeVignette;
-
-          gl_FragColor = vec4(finalColor, texColor.a);
-        }
-      `
-    });
-    ventBackdropMat.map = initialVentTex;
-
-    const ventBackdrop = new THREE.Mesh(ventBackdropGeo, ventBackdropMat);
-    ventBackdrop.rotation.y = -Math.PI / 2; // Facing -X into office
-    ventBackdrop.position.set(w / 2 + 0.16, ventH / 2, ventZ);
-    officeGroup.add(ventBackdrop);
-    this.nodes.ventBackdrop = ventBackdrop;
-    this.nodes.ventBackdropMat = ventBackdropMat;
-
+    // Heavy Industrial Steel Duct Flange Collar around vent mouth
     const flangeMat = frameMat;
     const flangeL = new THREE.Mesh(new THREE.BoxGeometry(0.12, ventH + 0.16, 0.08), flangeMat);
     flangeL.position.set(w / 2 - 0.04, ventH / 2, ventZ - ventW / 2 - 0.04);
