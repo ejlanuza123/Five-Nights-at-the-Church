@@ -436,6 +436,9 @@ class GameEngine {
   // --- STATUE PLACEMENT, STAGES & CAMERA MOTION ERROR SYSTEM ---
   positionStatuesInitial() {
     this.cameraErrorTimers = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    this.clearAngelDoorRetreatTimer();
+    this.clearSaintDoorRetreatTimer();
+    this.clearMournerVentRetreatTimer();
     this._lastAngelStage = undefined;
     this._lastSaintStage = undefined;
     this._lastMournerStage = undefined;
@@ -445,6 +448,66 @@ class GameEngine {
     this._lastAngelStage = 0;
     this._lastSaintStage = 0;
     this._lastMournerStage = 0;
+  }
+
+  startAngelDoorRetreatTimer() {
+    this.clearAngelDoorRetreatTimer();
+    this.aiConfig.weepingAngel.attackTimer = 0;
+    this._angelDoorRetreatTimer = setTimeout(() => {
+      this._angelDoorRetreatTimer = null;
+      if (this.isLeftDoorClosed && this.aiConfig.weepingAngel.stage === 3) {
+        window.Sound.playStoneGrind(0.85);
+        window.Sound.playLeftFootstep(0.65);
+        this.banishAngel();
+      }
+    }, 3200);
+  }
+
+  clearAngelDoorRetreatTimer() {
+    if (this._angelDoorRetreatTimer) {
+      clearTimeout(this._angelDoorRetreatTimer);
+      this._angelDoorRetreatTimer = null;
+    }
+  }
+
+  startSaintDoorRetreatTimer() {
+    this.clearSaintDoorRetreatTimer();
+    this.aiConfig.haloedSaint.attackTimer = 0;
+    this._saintDoorRetreatTimer = setTimeout(() => {
+      this._saintDoorRetreatTimer = null;
+      if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 3) {
+        window.Sound.playStoneGrind(0.85);
+        window.Sound.playLeftFootstep(0.65);
+        this.banishSaint();
+      }
+    }, 3200);
+  }
+
+  clearSaintDoorRetreatTimer() {
+    if (this._saintDoorRetreatTimer) {
+      clearTimeout(this._saintDoorRetreatTimer);
+      this._saintDoorRetreatTimer = null;
+    }
+  }
+
+  startMournerVentRetreatTimer() {
+    this.clearMournerVentRetreatTimer();
+    this.aiConfig.veiledMourner.attackTimer = 0;
+    this._mournerVentRetreatTimer = setTimeout(() => {
+      this._mournerVentRetreatTimer = null;
+      if (this.isVentClosed && this.aiConfig.veiledMourner.stage === 3) {
+        window.Sound.playStoneGrind(0.7);
+        window.Sound.playVentSound(false);
+        this.banishMourner();
+      }
+    }, 3000);
+  }
+
+  clearMournerVentRetreatTimer() {
+    if (this._mournerVentRetreatTimer) {
+      clearTimeout(this._mournerVentRetreatTimer);
+      this._mournerVentRetreatTimer = null;
+    }
   }
 
   camLocToId(loc) {
@@ -544,6 +607,9 @@ class GameEngine {
         angel.position.set(-4.20, 0.0, -0.60);
         angel.rotation.set(0, Math.PI * 0.46, 0); // Directly facing through the open doorway toward player desk
         angel.visible = !this.isLeftDoorClosed;
+        if (this.isLeftDoorClosed) {
+          this.startAngelDoorRetreatTimer();
+        }
         break;
       case 4: // Inside Office - Attack position
         angel.position.set(-1.2, 0.0, -0.8);
@@ -590,6 +656,9 @@ class GameEngine {
         saint.position.set(-4.20, 0.0, -0.60);
         saint.rotation.set(0, Math.PI * 0.46, 0); // Directly facing through the open doorway toward player desk
         saint.visible = !this.isLeftDoorClosed;
+        if (this.isLeftDoorClosed) {
+          this.startSaintDoorRetreatTimer();
+        }
         break;
       case 4: // Inside Office - Attack position
         saint.position.set(-0.8, 0.0, -0.7);
@@ -630,22 +699,25 @@ class GameEngine {
         break;
       case 1: // CAM 04 - Entering modern HVAC Air Duct
         mourner.position.set(5.8, 0.02, 0.45);
-        mourner.rotation.set(0, -Math.PI / 2, 0);
+        mourner.rotation.set(0, Math.PI / 2, 0);
         mourner.visible = true;
         break;
       case 2: // CAM 04 - Crawling deep inside HVAC Air Duct
         mourner.position.set(4.6, 0.02, 0.45);
-        mourner.rotation.set(0, -Math.PI / 2, 0);
+        mourner.rotation.set(0, Math.PI / 2, 0);
         mourner.visible = true;
         break;
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
-        mourner.position.set(3.52, 0.02, 0.45);
-        mourner.rotation.set(0, -Math.PI * 0.48, 0); // Crouched at duct mouth looking into office
+        mourner.position.set(4.15, 0.02, 0.45);
+        mourner.rotation.set(0, Math.PI * 0.52, 0); // Crawling crouched at duct mouth looking into office
         mourner.visible = !this.isVentClosed;
+        if (this.isVentClosed) {
+          this.startMournerVentRetreatTimer();
+        }
         break;
       case 4: // Inside Office - Attack position
-        mourner.position.set(1.1, 0.0, -0.8);
-        mourner.rotation.set(0, -Math.PI * 0.4, 0);
+        mourner.position.set(1.2, 0.0, -0.6);
+        mourner.rotation.set(0, Math.PI * 0.65, 0);
         mourner.visible = true;
         break;
     }
@@ -658,6 +730,7 @@ class GameEngine {
   }
 
   banishAngel() {
+    this.clearAngelDoorRetreatTimer();
     const ai = this.aiConfig.weepingAngel;
     const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_02 Crypt)
@@ -679,6 +752,7 @@ class GameEngine {
   }
 
   banishSaint() {
+    this.clearSaintDoorRetreatTimer();
     const ai = this.aiConfig.haloedSaint;
     const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_01 Sanctuary Nave)
@@ -700,6 +774,7 @@ class GameEngine {
   }
 
   banishMourner() {
+    this.clearMournerVentRetreatTimer();
     const ai = this.aiConfig.veiledMourner;
     const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_03 Reconciliation Chapel)
@@ -1977,23 +2052,15 @@ class GameEngine {
     // If door is closed while an entity is peeking at the door threshold:
     if (this.isLeftDoorClosed) {
       if (this.aiConfig.weepingAngel.stage === 3) {
-        this.aiConfig.weepingAngel.attackTimer = 0;
-        setTimeout(() => {
-          if (this.isLeftDoorClosed && this.aiConfig.weepingAngel.stage === 3) {
-            window.Sound.playStoneGrind(0.85);
-            this.banishAngel();
-          }
-        }, 1500);
+        this.startAngelDoorRetreatTimer();
       }
       if (this.aiConfig.haloedSaint.stage === 3) {
-        this.aiConfig.haloedSaint.attackTimer = 0;
-        setTimeout(() => {
-          if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 3) {
-            window.Sound.playStoneGrind(0.85);
-            this.banishSaint();
-          }
-        }, 1500);
+        this.startSaintDoorRetreatTimer();
       }
+    } else {
+      // Opening door cancels retreat timer! Entity remains outside if door is reopened prematurely
+      this.clearAngelDoorRetreatTimer();
+      this.clearSaintDoorRetreatTimer();
     }
   }
 
@@ -2032,14 +2099,11 @@ class GameEngine {
     // If vent shutter is closed while Mourner is peeking at the duct opening:
     if (this.isVentClosed) {
       if (this.aiConfig.veiledMourner.stage === 3) {
-        this.aiConfig.veiledMourner.attackTimer = 0;
-        setTimeout(() => {
-          if (this.isVentClosed && this.aiConfig.veiledMourner.stage === 3) {
-            window.Sound.playStoneGrind(0.7);
-            this.banishMourner();
-          }
-        }, 1500);
+        this.startMournerVentRetreatTimer();
       }
+    } else {
+      // Opening vent cancels retreat timer!
+      this.clearMournerVentRetreatTimer();
     }
   }
 
@@ -2536,6 +2600,10 @@ class GameEngine {
             // Cannot appear at window hallway while spotlight is shining down the hall!
             return;
           }
+          if (nextStage === 3 && this.aiConfig.haloedSaint.stage === 3) {
+            // Only ONE entity can appear at the door at a time! Saint Michael is already there.
+            return;
+          }
           this.setAngelStage(nextStage);
           window.Sound.playStoneGrind(0.7);
           if (nextStage >= 2) {
@@ -2543,9 +2611,10 @@ class GameEngine {
           }
         } else if (ai.stage === 3) {
           if (this.isLeftDoorClosed) {
-            window.Sound.playStoneGrind(0.9);
-            window.Sound.playMechanicalClick();
-            this.banishAngel();
+            ai.attackTimer = 0;
+            if (!this._angelDoorRetreatTimer) {
+              this.startAngelDoorRetreatTimer();
+            }
           } else {
             window.Sound.playLeftFootstep(0.7); // Directional audio warning before attack
             ai.attackTimer += 1.5;
@@ -2587,6 +2656,10 @@ class GameEngine {
             // Cannot appear at window hallway while spotlight is shining down the hall!
             return;
           }
+          if (nextStage === 3 && this.aiConfig.weepingAngel.stage === 3) {
+            // Only ONE entity can appear at the door at a time! Weeping Angel is already there.
+            return;
+          }
           this.setSaintStage(nextStage);
           window.Sound.playStoneGrind(0.8);
           if (nextStage === 2) {
@@ -2596,9 +2669,10 @@ class GameEngine {
           }
         } else if (ai.stage === 3) {
           if (this.isLeftDoorClosed) {
-            window.Sound.playStoneGrind(0.9);
-            window.Sound.playMechanicalClick();
-            this.banishSaint();
+            ai.attackTimer = 0;
+            if (!this._saintDoorRetreatTimer) {
+              this.startSaintDoorRetreatTimer();
+            }
           } else {
             window.Sound.playLeftFootstep(0.72);
             ai.attackTimer += 1.5;
@@ -2641,8 +2715,10 @@ class GameEngine {
           window.Sound.playVentClatter(0.8 + nextStage * 0.05); // 3D stereo vent scraping clatter panned +0.88!
         } else if (ai.stage === 3) {
           if (this.isVentClosed) {
-            window.Sound.playVentSound(false);
-            this.banishMourner();
+            ai.attackTimer = 0;
+            if (!this._mournerVentRetreatTimer) {
+              this.startMournerVentRetreatTimer();
+            }
           } else {
             window.Sound.playVentClatter(0.75); // Subtle acoustic warning at vent opening
             ai.attackTimer += 1.5;
@@ -2661,6 +2737,9 @@ class GameEngine {
     this.gameOver = true;
     this.jumpscareActive = true;
     this.jumpscareTimer = 0;
+    this.clearAngelDoorRetreatTimer();
+    this.clearSaintDoorRetreatTimer();
+    this.clearMournerVentRetreatTimer();
     this.muteCassette();
 
     // Immediately shut down CCTV monitor overlay and spotlight if active

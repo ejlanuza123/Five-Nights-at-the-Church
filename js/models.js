@@ -1047,10 +1047,10 @@ class WorldBuilder {
     const eyeGlowMat = new THREE.MeshBasicMaterial({ color: 0x88d4ff });
     const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeGlowMat);
     eye1.position.set(-0.07, 2.15, 0.22);
-    angel.add(eye1);
+    fallback.add(eye1);
     const eye2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), eyeGlowMat);
     eye2.position.set(0.07, 2.15, 0.22);
-    angel.add(eye2);
+    fallback.add(eye2);
 
     this.statues.weepingAngel = angel;
     this.scene.add(angel);
@@ -1126,10 +1126,10 @@ class WorldBuilder {
     const glowMat = new THREE.MeshBasicMaterial({ color: 0xffaa22 });
     const eye1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), glowMat);
     eye1.position.set(-0.06, 2.22, 0.22);
-    saint.add(eye1);
+    fallback.add(eye1);
     const eye2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), glowMat);
     eye2.position.set(0.06, 2.22, 0.22);
-    saint.add(eye2);
+    fallback.add(eye2);
 
     this.statues.haloedSaint = saint;
     this.scene.add(saint);
@@ -1185,10 +1185,10 @@ class WorldBuilder {
     const mournerEyeMat = new THREE.MeshBasicMaterial({ color: 0xff3333 });
     const mEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mournerEyeMat);
     mEye1.position.set(-0.06, 0.98, 0.26);
-    mourner.add(mEye1);
+    fallback.add(mEye1);
     const mEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), mournerEyeMat);
     mEye2.position.set(0.06, 0.98, 0.26);
-    mourner.add(mEye2);
+    fallback.add(mEye2);
 
     this.statues.veiledMourner = mourner;
     this.scene.add(mourner);
@@ -1318,11 +1318,11 @@ class WorldBuilder {
       });
     }
 
-    // 3. The Penitent / Veiled Mourner (Saint Mary)
+    // 3. The Penitent / Veiled Mourner (Saint Mary - Crawling Entity)
     if (this.statues.veiledMourner) {
       this.loadEntityGLB('assets/models/saint_mary_model.glb', this.statues.veiledMourner, {
-        targetHeight: 1.15,
-        rotX: -Math.PI / 2
+        targetHeight: 0.92,
+        rotX: 0
       });
     }
   }
