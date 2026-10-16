@@ -1227,6 +1227,9 @@ class WorldBuilder {
 
     const {
       targetHeight = 2.4,
+      scaleX = 1.0,
+      scaleY = 1.0,
+      scaleZ = 1.0,
       rotX = 0,
       rotY = 0,
       rotZ = 0,
@@ -1253,11 +1256,11 @@ class WorldBuilder {
           const rawSize = rawBox.getSize(new THREE.Vector3());
           const rawCenter = rawBox.getCenter(new THREE.Vector3());
 
-          // Uniform scale to match canonical entity height
+          // Uniform scale to match canonical entity height, with customizable width & depth axis scaling
           const scale = targetHeight / (rawSize.y || 1);
           const container = new THREE.Group();
           container.name = 'glbModel';
-          container.scale.set(scale, scale, scale);
+          container.scale.set(scale * scaleX, scale * scaleY, scale * scaleZ);
 
           // Ground feet at y = 0 and center horizontally at (0, 0)
           rawScene.position.set(-rawCenter.x, -rawBox.min.y + offsetY, -rawCenter.z);
@@ -1303,17 +1306,23 @@ class WorldBuilder {
 
   load3DModels() {
     // 1. Weeping Angel (Mater Dolorosa)
+    // Scaled to realistic slender gothic statue width (doorway is 1.35m wide)
     if (this.statues.weepingAngel) {
       this.loadEntityGLB('assets/models/weeping_angel_model.glb', this.statues.weepingAngel, {
-        targetHeight: 2.35,
+        targetHeight: 2.25,
+        scaleX: 0.50,
+        scaleZ: 0.70,
         rotX: 0
       });
     }
 
     // 2. Sanctus Michael (Haloed Saint)
+    // Slender, tall gothic cathedral proportions
     if (this.statues.haloedSaint) {
       this.loadEntityGLB('assets/models/saint_michael_model.glb', this.statues.haloedSaint, {
-        targetHeight: 2.45,
+        targetHeight: 2.35,
+        scaleX: 0.60,
+        scaleZ: 0.70,
         rotX: 0
       });
     }
@@ -1322,6 +1331,7 @@ class WorldBuilder {
     if (this.statues.veiledMourner) {
       this.loadEntityGLB('assets/models/saint_mary_model.glb', this.statues.veiledMourner, {
         targetHeight: 0.92,
+        scaleX: 0.85,
         rotX: 0
       });
     }

@@ -439,6 +439,12 @@ class GameEngine {
     this.clearAngelDoorRetreatTimer();
     this.clearSaintDoorRetreatTimer();
     this.clearMournerVentRetreatTimer();
+    this._angelStage3ArrivalTime = 0;
+    this._saintStage3ArrivalTime = 0;
+    this._mournerStage3ArrivalTime = 0;
+    this._angelBanishedOnClose = false;
+    this._saintBanishedOnClose = false;
+    this._mournerBanishedOnClose = false;
     this._lastAngelStage = undefined;
     this._lastSaintStage = undefined;
     this._lastMournerStage = undefined;
@@ -606,10 +612,8 @@ class GameEngine {
       case 3: // Exactly outside the Left Arched Church Doorway threshold in the outer cloister hallway!
         angel.position.set(-4.20, 0.0, -0.60);
         angel.rotation.set(0, Math.PI * 0.46, 0); // Directly facing through the open doorway toward player desk
-        angel.visible = !this.isLeftDoorClosed;
-        if (this.isLeftDoorClosed) {
-          this.startAngelDoorRetreatTimer();
-        }
+        angel.visible = true;
+        this._angelStage3ArrivalTime = Date.now();
         break;
       case 4: // Inside Office - Attack position
         angel.position.set(-1.2, 0.0, -0.8);
@@ -655,10 +659,8 @@ class GameEngine {
       case 3: // Exactly outside the Left Arched Church Doorway threshold in the outer cloister hallway!
         saint.position.set(-4.20, 0.0, -0.60);
         saint.rotation.set(0, Math.PI * 0.46, 0); // Directly facing through the open doorway toward player desk
-        saint.visible = !this.isLeftDoorClosed;
-        if (this.isLeftDoorClosed) {
-          this.startSaintDoorRetreatTimer();
-        }
+        saint.visible = true;
+        this._saintStage3ArrivalTime = Date.now();
         break;
       case 4: // Inside Office - Attack position
         saint.position.set(-0.8, 0.0, -0.7);
@@ -710,10 +712,8 @@ class GameEngine {
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
         mourner.position.set(4.15, 0.02, 0.45);
         mourner.rotation.set(0, -Math.PI * 0.54, 0); // Head and face looking directly out of vent toward player desk
-        mourner.visible = !this.isVentClosed;
-        if (this.isVentClosed) {
-          this.startMournerVentRetreatTimer();
-        }
+        mourner.visible = true;
+        this._mournerStage3ArrivalTime = Date.now();
         break;
       case 4: // Inside Office - Attack position
         mourner.position.set(1.2, 0.0, -0.6);
@@ -2040,28 +2040,6 @@ class GameEngine {
       btn.classList.toggle('active', this.isLeftDoorClosed);
       btn.classList.toggle('door-active', this.isLeftDoorClosed);
     }
-
-    // Toggle 3D statue visibility so they don't clip through closed door
-    if (this.aiConfig.weepingAngel.stage === 3 && this.world?.statues?.weepingAngel) {
-      this.world.statues.weepingAngel.visible = !this.isLeftDoorClosed;
-    }
-    if (this.aiConfig.haloedSaint.stage === 3 && this.world?.statues?.haloedSaint) {
-      this.world.statues.haloedSaint.visible = !this.isLeftDoorClosed;
-    }
-
-    // If door is closed while an entity is peeking at the door threshold:
-    if (this.isLeftDoorClosed) {
-      if (this.aiConfig.weepingAngel.stage === 3) {
-        this.startAngelDoorRetreatTimer();
-      }
-      if (this.aiConfig.haloedSaint.stage === 3) {
-        this.startSaintDoorRetreatTimer();
-      }
-    } else {
-      // Opening door cancels retreat timer! Entity remains outside if door is reopened prematurely
-      this.clearAngelDoorRetreatTimer();
-      this.clearSaintDoorRetreatTimer();
-    }
   }
 
   toggleLeftDoorLight() {
@@ -2089,21 +2067,6 @@ class GameEngine {
     if (btn) {
       btn.classList.toggle('active', this.isVentClosed);
       btn.classList.toggle('door-active', this.isVentClosed);
-    }
-
-    // Toggle 3D mourner visibility so it doesn't clip through closed vent shutter
-    if (this.aiConfig.veiledMourner.stage === 3 && this.world?.statues?.veiledMourner) {
-      this.world.statues.veiledMourner.visible = !this.isVentClosed;
-    }
-
-    // If vent shutter is closed while Mourner is peeking at the duct opening:
-    if (this.isVentClosed) {
-      if (this.aiConfig.veiledMourner.stage === 3) {
-        this.startMournerVentRetreatTimer();
-      }
-    } else {
-      // Opening vent cancels retreat timer!
-      this.clearMournerVentRetreatTimer();
     }
   }
 
@@ -2894,12 +2857,59 @@ class GameEngine {
     if (this.world?.nodes?.doorPivot) {
       const targetDoorRot = this.isLeftDoorClosed ? 0.0 : Math.PI * 0.48;
       this.world.nodes.doorPivot.rotation.y += (targetDoorRot - this.world.nodes.doorPivot.rotation.y) * 0.15;
+
+      const isDoorFullyClosed = this.isLeftDoorClosed && (Math.abs(this.world.nodes.doorPivot.rotation.y) < 0.04);
+      if (isDoorFullyClosed) {
+        // Disappear/banish entity when door is fully closed
+        if (this.aiConfig.weepingAngel.stage === 3) {
+          if (!this._angelBanishedOnClose) {
+            const timeAtDoor = Date.now() - (this._angelStage3ArrivalTime || 0);
+            if (timeAtDoor > 400) {
+              this._angelBanishedOnClose = true;
+              window.Sound.playStoneGrind(0.85);
+              window.Sound.playLeftFootstep(0.65);
+              this.banishAngel();
+            }
+          }
+        }
+        if (this.aiConfig.haloedSaint.stage === 3) {
+          if (!this._saintBanishedOnClose) {
+            const timeAtDoor = Date.now() - (this._saintStage3ArrivalTime || 0);
+            if (timeAtDoor > 400) {
+              this._saintBanishedOnClose = true;
+              window.Sound.playStoneGrind(0.85);
+              window.Sound.playLeftFootstep(0.65);
+              this.banishSaint();
+            }
+          }
+        }
+      } else {
+        this._angelBanishedOnClose = false;
+        this._saintBanishedOnClose = false;
+      }
     }
 
     // Heavy Industrial Vent Shutter Damper slide animation (drops flush with duct sill at 0.58)
     if (this.world?.nodes?.ventShutter) {
       const targetVentY = this.isVentClosed ? 0.58 : 1.85;
       this.world.nodes.ventShutter.position.y += (targetVentY - this.world.nodes.ventShutter.position.y) * 0.18;
+
+      const isVentFullyClosed = this.isVentClosed && (this.world.nodes.ventShutter.position.y < 0.62);
+      if (isVentFullyClosed) {
+        if (this.aiConfig.veiledMourner.stage === 3) {
+          if (!this._mournerBanishedOnClose) {
+            const timeAtVent = Date.now() - (this._mournerStage3ArrivalTime || 0);
+            if (timeAtVent > 400) {
+              this._mournerBanishedOnClose = true;
+              window.Sound.playStoneGrind(0.7);
+              window.Sound.playVentSound(false);
+              this.banishMourner();
+            }
+          }
+        }
+      } else {
+        this._mournerBanishedOnClose = false;
+      }
     }
 
     // Desk Task Lamp gentle flicker
