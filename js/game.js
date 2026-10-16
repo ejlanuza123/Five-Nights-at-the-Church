@@ -502,9 +502,9 @@ class GameEngine {
       case 2: // CAM 05 - Narthex Corridor outside office window
         angel.visible = false; // Photorealistically displayed on windowBackdrop!
         break;
-      case 3: // Standing in outer hallway corridor outside Left Arched Doorway!
-        angel.position.set(-4.85, 0.0, -0.65);
-        angel.rotation.set(0, Math.PI * 0.48, 0); // Facing slightly inward towards doorway
+      case 3: // Standing in outer hallway corridor outside Left Door (FNAF door blindspot!)
+        angel.position.set(-4.6, 0.0, -0.6);
+        angel.rotation.set(0, Math.PI * 0.45, 0); // Angled into office towards player desk
         angel.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
@@ -548,9 +548,9 @@ class GameEngine {
       case 2: // CAM 05 - Right outside observation window
         saint.visible = false; // Photorealistically displayed on windowBackdrop!
         break;
-      case 3: // Standing in outer hallway corridor outside Left Arched Doorway!
-        saint.position.set(-4.85, 0.0, -0.65);
-        saint.rotation.set(0, Math.PI * 0.48, 0); // Facing slightly inward towards doorway
+      case 3: // Standing in outer hallway corridor outside Left Door (FNAF door blindspot!)
+        saint.position.set(-4.6, 0.0, -0.6);
+        saint.rotation.set(0, Math.PI * 0.45, 0); // Angled into office towards player desk
         saint.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
