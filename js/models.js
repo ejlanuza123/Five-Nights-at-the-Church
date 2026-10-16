@@ -413,14 +413,16 @@ class WorldBuilder {
 
     // (The red brick wall corrSideWallL blocking the way forward has been removed)
 
-    // Stone arch rib spanning outside hallway
-    const corrArchTorus = new THREE.Mesh(
-      new THREE.TorusGeometry(1.4, 0.16, 8, 16, Math.PI),
-      this.materials.vaultStone
-    );
-    corrArchTorus.rotation.y = Math.PI / 2;
-    corrArchTorus.position.set(-w / 2 - 2.0, 2.0, doorZ);
-    corridorGroup.add(corrArchTorus);
+    // Hallway ceiling downlight fixture mounted directly above door threshold
+    const corrLampMat = this.materials.darkIron;
+    const corrLampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.08, 16), corrLampMat);
+    corrLampBase.position.set(-w / 2 - 0.7, corrH - 0.04, doorZ);
+    corridorGroup.add(corrLampBase);
+
+    const corrBulbMat = new THREE.MeshBasicMaterial({ color: 0xfff0d4 });
+    const corrBulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), corrBulbMat);
+    corrBulb.position.set(-w / 2 - 0.7, corrH - 0.12, doorZ);
+    corridorGroup.add(corrBulb);
 
     officeGroup.add(corridorGroup);
 
@@ -792,8 +794,8 @@ class WorldBuilder {
     this.lights.windowSpot = windowSpot;
 
     // 5. Left Corridor Downlight (Arched Door)
-    const doorLight = new THREE.PointLight(0xfff0d4, 0, 9);
-    doorLight.position.set(-w / 2 - 1.2, 2.7, -0.6);
+    const doorLight = new THREE.PointLight(0xfff0d4, 0, 10, 1.2);
+    doorLight.position.set(-w / 2 - 0.7, corrH - 0.25, -0.6);
     officeGroup.add(doorLight);
     this.lights.doorLight = doorLight;
 

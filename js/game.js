@@ -540,9 +540,9 @@ class GameEngine {
       case 2: // CAM 05 - Narthex Corridor outside office window
         angel.visible = false; // Photorealistically displayed on windowBackdrop!
         break;
-      case 3: // Peeking directly around Left Arched Church Doorway threshold!
-        angel.position.set(-3.55, 0.0, -0.65);
-        angel.rotation.set(0, Math.PI * 0.42, 0); // Angled into office towards player desk
+      case 3: // Exactly outside the Left Arched Church Doorway threshold in the outer cloister hallway!
+        angel.position.set(-4.20, 0.0, -0.60);
+        angel.rotation.set(0, Math.PI * 0.46, 0); // Directly facing through the open doorway toward player desk
         angel.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
@@ -586,9 +586,9 @@ class GameEngine {
       case 2: // CAM 05 - Right outside observation window
         saint.visible = false; // Photorealistically displayed on windowBackdrop!
         break;
-      case 3: // Peeking directly around Left Arched Church Doorway threshold!
-        saint.position.set(-3.56, 0.0, -0.60);
-        saint.rotation.set(0, Math.PI * 0.40, 0); // Angled into office
+      case 3: // Exactly outside the Left Arched Church Doorway threshold in the outer cloister hallway!
+        saint.position.set(-4.20, 0.0, -0.60);
+        saint.rotation.set(0, Math.PI * 0.46, 0); // Directly facing through the open doorway toward player desk
         saint.visible = !this.isLeftDoorClosed;
         break;
       case 4: // Inside Office - Attack position
