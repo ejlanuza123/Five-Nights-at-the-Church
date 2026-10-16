@@ -2853,10 +2853,14 @@ class GameEngine {
     this.cameraYaw += (this.targetYaw - this.cameraYaw) * 0.28;
     this.cameraPitch += (this.targetPitch - this.cameraPitch) * 0.28;
 
-    // Heavy Gothic Church Arched Door Hinge animation (swings inward into office room)
+    // Heavy Gothic Church Arched Door Hinge animation (fast responsive emergency slam shut)
     if (this.world?.nodes?.doorPivot) {
       const targetDoorRot = this.isLeftDoorClosed ? 0.0 : Math.PI * 0.48;
-      this.world.nodes.doorPivot.rotation.y += (targetDoorRot - this.world.nodes.doorPivot.rotation.y) * 0.15;
+      const doorSpeed = this.isLeftDoorClosed ? 0.35 : 0.30; // Fast emergency shut, smooth swift open
+      this.world.nodes.doorPivot.rotation.y += (targetDoorRot - this.world.nodes.doorPivot.rotation.y) * doorSpeed;
+      if (Math.abs(this.world.nodes.doorPivot.rotation.y - targetDoorRot) < 0.015) {
+        this.world.nodes.doorPivot.rotation.y = targetDoorRot;
+      }
 
       const isDoorFullyClosed = this.isLeftDoorClosed && (Math.abs(this.world.nodes.doorPivot.rotation.y) < 0.04);
       if (isDoorFullyClosed) {
@@ -2864,7 +2868,7 @@ class GameEngine {
         if (this.aiConfig.weepingAngel.stage === 3) {
           if (!this._angelBanishedOnClose) {
             const timeAtDoor = Date.now() - (this._angelStage3ArrivalTime || 0);
-            if (timeAtDoor > 400) {
+            if (timeAtDoor > 250) {
               this._angelBanishedOnClose = true;
               window.Sound.playStoneGrind(0.85);
               window.Sound.playLeftFootstep(0.65);
@@ -2875,7 +2879,7 @@ class GameEngine {
         if (this.aiConfig.haloedSaint.stage === 3) {
           if (!this._saintBanishedOnClose) {
             const timeAtDoor = Date.now() - (this._saintStage3ArrivalTime || 0);
-            if (timeAtDoor > 400) {
+            if (timeAtDoor > 250) {
               this._saintBanishedOnClose = true;
               window.Sound.playStoneGrind(0.85);
               window.Sound.playLeftFootstep(0.65);
@@ -2889,17 +2893,21 @@ class GameEngine {
       }
     }
 
-    // Heavy Industrial Vent Shutter Damper slide animation (drops flush with duct sill at 0.58)
+    // Heavy Industrial Vent Shutter Damper slide animation (fast motorized drop seal)
     if (this.world?.nodes?.ventShutter) {
       const targetVentY = this.isVentClosed ? 0.58 : 1.85;
-      this.world.nodes.ventShutter.position.y += (targetVentY - this.world.nodes.ventShutter.position.y) * 0.18;
+      const ventSpeed = this.isVentClosed ? 0.36 : 0.30; // Fast motorized drop seal
+      this.world.nodes.ventShutter.position.y += (targetVentY - this.world.nodes.ventShutter.position.y) * ventSpeed;
+      if (Math.abs(this.world.nodes.ventShutter.position.y - targetVentY) < 0.02) {
+        this.world.nodes.ventShutter.position.y = targetVentY;
+      }
 
       const isVentFullyClosed = this.isVentClosed && (this.world.nodes.ventShutter.position.y < 0.62);
       if (isVentFullyClosed) {
         if (this.aiConfig.veiledMourner.stage === 3) {
           if (!this._mournerBanishedOnClose) {
             const timeAtVent = Date.now() - (this._mournerStage3ArrivalTime || 0);
-            if (timeAtVent > 400) {
+            if (timeAtVent > 250) {
               this._mournerBanishedOnClose = true;
               window.Sound.playStoneGrind(0.7);
               window.Sound.playVentSound(false);
