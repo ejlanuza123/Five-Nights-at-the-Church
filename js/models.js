@@ -378,119 +378,50 @@ class WorldBuilder {
     lwTop.position.set(-w / 2, doorH + (h - doorH) / 2, doorZ);
     officeGroup.add(lwTop);
 
-    // --- OUTER WEST CLOISTER CORRIDOR (FNAF-style West Hall outside left door) ---
-    // In authentic FNAF layout, the hallway runs North-South parallel to the office wall (along Z),
-    // with the opposite wall 3m across at X = -6.5, and the corridor stretching 26m down into darkness!
+    // --- OUTER WEST CLOISTER CORRIDOR (Visible through left open doorway) ---
     const corridorGroup = new THREE.Group();
-    const hallWidth = 3.0; // Corridor width from office wall (X = -3.5) to outer wall (X = -6.5)
-    const hallCenterX = -w / 2 - hallWidth / 2; // X = -5.0
-    const zSouth = 3.5;    // Back corner of hallway (behind office, like CAM 2B corner)
-    const zNorth = -26.0;  // Far end of hallway stretching into cathedral darkness
-    const hallLength = zSouth - zNorth; // 29.5m total length
-    const hallCenterZ = (zSouth + zNorth) / 2; // Z = -11.25
-    const hallH = 3.8;     // Corridor height
+    const corrW = 4.2;
+    const corrD = 2.8;
+    const corrH = 3.4;
 
-    // Corridor stone flagstone floor extending the entire length of the hallway
-    const corrFloor = new THREE.Mesh(new THREE.PlaneGeometry(hallWidth, hallLength, 4, 32), this.materials.floor);
+    // Corridor stone floor
+    const corrFloor = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD), this.materials.floor);
     corrFloor.rotation.x = -Math.PI / 2;
-    corrFloor.position.set(hallCenterX, 0.01, hallCenterZ);
+    corrFloor.position.set(-w / 2 - corrW / 2, 0.01, doorZ);
     corridorGroup.add(corrFloor);
 
-    // Corridor vaulted stone ceiling extending down the hall
-    const corrCeil = new THREE.Mesh(new THREE.PlaneGeometry(hallWidth, hallLength, 4, 32), this.materials.vaultStone);
+    // Corridor stone ceiling
+    const corrCeil = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrD), this.materials.vaultStone);
     corrCeil.rotation.x = Math.PI / 2;
-    corrCeil.position.set(hallCenterX, hallH, hallCenterZ);
+    corrCeil.position.set(-w / 2 - corrW / 2, corrH, doorZ);
     corridorGroup.add(corrCeil);
 
-    // Outer West Wall (Directly across from the office door at X = -6.5, running from Z = +3.5 to Z = -26.0)
-    const outerWestWall = new THREE.Mesh(new THREE.PlaneGeometry(hallLength, hallH, 32, 4), this.materials.brick);
-    outerWestWall.rotation.y = Math.PI / 2;
-    outerWestWall.position.set(-w / 2 - hallWidth, hallH / 2, hallCenterZ);
-    corridorGroup.add(outerWestWall);
+    // Far west wall
+    const corrFarWall = new THREE.Mesh(new THREE.PlaneGeometry(corrD, corrH), this.materials.wall);
+    corrFarWall.rotation.y = Math.PI / 2;
+    corrFarWall.position.set(-w / 2 - corrW, corrH / 2, doorZ);
+    corridorGroup.add(corrFarWall);
 
-    // Inner Cloister Wall forward of office (from Z = -2.8 to Z = -26.0 along X = -3.5)
-    const innerNorthLen = Math.abs(zNorth - (-d / 2)); // 23.2m
-    const innerNorthZ = -d / 2 - innerNorthLen / 2;    // -14.4
-    const innerNorthWall = new THREE.Mesh(new THREE.PlaneGeometry(innerNorthLen, hallH, 24, 4), this.materials.wall);
-    innerNorthWall.rotation.y = -Math.PI / 2;
-    innerNorthWall.position.set(-w / 2, hallH / 2, innerNorthZ);
-    corridorGroup.add(innerNorthWall);
+    // Corridor side walls with arch ribs
+    const corrSideWallL = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH), this.materials.brick);
+    corrSideWallL.position.set(-w / 2 - corrW / 2, corrH / 2, doorZ - corrD / 2);
+    corridorGroup.add(corrSideWallL);
 
-    // Inner Cloister Wall behind office (from Z = +2.8 to Z = +3.5 along X = -3.5)
-    const innerSouthLen = zSouth - (d / 2); // 0.7m
-    const innerSouthZ = d / 2 + innerSouthLen / 2; // 3.15
-    const innerSouthWall = new THREE.Mesh(new THREE.PlaneGeometry(innerSouthLen, hallH), this.materials.wall);
-    innerSouthWall.rotation.y = -Math.PI / 2;
-    innerSouthWall.position.set(-w / 2, hallH / 2, innerSouthZ);
-    corridorGroup.add(innerSouthWall);
+    const corrSideWallR = new THREE.Mesh(new THREE.PlaneGeometry(corrW, corrH), this.materials.brick);
+    corrSideWallR.rotation.y = Math.PI;
+    corrSideWallR.position.set(-w / 2 - corrW / 2, corrH / 2, doorZ + corrD / 2);
+    corridorGroup.add(corrSideWallR);
 
-    // South End Wall (Corner at Z = +3.5, like FNAF CAM 2B corner)
-    const southEndWall = new THREE.Mesh(new THREE.PlaneGeometry(hallWidth, hallH), this.materials.wall);
-    southEndWall.rotation.y = Math.PI;
-    southEndWall.position.set(hallCenterX, hallH / 2, zSouth);
-    corridorGroup.add(southEndWall);
-
-    // North End Wall (26m away, dissolved into scene fog and darkness)
-    const northEndWall = new THREE.Mesh(new THREE.PlaneGeometry(hallWidth, hallH), this.materials.wall);
-    northEndWall.position.set(hallCenterX, hallH / 2, zNorth);
-    corridorGroup.add(northEndWall);
-
-    // Gothic Vault Arch Ribs spanning across the corridor (East to West) along the hallway
-    const archZOffsets = [2.2, doorZ, -4.5, -9.0, -13.5, -18.0, -22.5];
-    const archRadius = hallWidth / 2;
-    archZOffsets.forEach((az) => {
-      // Vaulted stone arch torus spanning across from X = -3.5 to X = -6.5
-      const archTorus = new THREE.Mesh(
-        new THREE.TorusGeometry(archRadius, 0.13, 8, 20, Math.PI),
-        this.materials.vaultStone
-      );
-      archTorus.position.set(hallCenterX, 2.3, az);
-      corridorGroup.add(archTorus);
-
-      // Supporting stone pilasters on outer and inner walls
-      const pilGeo = new THREE.BoxGeometry(0.22, 2.3, 0.22);
-      const pilOuter = new THREE.Mesh(pilGeo, this.materials.vaultStone);
-      pilOuter.position.set(-w / 2 - hallWidth + 0.11, 1.15, az);
-      corridorGroup.add(pilOuter);
-
-      const pilInner = new THREE.Mesh(pilGeo, this.materials.vaultStone);
-      pilInner.position.set(-w / 2 - 0.11, 1.15, az);
-      corridorGroup.add(pilInner);
-    });
-
-    // Decorative Gothic Wall Features on the outer wall directly opposite the doorway (X = -6.5, Z = doorZ)
-    // 1. Recessed Arched Stone Wall Niche opposite door
-    const nicheFrame = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.6, 0.9), this.materials.vaultStone);
-    nicheFrame.position.set(-w / 2 - hallWidth + 0.04, 1.7, doorZ);
-    corridorGroup.add(nicheFrame);
-
-    // 2. Wall Sconce Lantern Bracket opposite door
-    const sconceArm = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.05, 0.05), this.materials.iron);
-    sconceArm.position.set(-w / 2 - hallWidth + 0.12, 2.3, doorZ);
-    corridorGroup.add(sconceArm);
-
-    const sconceLantern = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.22, 6), this.materials.iron);
-    sconceLantern.position.set(-w / 2 - hallWidth + 0.22, 2.2, doorZ);
-    corridorGroup.add(sconceLantern);
-
-    // 3. Black Industrial Conduit along outer wall
-    const conduitGeo = new THREE.CylinderGeometry(0.02, 0.02, hallLength, 6);
-    const conduit = new THREE.Mesh(conduitGeo, frameMat);
-    conduit.rotation.x = Math.PI / 2;
-    conduit.position.set(-w / 2 - hallWidth + 0.04, 3.2, hallCenterZ);
-    corridorGroup.add(conduit);
-
-    // Distant Atmospheric Corridor Lanterns down the hallway (FNAF ambient depth)
-    const corrFarLight1 = new THREE.PointLight(0x335588, 0.38, 10);
-    corrFarLight1.position.set(hallCenterX, 2.5, -9.0);
-    corridorGroup.add(corrFarLight1);
-
-    const corrFarLight2 = new THREE.PointLight(0x223355, 0.25, 8);
-    corrFarLight2.position.set(hallCenterX, 2.5, -18.0);
-    corridorGroup.add(corrFarLight2);
+    // Stone arch rib spanning outside hallway
+    const corrArchTorus = new THREE.Mesh(
+      new THREE.TorusGeometry(corrD / 2, 0.16, 8, 16, Math.PI),
+      this.materials.vaultStone
+    );
+    corrArchTorus.rotation.y = Math.PI / 2;
+    corrArchTorus.position.set(-w / 2 - 2.0, 2.0, doorZ);
+    corridorGroup.add(corrArchTorus);
 
     officeGroup.add(corridorGroup);
-
 
 
     // Arched Stone Trim around doorway (Inside Office)
