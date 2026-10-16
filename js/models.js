@@ -1306,32 +1306,34 @@ class WorldBuilder {
 
   load3DModels() {
     // 1. Weeping Angel (Mater Dolorosa)
-    // Scaled to realistic slender gothic statue width (doorway is 1.35m wide)
+    // Normal natural statue width (wings full and natural, torso uncompressed)
     if (this.statues.weepingAngel) {
       this.loadEntityGLB('assets/models/weeping_angel_model.glb', this.statues.weepingAngel, {
         targetHeight: 2.25,
-        scaleX: 0.50,
-        scaleZ: 0.70,
+        scaleX: 0.78,
+        scaleZ: 0.90,
         rotX: 0
       });
     }
 
     // 2. Sanctus Michael (Haloed Saint)
-    // Slender, tall gothic cathedral proportions
+    // Normal heroic human statue proportions (natural broad shoulders and halo)
     if (this.statues.haloedSaint) {
       this.loadEntityGLB('assets/models/saint_michael_model.glb', this.statues.haloedSaint, {
         targetHeight: 2.35,
-        scaleX: 0.60,
-        scaleZ: 0.70,
+        scaleX: 0.90,
+        scaleZ: 0.92,
         rotX: 0
       });
     }
 
     // 3. The Penitent / Veiled Mourner (Saint Mary - Crawling Entity)
+    // Larger size to menacingly fill the HVAC ventilation duct
     if (this.statues.veiledMourner) {
       this.loadEntityGLB('assets/models/saint_mary_model.glb', this.statues.veiledMourner, {
-        targetHeight: 0.92,
-        scaleX: 0.85,
+        targetHeight: 1.06,
+        scaleX: 1.05,
+        scaleZ: 1.02,
         rotX: 0
       });
     }

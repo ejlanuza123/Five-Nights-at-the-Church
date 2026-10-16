@@ -710,7 +710,7 @@ class GameEngine {
         mourner.visible = true;
         break;
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
-        mourner.position.set(4.15, 0.02, 0.45);
+        mourner.position.set(4.25, 0.02, 0.45);
         mourner.rotation.set(0, -Math.PI * 0.54, 0); // Head and face looking directly out of vent toward player desk
         mourner.visible = true;
         this._mournerStage3ArrivalTime = Date.now();
