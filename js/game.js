@@ -44,6 +44,8 @@ class GameEngine {
     this.isWindowSpotOn = false;      // Observation Window High-Power Spotlight
     this.windowSpotIntensity = 0.0;   // Dynamic light intensity (0.0 night -> 1.0 lit)
     this.windowSpotIgnitionTimer = 0.0; // Filament surge ignition timer
+    this.isWindowSpotFlickering = false; // Horror halogen strobe flicker when catching entities
+    this._windowSpotRetreatTimer = null;
 
     // Digital Surveillance Monitor (CCTV)
     this.isCCTVOpen = false;
@@ -1897,6 +1899,11 @@ class GameEngine {
     } else {
       // INSTANTLY DARK WHEN CLOSED! Zero fade, zero delay
       this.windowSpotIntensity = 0.0;
+      this.isWindowSpotFlickering = false;
+      if (this._windowSpotRetreatTimer) {
+        clearTimeout(this._windowSpotRetreatTimer);
+        this._windowSpotRetreatTimer = null;
+      }
       window.Sound.stopFlashlightHum();
       if (this.world.nodes.windowBackdropMat && this.world.nodes.windowBackdropMat.uniforms) {
         this.world.nodes.windowBackdropMat.uniforms.lightIntensity.value = 0.0;
@@ -1921,19 +1928,27 @@ class GameEngine {
       const mournerInHallway = this.aiConfig.veiledMourner.location === 'CAM_05';
 
       if (angelInHallway || saintInHallway || mournerInHallway) {
-        // Eerie warning stone grind sound when caught in spotlight beam
-        window.Sound.playStoneGrind(0.65);
+        // Light flickers dramatically when an entity is caught, then entity vanishes!
+        this.isWindowSpotFlickering = true;
+        window.Sound.playLightFlicker(0.85);
+        window.Sound.playStoneGrind(0.85);
 
-        // Keep entity visible in spotlight beam for 1.4s so player clearly spots them, then retreat!
-        clearTimeout(this._windowSpotRetreatTimer);
+        if (this._windowSpotRetreatTimer) {
+          clearTimeout(this._windowSpotRetreatTimer);
+        }
         this._windowSpotRetreatTimer = setTimeout(() => {
-          if (this.isWindowSpotOn && !this.gameOver) {
-            window.Sound.playStoneGrind(0.9);
+          if (this.isWindowSpotOn && !this.gameOver && !this.victory) {
+            // Entities vanish and flee back to camera bases
             if (this.aiConfig.weepingAngel.location === 'CAM_05') this.banishAngel();
             if (this.aiConfig.haloedSaint.location === 'CAM_05') this.banishSaint();
             if (this.aiConfig.veiledMourner.location === 'CAM_05') this.banishMourner();
+
+            this.isWindowSpotFlickering = false;
+            this.windowSpotIntensity = 1.0;
+            this.updateWindowHallwayView();
+            window.Sound.playStoneGrind(0.9);
           }
-        }, 1400);
+        }, 800);
       }
     }
   }
@@ -1950,6 +1965,10 @@ class GameEngine {
     }
 
     if (this.isCCTVOpen) {
+      // Automatically close/turn off window spotlight when looking at cameras
+      if (this.isWindowSpotOn) {
+        this.toggleWindowSpot();
+      }
       this.triggerStatic(0.15);
       this.switchCamera(this.activeCameraId);
     }
@@ -2312,10 +2331,15 @@ class GameEngine {
       if (roll <= ai.level) {
         if (ai.stage === -1) {
           // Banishment recovery: advances from CAM_02 Crypt back to CAM_05 Hallway
+          if (this.isWindowSpotOn) return; // Cannot appear at window hallway while lights are turned on
           this.setAngelStage(1);
           window.Sound.playStoneGrind(0.7);
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
+          if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
+            // Cannot appear at window hallway while spotlight is shining down the hall!
+            return;
+          }
           this.setAngelStage(nextStage);
           window.Sound.playStoneGrind(0.7);
           if (nextStage >= 2) {
@@ -2358,10 +2382,15 @@ class GameEngine {
       if (roll <= ai.level) {
         if (ai.stage === -1) {
           // Banishment recovery: advances from CAM_01 Nave back to CAM_05 Hallway
+          if (this.isWindowSpotOn) return; // Cannot appear at window hallway while lights are turned on
           this.setSaintStage(1);
           window.Sound.playStoneGrind(0.8);
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
+          if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
+            // Cannot appear at window hallway while spotlight is shining down the hall!
+            return;
+          }
           this.setSaintStage(nextStage);
           window.Sound.playStoneGrind(0.8);
           if (nextStage === 2) {
@@ -2583,9 +2612,9 @@ class GameEngine {
     this.cameraYaw += (this.targetYaw - this.cameraYaw) * 0.28;
     this.cameraPitch += (this.targetPitch - this.cameraPitch) * 0.28;
 
-    // Heavy Gothic Church Arched Door Hinge animation (swings outward into cloister corridor)
+    // Heavy Gothic Church Arched Door Hinge animation (swings inward into office room)
     if (this.world?.nodes?.doorPivot) {
-      const targetDoorRot = this.isLeftDoorClosed ? 0.0 : -Math.PI * 0.45;
+      const targetDoorRot = this.isLeftDoorClosed ? 0.0 : Math.PI * 0.48;
       this.world.nodes.doorPivot.rotation.y += (targetDoorRot - this.world.nodes.doorPivot.rotation.y) * 0.15;
     }
 
@@ -2600,8 +2629,16 @@ class GameEngine {
       this.world.lights.candleLight.intensity = 1.35 + Math.sin(Date.now() * 0.007) * 0.05;
     }
 
-    // Observation Window Halogen Spotlight Dynamics (Instant snap to pitch-black when closed)
-    this.windowSpotIntensity = this.isWindowSpotOn ? 1.0 : 0.0;
+    // Observation Window Halogen Spotlight Dynamics (Instant snap to pitch-black when closed, erratic horror flicker when catching entities)
+    if (this.isWindowSpotOn) {
+      if (this.isWindowSpotFlickering) {
+        this.windowSpotIntensity = Math.random() < 0.45 ? (Math.random() * 0.12) : (0.75 + Math.random() * 0.45);
+      } else {
+        this.windowSpotIntensity = 1.0;
+      }
+    } else {
+      this.windowSpotIntensity = 0.0;
+    }
 
     // Update Window Backdrop Shader Material Uniforms
     const backdropMat = this.world?.nodes?.windowBackdropMat;
@@ -2609,7 +2646,7 @@ class GameEngine {
       backdropMat.uniforms.lightIntensity.value = this.windowSpotIntensity;
       backdropMat.uniforms.time.value += delta;
       backdropMat.uniforms.flicker.value = this.isWindowSpotOn
-        ? (1.0 + Math.sin(Date.now() * 0.02) * 0.008)
+        ? (this.isWindowSpotFlickering ? (0.2 + Math.random() * 1.2) : (1.0 + Math.sin(Date.now() * 0.02) * 0.008))
         : 1.0;
     }
 

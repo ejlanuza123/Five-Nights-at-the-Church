@@ -743,6 +743,30 @@ class SoundEngine {
     }
   }
 
+  // --- REALISTIC ELECTRICAL ARC & HALOGEN LIGHT FLICKER ---
+  playLightFlicker(duration = 0.85) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+
+    // Rapid erratic electrical sparks and buzzing pops
+    const burstCount = 7;
+    for (let i = 0; i < burstCount; i++) {
+      const burstTime = now + (i / burstCount) * (duration * 0.9) + (Math.random() * 0.04);
+      const osc = this.ctx.createOscillator();
+      osc.type = Math.random() > 0.5 ? 'sawtooth' : 'square';
+      osc.frequency.setValueAtTime(75 + Math.random() * 260, burstTime);
+
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.22 + Math.random() * 0.12, burstTime);
+      g.gain.exponentialRampToValueAtTime(0.001, burstTime + 0.05);
+
+      osc.connect(g);
+      g.connect(this.masterGain);
+      osc.start(burstTime);
+      osc.stop(burstTime + 0.055);
+    }
+  }
+
   startFlashlightHum() {
     if (!this.ctx) return;
     this.stopFlashlightHum();

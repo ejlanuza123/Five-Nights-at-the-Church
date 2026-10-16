@@ -457,7 +457,7 @@ class WorldBuilder {
     this.nodes.magLedMat = magLedMat;
 
     // Arched Wooden Church Door with Iron Straps (Door Pivot)
-    // Hinge edge is at doorZ - doorW / 2; swings outward into corridor!
+    // Hinge edge is at doorZ - doorW / 2; swings inward into office room!
     const doorPivot = new THREE.Group();
     doorPivot.position.set(-w / 2 + 0.04, 0, doorZ - doorW / 2);
 
