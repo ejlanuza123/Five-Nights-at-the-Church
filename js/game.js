@@ -699,17 +699,17 @@ class GameEngine {
         break;
       case 1: // CAM 04 - Entering modern HVAC Air Duct
         mourner.position.set(5.8, 0.02, 0.45);
-        mourner.rotation.set(0, Math.PI / 2, 0);
+        mourner.rotation.set(0, -Math.PI / 2, 0); // Head and crawling arms face forward towards office (-X)
         mourner.visible = true;
         break;
       case 2: // CAM 04 - Crawling deep inside HVAC Air Duct
         mourner.position.set(4.6, 0.02, 0.45);
-        mourner.rotation.set(0, Math.PI / 2, 0);
+        mourner.rotation.set(0, -Math.PI / 2, 0); // Head and crawling arms face forward towards office (-X)
         mourner.visible = true;
         break;
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
         mourner.position.set(4.15, 0.02, 0.45);
-        mourner.rotation.set(0, Math.PI * 0.52, 0); // Crawling crouched at duct mouth looking into office
+        mourner.rotation.set(0, -Math.PI * 0.54, 0); // Head and face looking directly out of vent toward player desk
         mourner.visible = !this.isVentClosed;
         if (this.isVentClosed) {
           this.startMournerVentRetreatTimer();
@@ -717,7 +717,7 @@ class GameEngine {
         break;
       case 4: // Inside Office - Attack position
         mourner.position.set(1.2, 0.0, -0.6);
-        mourner.rotation.set(0, Math.PI * 0.65, 0);
+        mourner.rotation.set(0, -Math.PI * 0.35, 0); // Face pointed directly at player
         mourner.visible = true;
         break;
     }
