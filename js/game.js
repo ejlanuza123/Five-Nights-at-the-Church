@@ -60,9 +60,9 @@ class GameEngine {
 
     // AI Entities & Levels (Strictly tracked unique locations)
     this.aiConfig = {
-      weepingAngel: { level: 2, stage: 0, location: 'CAM_01', timer: 0, attackTimer: 0 },
-      haloedSaint: { level: 1, stage: 0, location: 'CAM_03', timer: 0, attackTimer: 0 },
-      veiledMourner: { level: 0, stage: 0, location: 'CAM_02', timer: 0, attackTimer: 0 }
+      weepingAngel: { level: 2, stage: 0, location: 'CAM_01', timer: 0, attackTimer: 0, awakened: false },
+      haloedSaint: { level: 1, stage: 0, location: 'CAM_03', timer: 0, attackTimer: 0, awakened: false },
+      veiledMourner: { level: 0, stage: 0, location: 'CAM_02', timer: 0, attackTimer: 0, awakened: false }
     };
 
     // Modern 3D Camera Viewpoints
@@ -314,6 +314,7 @@ class GameEngine {
       'assets/cctv/church_cam_03_empty.png',
       'assets/cctv/church_cam_03_mary_chapel.png',
       'assets/cctv/church_cam_04_vent.png',
+      'assets/cctv/church_cam_04_vent_crawl.png',
       'assets/cctv/church_cam_04_vent_anomaly.png',
       'assets/cctv/church_cam_05_narthex.png',
       'assets/cctv/church_cam_05_narthex_anomaly.png',
@@ -587,6 +588,9 @@ class GameEngine {
     this._lastAngelStage = undefined;
     this._lastSaintStage = undefined;
     this._lastMournerStage = undefined;
+    this.aiConfig.weepingAngel.awakened = false;
+    this.aiConfig.haloedSaint.awakened = false;
+    this.aiConfig.veiledMourner.awakened = false;
     this.setAngelStage(0);
     this.setSaintStage(0);
     this.setMournerStage(0);
@@ -727,6 +731,7 @@ class GameEngine {
     const prevLoc = this.aiConfig.weepingAngel.location;
     const prevStage = this.aiConfig.weepingAngel.stage;
     this.aiConfig.weepingAngel.stage = stage;
+    if (stage === 0) this.aiConfig.weepingAngel.awakened = false;
 
     // Strict Unique Location mapping (Angel is only ever in ONE place)
     const locMap = { 0: 'CAM_01', 1: 'CAM_05', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
@@ -774,6 +779,7 @@ class GameEngine {
     const prevLoc = this.aiConfig.haloedSaint.location;
     const prevStage = this.aiConfig.haloedSaint.stage;
     this.aiConfig.haloedSaint.stage = stage;
+    if (stage === 0) this.aiConfig.haloedSaint.awakened = false;
 
     // Strict Unique Location mapping (Saint is only ever in ONE place)
     const locMap = { 0: 'CAM_03', 1: 'CAM_05', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
@@ -821,6 +827,7 @@ class GameEngine {
     const prevLoc = this.aiConfig.veiledMourner.location;
     const prevStage = this.aiConfig.veiledMourner.stage;
     this.aiConfig.veiledMourner.stage = stage;
+    if (stage === 0) this.aiConfig.veiledMourner.awakened = false;
 
     // Strict Unique Location mapping (Mourner is only ever in ONE place)
     const locMap = { 0: 'CAM_02', 1: 'CAM_04', 2: 'CAM_04', 3: 'RIGHT_VENT', 4: 'OFFICE' };
@@ -874,6 +881,7 @@ class GameEngine {
     const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_02 Crypt)
     ai.location = 'CAM_02';
+    ai.awakened = false;
     ai.attackTimer = 0;
     ai.timer = 0;
     this._lastAngelStage = -1;
@@ -896,6 +904,7 @@ class GameEngine {
     const prevLoc = ai.location;
     ai.stage = -1; // Banished to alternate camera (CAM_01 Sanctuary Nave)
     ai.location = 'CAM_01';
+    ai.awakened = false;
     ai.attackTimer = 0;
     ai.timer = 0;
     this._lastSaintStage = -1;
@@ -916,12 +925,14 @@ class GameEngine {
     this.clearMournerVentRetreatTimer();
     const ai = this.aiConfig.veiledMourner;
     const prevLoc = ai.location;
-    ai.stage = -1; // Banished to alternate camera (CAM_03 Reconciliation Chapel)
-    ai.location = 'CAM_03';
+    ai.stage = -1; // Banished to alternate camera (CAM_03 Chapel or CAM_01 Sanctuary Altar)
+    const banishTarget = (Math.random() < 0.5) ? 'CAM_03' : 'CAM_01';
+    ai.location = banishTarget;
+    ai.awakened = false;
     ai.attackTimer = 0;
     ai.timer = 0;
     this._lastMournerStage = -1;
-    this.handleEntityMovement(prevLoc, 'CAM_03', 'veiledMourner');
+    this.handleEntityMovement(prevLoc, banishTarget, 'veiledMourner');
 
     const mourner = this.world?.statues?.veiledMourner;
     if (mourner) {
@@ -2353,12 +2364,18 @@ class GameEngine {
     const mournerLoc = this.aiConfig.veiledMourner.location;
 
     if (camId === 1) {
-      // CAM 01: Sanctuary Altar & Nave (Angel home, or Saint banished)
+      // CAM 01: Sanctuary Altar & Nave (Angel home, or Saint/Mourner roaming/banished)
       if (saintLoc === 'CAM_01') {
         return 'assets/cctv/church_cam_01_saint_nave.png';
       }
+      if (mournerLoc === 'CAM_01') {
+        return 'assets/cctv/church_cam_01_mary_altar.png';
+      }
       if (angelLoc === 'CAM_01') {
-        return 'assets/cctv/church_cam_normal.png'; // Angel on altar
+        if (this.aiConfig.weepingAngel.awakened) {
+          return 'assets/cctv/church_cam_anomaly.png'; // Angel agitated on altar
+        }
+        return 'assets/cctv/church_cam_normal.png'; // Angel dormant on altar
       }
       return 'assets/cctv/church_cam_01_empty.png';
     }
@@ -2369,7 +2386,10 @@ class GameEngine {
         return 'assets/cctv/church_cam_02_angel_crypt.png';
       }
       if (mournerLoc === 'CAM_02') {
-        return 'assets/cctv/church_cam_02_columbarium.png'; // Mourner in crypt
+        if (this.aiConfig.veiledMourner.awakened) {
+          return 'assets/cctv/church_cam_02_columbarium_anomaly.png'; // Mourner standing upright in crypt tombs
+        }
+        return 'assets/cctv/church_cam_02_columbarium.png'; // Mourner seated dormant on crypt pedestal
       }
       return 'assets/cctv/church_cam_02_empty.png';
     }
@@ -2380,15 +2400,21 @@ class GameEngine {
         return 'assets/cctv/church_cam_03_mary_chapel.png';
       }
       if (saintLoc === 'CAM_03') {
-        return 'assets/cctv/church_cam_03_confessional.png'; // Saint in confessional
+        if (this.aiConfig.haloedSaint.awakened) {
+          return 'assets/cctv/church_cam_03_confessional_anomaly.png'; // Saint screaming close up at camera
+        }
+        return 'assets/cctv/church_cam_03_confessional.png'; // Saint standing still in alcove
       }
       return 'assets/cctv/church_cam_03_empty.png';
     }
 
     if (camId === 4) {
-      // CAM 04: Return Air Duct
+      // CAM 04: Return Air Duct (Mourner crawl progression)
       if (mournerLoc === 'CAM_04') {
-        return 'assets/cctv/church_cam_04_vent_anomaly.png'; // Mourner crawling in duct
+        if (this.aiConfig.veiledMourner.stage === 1) {
+          return 'assets/cctv/church_cam_04_vent_crawl.png'; // Mourner crawling mid-distance in duct
+        }
+        return 'assets/cctv/church_cam_04_vent_anomaly.png'; // Mourner close up at duct camera opening
       }
       return 'assets/cctv/church_cam_04_vent.png'; // Duct clear
     }
@@ -2707,6 +2733,18 @@ class GameEngine {
           if (this.isWindowSpotOn) return; // Cannot appear at window hallway while lights are turned on
           this.setAngelStage(1);
           window.Sound.playStoneGrind(0.7);
+        } else if (ai.stage === 0) {
+          if (!ai.awakened) {
+            ai.awakened = true;
+            this.triggerCameraMotionError(1, 1.8);
+            window.Sound.playStoneGrind(0.5);
+            if (this.isCCTVOpen) this.updateCCTVFeed();
+          } else {
+            ai.awakened = false;
+            if (this.isWindowSpotOn) return;
+            this.setAngelStage(1);
+            window.Sound.playStoneGrind(0.7);
+          }
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
           if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
@@ -2763,6 +2801,18 @@ class GameEngine {
           if (this.isWindowSpotOn) return; // Cannot appear at window hallway while lights are turned on
           this.setSaintStage(1);
           window.Sound.playStoneGrind(0.8);
+        } else if (ai.stage === 0) {
+          if (!ai.awakened) {
+            ai.awakened = true;
+            this.triggerCameraMotionError(3, 1.8);
+            window.Sound.playStoneGrind(0.6);
+            if (this.isCCTVOpen) this.updateCCTVFeed();
+          } else {
+            ai.awakened = false;
+            if (this.isWindowSpotOn) return;
+            this.setSaintStage(1);
+            window.Sound.playStoneGrind(0.8);
+          }
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
           if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
@@ -2809,7 +2859,9 @@ class GameEngine {
       const isWatchedOnCam = this.isCCTVOpen && (
         (ai.location === 'CAM_02' && this.activeCameraId === 2) ||
         (ai.location === 'CAM_03' && this.activeCameraId === 3) ||
-        (ai.location === 'CAM_04' && this.activeCameraId === 4)
+        (ai.location === 'CAM_01' && this.activeCameraId === 1) ||
+        (ai.location === 'CAM_04' && this.activeCameraId === 4) ||
+        (ai.location === 'CAM_05' && this.activeCameraId === 5)
       );
 
       if (isWatchedOnCam) return;
@@ -2817,10 +2869,37 @@ class GameEngine {
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
         if (ai.stage === -1) {
-          // Banishment recovery: advances from CAM_03 Chapel into CAM_04 HVAC return duct
+          // Banishment recovery: advances from CAM_03 Chapel or CAM_01 Altar
+          if (ai.location === 'CAM_01' && Math.random() < 0.5) {
+            // Rare alternative flank: crosses through CAM_05 Hallway outside observation window
+            if (this.isWindowSpotOn) return;
+            ai.location = 'CAM_05';
+            ai.stage = 1;
+            this.updateWindowHallwayView();
+            if (this.isCCTVOpen) this.updateCCTVFeed();
+            window.Sound.playStoneGrind(0.6);
+          } else {
+            this.setMournerStage(1);
+            window.Sound.playStoneGrind(0.6);
+            window.Sound.playVentClatter(0.75);
+          }
+        } else if (ai.location === 'CAM_05') {
+          // Advances from CAM_05 hallway into CAM_04 HVAC return duct
           this.setMournerStage(1);
           window.Sound.playStoneGrind(0.6);
           window.Sound.playVentClatter(0.75);
+        } else if (ai.stage === 0) {
+          if (!ai.awakened) {
+            ai.awakened = true;
+            this.triggerCameraMotionError(2, 1.8);
+            window.Sound.playStoneGrind(0.5);
+            if (this.isCCTVOpen) this.updateCCTVFeed();
+          } else {
+            ai.awakened = false;
+            this.setMournerStage(1);
+            window.Sound.playStoneGrind(0.6);
+            window.Sound.playVentClatter(0.75);
+          }
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
           this.setMournerStage(nextStage);
