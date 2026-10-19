@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
-  <link rel="stylesheet" href="css/style.css?v=20261016_v35">
+  <link rel="stylesheet" href="css/style.css?v=20261019_v50">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
@@ -176,15 +176,24 @@
       <!-- Heavy Anomaly Static Interference Burst Screen -->
       <div class="cctv-anomaly-burst" id="cctv-anomaly-burst"></div>
 
-      <!-- Authentic FNAF Camera Motion "VIDEO ERROR / STATIC" Screen -->
+      <!-- Authentic Analog TV "NO SIGNAL" / Signal Interruption OSD Screen -->
       <div class="cctv-error-screen hidden" id="cctv-error-screen">
+        <div class="cctv-tv-tracking-bar"></div>
         <div class="cctv-error-glitch-lines"></div>
-        <div class="cctv-error-box">
-          <div class="cctv-error-badge-icon">▲</div>
-          <div class="cctv-error-title">VIDEO ERROR</div>
-          <div class="cctv-error-desc">CAMERA FEED INTERRUPTED</div>
-          <div class="cctv-error-code">ERR_SIGNAL_LOST // ANOMALY_MOTION</div>
-          <div class="cctv-error-sub">RECONNECTING FEED...</div>
+        <div class="cctv-no-signal-box">
+          <div class="cctv-no-signal-header">
+            <span class="cctv-no-signal-icon">■</span>
+            <span class="cctv-no-signal-title">NO SIGNAL</span>
+          </div>
+          <div class="cctv-no-signal-divider"></div>
+          <div class="cctv-no-signal-interruption">
+            <span class="cctv-interruption-tag">SIGNAL INTERRUPTION</span>
+          </div>
+          <div class="cctv-no-signal-channel" id="cctv-no-signal-channel">SOURCE: CAM 01 - SANCTUARY & ALTAR</div>
+          <div class="cctv-no-signal-status">
+            <span class="cctv-status-blink-dot"></span>
+            <span class="cctv-status-msg">VIDEO LOSS // SEARCHING FOR SIGNAL...</span>
+          </div>
         </div>
       </div>
 
@@ -1048,9 +1057,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261019_v49"></script>
-  <script src="js/textures.js?v=20261019_v49"></script>
-  <script src="js/models.js?v=20261019_v49"></script>
-  <script src="js/game.js?v=20261019_v49"></script>
+  <script src="js/audio.js?v=20261019_v50"></script>
+  <script src="js/textures.js?v=20261019_v50"></script>
+  <script src="js/models.js?v=20261019_v50"></script>
+  <script src="js/game.js?v=20261019_v50"></script>
 </body>
 </html>

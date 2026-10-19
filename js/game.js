@@ -54,6 +54,8 @@ class GameEngine {
     this.activeCameraId = 1;
     this.cameraStaticTimer = 0;
     this.cameraErrorTimers = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    this.cctvLossOfSignal = false;
+    this._staticCanvasTex = null;
     this._lastAngelStage = 0;
     this._lastSaintStage = 0;
     this._lastMournerStage = 0;
@@ -369,26 +371,108 @@ class GameEngine {
   setupStaticCanvas() {
     const canvas = document.getElementById('cctv-static-canvas');
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = 256;
-    canvas.height = 192;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const w = 320;
+    const h = 240;
+    canvas.width = w;
+    canvas.height = h;
 
-    const imgData = ctx.createImageData(canvas.width, canvas.height);
-    const data = imgData.data;
+    const imgData = ctx.createImageData(w, h);
+    const data32 = new Uint32Array(imgData.data.buffer);
+    const totalPixels = w * h;
+
+    // Precomputed CRT grayscale palette for maximum performance
+    const palette = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      palette[i] = 0xFF000000 | (i << 16) | (i << 8) | i;
+    }
 
     let lastDraw = 0;
+    let rollBarY = 0;
+
     const renderStatic = (now) => {
-      if (this.isCCTVOpen && (now - lastDraw > 33)) { // 30 FPS static noise
+      if (this.isCCTVOpen && (now - lastDraw > 24)) { // ~40 FPS authentic CRT refresh
         lastDraw = now;
-        const len = data.length;
-        for (let i = 0; i < len; i += 4) {
-          const v = (Math.random() * 255) | 0;
-          data[i] = v;
-          data[i + 1] = v;
-          data[i + 2] = v;
-          data[i + 3] = (Math.random() * 140 + 30) | 0;
+
+        const isSignalLoss = this.cctvLossOfSignal || (this.cameraErrorTimers && (this.cameraErrorTimers[this.activeCameraId] || 0) > 0);
+
+        if (isSignalLoss) {
+          // --- FULL ANALOG TV LOSS-OF-SIGNAL SNOW ---
+          if (!canvas.classList.contains('loss-of-signal')) {
+            canvas.classList.add('loss-of-signal');
+          }
+
+          // Advance rolling 60Hz AC hum bar (sinusoidal analog brightness wave)
+          rollBarY = (rollBarY + 3.8) % h;
+          const rollBar2Y = (rollBarY + h * 0.52) % h;
+
+          // Horizontal tracking sync tear (jittering RF sync drift bands)
+          const hasTear = Math.random() < 0.88;
+          const tearY = (Math.random() * h) | 0;
+          const tearH = ((Math.random() * 26) + 8) | 0;
+          const tearShift = ((Math.random() - 0.5) * 40) | 0;
+
+          // Occasional horizontal scanline blackout/dropout line
+          const dropoutY = Math.random() < 0.3 ? ((Math.random() * h) | 0) : -1;
+
+          for (let y = 0; y < h; y++) {
+            const isTear = hasTear && (y >= tearY && y < tearY + tearH);
+            const isDropout = (y === dropoutY || y === dropoutY + 1);
+            const shift = isTear ? tearShift : 0;
+
+            // Rolling AC hum bar modulation
+            const dist1 = Math.abs(y - rollBarY);
+            const dist2 = Math.abs(y - rollBar2Y);
+            const humMod = (dist1 < 32 ? (32 - dist1) * 2.2 : 0) + (dist2 < 22 ? -(22 - dist2) * 2.0 : 0);
+
+            for (let x = 0; x < w; x++) {
+              const srcX = Math.max(0, Math.min(w - 1, x + shift));
+              const idx = y * w + srcX;
+
+              if (isDropout) {
+                data32[idx] = 0xFF0A0A0A; // Scanline dropout
+              } else {
+                // High-contrast snowy distribution (authentic analog TV RF thermal noise)
+                const rnd = Math.random();
+                let lum;
+                if (rnd < 0.42) {
+                  lum = (Math.random() * 40) | 0; // Dark pits
+                } else if (rnd < 0.72) {
+                  lum = ((Math.random() * 65) + 60) | 0; // Phosphor mid-tones
+                } else {
+                  lum = ((Math.random() * 95) + 160) | 0; // Blinding white snow
+                }
+
+                // Add rolling hum bar & clamp
+                const finalLum = Math.max(0, Math.min(255, (lum + humMod) | 0));
+                data32[idx] = palette[finalLum];
+              }
+            }
+          }
+        } else {
+          // --- LIVE CCTV NORMAL MODE (Subtle CRT Sensor Grain) ---
+          if (canvas.classList.contains('loss-of-signal')) {
+            canvas.classList.remove('loss-of-signal');
+          }
+
+          for (let i = 0; i < totalPixels; i++) {
+            const v = (Math.random() * 255) | 0;
+            const a = (Math.random() * 40 + 10) | 0;
+            data32[i] = (a << 24) | (v << 16) | (v << 8) | v;
+          }
         }
+
         ctx.putImageData(imgData, 0, 0);
+
+        // Sync with desk 3D CRT monitor during loss of signal
+        if (this.world && this.world.nodes && this.world.nodes.crtTvScreenMat && isSignalLoss) {
+          if (!this._staticCanvasTex) {
+            this._staticCanvasTex = new THREE.CanvasTexture(canvas);
+          }
+          this._staticCanvasTex.needsUpdate = true;
+          this.world.nodes.crtTvScreenMat.map = this._staticCanvasTex;
+          this.world.nodes.crtTvScreenMat.needsUpdate = true;
+        }
       }
       requestAnimationFrame(renderStatic);
     };
@@ -706,6 +790,7 @@ class GameEngine {
   }
 
   onCameraErrorResolved(camId) {
+    this.cctvLossOfSignal = false;
     if (!this.isCCTVOpen || this.activeCameraId !== camId) return;
     const errorScreen = document.getElementById('cctv-error-screen');
     const anomalyBurst = document.getElementById('cctv-anomaly-burst');
@@ -717,7 +802,10 @@ class GameEngine {
     if (errorScreen) errorScreen.classList.add('hidden');
     if (anomalyBurst) anomalyBurst.classList.remove('active');
     if (imgEl) imgEl.classList.remove('cam-error-hidden');
-    if (recDot) recDot.classList.remove('error-mode');
+    if (recDot) {
+      recDot.classList.remove('error-mode');
+      recDot.classList.remove('no-signal-mode');
+    }
     if (recText) recText.textContent = 'LIVE';
     if (statusBadge) statusBadge.textContent = '1080p HD FEED  |  ENCRYPTION: SECURE';
 
@@ -2451,6 +2539,7 @@ class GameEngine {
     if (!this.isCCTVOpen || this.isBlackout) return;
     const camId = this.activeCameraId;
     const isError = (this.cameraErrorTimers && (this.cameraErrorTimers[camId] || 0) > 0);
+    this.cctvLossOfSignal = isError;
 
     const errorScreen = document.getElementById('cctv-error-screen');
     const anomalyBurst = document.getElementById('cctv-anomaly-burst');
@@ -2458,19 +2547,29 @@ class GameEngine {
     const recDot = document.getElementById('cctv-rec-dot');
     const recText = document.getElementById('cctv-rec-status-text');
     const statusBadge = document.getElementById('cctv-status-badge');
+    const channelEl = document.getElementById('cctv-no-signal-channel');
 
     if (isError) {
       if (errorScreen) errorScreen.classList.remove('hidden');
       if (anomalyBurst) anomalyBurst.classList.add('active');
       if (imgEl) imgEl.classList.add('cam-error-hidden');
-      if (recDot) recDot.classList.add('error-mode');
-      if (recText) recText.textContent = 'ERROR';
-      if (statusBadge) statusBadge.textContent = 'VIDEO ERROR — SIGNAL LOST';
+      if (recDot) {
+        recDot.classList.add('error-mode');
+        recDot.classList.add('no-signal-mode');
+      }
+      if (recText) recText.textContent = 'NO SIGNAL';
+      if (statusBadge) statusBadge.textContent = 'SIGNAL INTERRUPTION — LOSS OF CARRIER';
+      if (channelEl && this.cctvViews[camId]) {
+        channelEl.textContent = `SOURCE: ${this.cctvViews[camId].name}`;
+      }
     } else {
       if (errorScreen) errorScreen.classList.add('hidden');
       if (anomalyBurst) anomalyBurst.classList.remove('active');
       if (imgEl) imgEl.classList.remove('cam-error-hidden');
-      if (recDot) recDot.classList.remove('error-mode');
+      if (recDot) {
+        recDot.classList.remove('error-mode');
+        recDot.classList.remove('no-signal-mode');
+      }
       if (recText) recText.textContent = 'LIVE';
       if (statusBadge) statusBadge.textContent = '1080p HD FEED  |  ENCRYPTION: SECURE';
     }
@@ -2484,12 +2583,14 @@ class GameEngine {
 
     // 2. Sync live feed onto the 3D retro CRT TV monitor sitting on the office desk
     if (this.world && this.world.nodes && this.world.nodes.crtTvScreenMat) {
-      if (!this._camTextures) this._camTextures = {};
-      if (!this._camTextures[imgSrc]) {
-        this._camTextures[imgSrc] = new THREE.TextureLoader().load(imgSrc);
+      if (!isError) {
+        if (!this._camTextures) this._camTextures = {};
+        if (!this._camTextures[imgSrc]) {
+          this._camTextures[imgSrc] = new THREE.TextureLoader().load(imgSrc);
+        }
+        this.world.nodes.crtTvScreenMat.map = this._camTextures[imgSrc];
+        this.world.nodes.crtTvScreenMat.needsUpdate = true;
       }
-      this.world.nodes.crtTvScreenMat.map = this._camTextures[imgSrc];
-      this.world.nodes.crtTvScreenMat.needsUpdate = true;
     }
   }
 
@@ -2536,6 +2637,12 @@ class GameEngine {
   }
 
   triggerStatic(duration = 0.15) {
+    this.cctvLossOfSignal = true;
+    clearTimeout(this._staticLossTimeout);
+    this._staticLossTimeout = setTimeout(() => {
+      this.cctvLossOfSignal = (this.cameraErrorTimers && (this.cameraErrorTimers[this.activeCameraId] || 0) > 0);
+    }, duration * 1000);
+
     const staticEl = document.getElementById('static-screen');
     if (staticEl) {
       staticEl.classList.add('active');
