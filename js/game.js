@@ -13,6 +13,7 @@ class GameEngine {
 
     // Game State
     this.isRunning = false;
+    this.isNightTransitioning = false;
     this.isPaused = false;
     this.currentNight = 1;
     this.hour = 0; // 0 = 12 AM, 1 = 1 AM, ..., 6 = 6 AM
@@ -1256,14 +1257,14 @@ class GameEngine {
       }
       window.Sound.init();
       window.Sound.resume();
-      if (!this.isRunning) {
+      if (this.isRunning || this.isNightTransitioning) {
+        window.Sound.startGameMusic();
+      } else {
         window.Sound.startLobbyMusic();
         if (!this._menuAudioStarted) {
           this._menuAudioStarted = true;
           window.Sound.startMenuDrone();
         }
-      } else {
-        window.Sound.startGameMusic();
       }
     };
     window.addEventListener('click', tryStartMenuSound, { once: false });
@@ -1292,19 +1293,22 @@ class GameEngine {
       });
     });
 
-    btnContinue?.addEventListener('click', () => {
+    btnContinue?.addEventListener('click', (e) => {
+      if (e) e.stopPropagation();
       this.isCustomNight = false;
       this.startNightWithTransition(this.currentNight);
     });
 
-    btnNewGame?.addEventListener('click', () => {
+    btnNewGame?.addEventListener('click', (e) => {
+      if (e) e.stopPropagation();
       this.isCustomNight = false;
       this.currentNight = 1;
       this.updateNightBadge();
       this.startNightWithTransition(1);
     });
 
-    btnNight6?.addEventListener('click', () => {
+    btnNight6?.addEventListener('click', (e) => {
+      if (e) e.stopPropagation();
       this.isCustomNight = false;
       this.currentNight = 6;
       this.updateNightBadge();
@@ -1322,6 +1326,7 @@ class GameEngine {
 
     document.querySelectorAll('.night-chip').forEach(chip => {
       chip.addEventListener('click', (e) => {
+        if (e) e.stopPropagation();
         const night = parseInt(e.currentTarget.dataset.night, 10);
         document.querySelectorAll('.night-chip').forEach(c => c.classList.remove('active'));
         e.currentTarget.classList.add('active');
@@ -1578,6 +1583,7 @@ class GameEngine {
   }
 
   startNightWithTransition(night = 1) {
+    this.isNightTransitioning = true;
     if (!this.isCustomNight) {
       this.currentNight = night;
     }
@@ -1962,6 +1968,7 @@ class GameEngine {
 
   returnToMainMenu() {
     this.stopAnalogLossOfSignal();
+    this.isNightTransitioning = false;
     this.isRunning = false;
     this.isPaused = false;
     this.gameOver = false;
@@ -2041,6 +2048,8 @@ class GameEngine {
   // --- GAME START & RESTART ---
   startGame() {
     this.stopAnalogLossOfSignal();
+    this.isNightTransitioning = false;
+    this.isRunning = true;
     window.Sound.init();
     window.Sound.resume();
     window.Sound.startGameMusic();

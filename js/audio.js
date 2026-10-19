@@ -44,22 +44,33 @@ class SoundEngine {
         if (!this.lobbyAudio) {
           this.lobbyAudio = new Audio('assets/audio/church_theme_ambiance.mp3');
         }
+        if (!this.lobbyAudio.src || this.lobbyAudio.src === '') {
+          this.lobbyAudio.src = 'assets/audio/church_theme_ambiance.mp3';
+        }
         this.lobbyAudio.loop = true;
         this.lobbyAudio.preload = 'auto';
       }
       if (!this.gameAudio) {
         this.gameAudio = document.getElementById('bgm-game');
         if (!this.gameAudio) {
-          this.gameAudio = new Audio('assets/audio/Dark Ambient - Horror.mp3');
+          this.gameAudio = new Audio('assets/audio/dark_ambient_horror.mp3');
+        }
+        if (!this.gameAudio.src || this.gameAudio.src === '') {
+          this.gameAudio.src = 'assets/audio/dark_ambient_horror.mp3';
         }
         this.gameAudio.loop = true;
         this.gameAudio.preload = 'auto';
         this.gameAudio.addEventListener('error', () => {
-          if (this.gameAudio && !this.gameAudio.src.includes('Horror')) {
-            this.gameAudio.src = 'assets/audio/Dark Ambient - Horror.mp3';
+          if (this.gameAudio) {
+            const current = this.gameAudio.src || '';
+            if (!current.includes('dark_ambient_horror')) {
+              this.gameAudio.src = 'assets/audio/dark_ambient_horror.mp3';
+            } else {
+              this.gameAudio.src = 'assets/audio/Dark%20Ambient%20-%20Horror.mp3';
+            }
             this.gameAudio.load();
           }
-        }, { once: true });
+        });
       }
       this.updateBGMVolume();
     } catch (e) {
@@ -88,7 +99,7 @@ class SoundEngine {
 
     const audioTracks = [
       { name: 'Cathedral Lobby Ambience', url: 'assets/audio/church_theme_ambiance.mp3' },
-      { name: 'Dark In-Game Horror Ambience', url: 'assets/audio/Dark Ambient - Horror.mp3' }
+      { name: 'Dark In-Game Horror Ambience', url: 'assets/audio/dark_ambient_horror.mp3' }
     ];
 
     let completed = 0;
@@ -114,12 +125,14 @@ class SoundEngine {
 
   updateBGMVolume() {
     try {
-      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume));
+      const musicVol = (this.musicVolume !== undefined) ? this.musicVolume : (this.bgmVolume || 0.80);
+      const masterVol = (this.masterVolume !== undefined) ? this.masterVolume : 0.85;
+      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, masterVol * musicVol));
       if (this.lobbyAudio) {
-        this.lobbyAudio.volume = masterMult * this.lobbyBaseVolume;
+        this.lobbyAudio.volume = Math.max(0, Math.min(1, masterMult * (this.lobbyBaseVolume || 0.70)));
       }
       if (this.gameAudio) {
-        this.gameAudio.volume = masterMult * this.gameBaseVolume;
+        this.gameAudio.volume = Math.max(0, Math.min(1, masterMult * (this.gameBaseVolume || 0.75)));
       }
     } catch (e) {}
   }
@@ -136,14 +149,16 @@ class SoundEngine {
 
     // Smoothly stop in-game audio if playing
     if (this.gameAudio && !this.gameAudio.paused) {
-      this.fadeAudioOut(this.gameAudio, 400);
+      this.fadeAudioOut(this.gameAudio, 300);
     }
 
     this.updateBGMVolume();
 
     if (this.lobbyAudio) {
-      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume));
-      this.lobbyAudio.volume = masterMult * this.lobbyBaseVolume;
+      const musicVol = (this.musicVolume !== undefined) ? this.musicVolume : (this.bgmVolume || 0.80);
+      const masterVol = (this.masterVolume !== undefined) ? this.masterVolume : 0.85;
+      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, masterVol * musicVol));
+      this.lobbyAudio.volume = Math.max(0, Math.min(1, masterMult * (this.lobbyBaseVolume || 0.70)));
       if (this.lobbyAudio.paused) {
         const playPromise = this.lobbyAudio.play();
         if (playPromise !== undefined) {
@@ -156,6 +171,7 @@ class SoundEngine {
             };
             window.addEventListener('click', resumeLobbyAudio, { once: true });
             window.addEventListener('keydown', resumeLobbyAudio, { once: true });
+            window.addEventListener('touchstart', resumeLobbyAudio, { once: true });
           });
         }
       }
@@ -174,18 +190,30 @@ class SoundEngine {
 
     // Smoothly stop lobby audio if playing
     if (this.lobbyAudio && !this.lobbyAudio.paused) {
-      this.fadeAudioOut(this.lobbyAudio, 400);
+      this.fadeAudioOut(this.lobbyAudio, 300);
     }
 
     this.updateBGMVolume();
 
     if (this.gameAudio) {
-      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, this.masterVolume * this.musicVolume));
-      this.gameAudio.volume = masterMult * this.gameBaseVolume;
-      if (this.gameAudio.paused) {
+      const musicVol = (this.musicVolume !== undefined) ? this.musicVolume : (this.bgmVolume || 0.80);
+      const masterVol = (this.masterVolume !== undefined) ? this.masterVolume : 0.85;
+      const masterMult = this.isMuted ? 0 : Math.max(0, Math.min(1, masterVol * musicVol));
+      this.gameAudio.volume = Math.max(0, Math.min(1, masterMult * (this.gameBaseVolume || 0.75)));
+
+      // Ensure valid src is bound
+      if (!this.gameAudio.src || this.gameAudio.src === '' || this.gameAudio.src.endsWith('/')) {
+        this.gameAudio.src = 'assets/audio/dark_ambient_horror.mp3';
+        this.gameAudio.load();
+      }
+
+      const attemptPlay = () => {
+        if (this.activeTrack !== 'game') return;
         const playPromise = this.gameAudio.play();
         if (playPromise !== undefined) {
-          playPromise.catch((err) => {
+          playPromise.then(() => {
+            this.updateBGMVolume();
+          }).catch((err) => {
             console.warn('In-game dark ambient play pending user gesture or buffer:', err);
             const resumeGameAudio = () => {
               if (this.activeTrack === 'game' && this.gameAudio && this.gameAudio.paused) {
@@ -195,8 +223,16 @@ class SoundEngine {
             };
             window.addEventListener('click', resumeGameAudio, { once: true });
             window.addEventListener('keydown', resumeGameAudio, { once: true });
+            window.addEventListener('touchstart', resumeGameAudio, { once: true });
+            window.addEventListener('pointerdown', resumeGameAudio, { once: true });
           });
         }
+      };
+
+      if (this.gameAudio.paused) {
+        attemptPlay();
+      } else {
+        this.updateBGMVolume();
       }
     }
   }
