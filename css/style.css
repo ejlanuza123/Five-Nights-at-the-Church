@@ -1305,8 +1305,128 @@ body::-webkit-scrollbar,
   display: none !important;
 }
 
+/* ================= ANALOG TV LOSS-OF-SIGNAL GLITCH OVERLAY ================= */
+.analog-tv-glitch {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: #010204;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.analog-tv-glitch.hidden {
+  display: none !important;
+}
+
+.analog-tv-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: contrast(170%) brightness(120%);
+}
+
+.analog-tv-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.45) 0px,
+    rgba(0, 0, 0, 0.45) 1.5px,
+    transparent 1.5px,
+    transparent 3px
+  );
+  z-index: 2;
+}
+
+.analog-tv-rolling-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 16%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.18) 25%,
+    rgba(0, 0, 0, 0.75) 50%,
+    rgba(255, 255, 255, 0.22) 75%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+  animation: analogTvRoll 1.6s linear infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes analogTvRoll {
+  0% { top: -20%; }
+  100% { top: 110%; }
+}
+
+.analog-tv-rgb-split {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.85);
+  animation: analogRgbJitter 0.07s steps(2) infinite;
+}
+
+@keyframes analogRgbJitter {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-4px, 2px); }
+  50% { transform: translate(3px, -2px); }
+  75% { transform: translate(-2px, 3px); }
+  100% { transform: translate(4px, -1px); }
+}
+
+.analog-tv-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: radial-gradient(circle at center, transparent 50%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.analog-tv-osd {
+  position: absolute;
+  top: 36px;
+  left: 48px;
+  z-index: 6;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 2.5px;
+  pointer-events: none;
+  animation: analogOsdBlink 1.0s infinite steps(1);
+}
+
+.analog-tv-osd-ch {
+  font-size: 20px;
+  color: #38bdf8;
+  text-shadow: 0 0 8px #38bdf8, 0 0 16px rgba(56, 189, 248, 0.6);
+  margin-bottom: 6px;
+}
+
+.analog-tv-osd-status {
+  font-size: 28px;
+  font-weight: bold;
+  color: #ef4444;
+  text-shadow: 0 0 10px #ef4444, 0 0 20px rgba(239, 68, 68, 0.8);
+}
+
+@keyframes analogOsdBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.2; }
+}
+
 #gameover-screen {
-  background: rgba(3, 4, 8, 0.98);
+  background: rgba(3, 4, 8, 0.86);
+  backdrop-filter: blur(1.5px);
 }
 
 .gameover-title {

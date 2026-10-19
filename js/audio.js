@@ -1162,6 +1162,100 @@ class SoundEngine {
     noise.start(now);
   }
 
+  // --- ANALOG TV LOSS-OF-SIGNAL NOISE (POST-JUMPSCARE / SIGNAL DROPOUT) ---
+  playAnalogLossOfSignal() {
+    if (!this.ctx || this.isMuted) return;
+    this.stopAnalogLossOfSignal();
+    const now = this.ctx.currentTime;
+
+    // 1. Continuous White Noise Static Buffer (Simulates untuned RF/VHF static snow)
+    const bufferSize = this.ctx.sampleRate * 2.0;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noiseSource = this.ctx.createBufferSource();
+    noiseSource.buffer = buffer;
+    noiseSource.loop = true;
+
+    // Resonant bandpass filter tuned to vintage CRT television static
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2600, now);
+    filter.Q.setValueAtTime(0.7, now);
+
+    const noiseGain = this.ctx.createGain();
+    // Harsh initial burst of static, settling into persistent background hiss
+    noiseGain.gain.setValueAtTime(0.70, now);
+    noiseGain.gain.linearRampToValueAtTime(0.42, now + 0.35);
+    noiseGain.gain.linearRampToValueAtTime(0.20, now + 2.0);
+
+    noiseSource.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.masterGain);
+    noiseSource.start(now);
+
+    // 2. 60Hz CRT Mains Hum + 120Hz/180Hz transformer buzz
+    const hum = this.ctx.createOscillator();
+    hum.type = 'sawtooth';
+    hum.frequency.setValueAtTime(60, now);
+
+    const humFilter = this.ctx.createBiquadFilter();
+    humFilter.type = 'lowpass';
+    humFilter.frequency.setValueAtTime(220, now);
+
+    const humGain = this.ctx.createGain();
+    humGain.gain.setValueAtTime(0.25, now);
+    humGain.gain.linearRampToValueAtTime(0.10, now + 2.0);
+
+    hum.connect(humFilter);
+    humFilter.connect(humGain);
+    humGain.connect(this.masterGain);
+    hum.start(now);
+
+    // 3. Initial abrupt transient electrical pop / cable disconnect
+    const pop = this.ctx.createOscillator();
+    pop.type = 'square';
+    pop.frequency.setValueAtTime(95, now);
+    pop.frequency.exponentialRampToValueAtTime(15, now + 0.12);
+
+    const popGain = this.ctx.createGain();
+    popGain.gain.setValueAtTime(0.75, now);
+    popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+    pop.connect(popGain);
+    popGain.connect(this.masterGain);
+    pop.start(now);
+    pop.stop(now + 0.12);
+
+    this._analogGlitchNodes = {
+      noiseSource,
+      noiseGain,
+      hum,
+      humGain
+    };
+  }
+
+  stopAnalogLossOfSignal() {
+    if (!this._analogGlitchNodes) return;
+    try {
+      const { noiseSource, noiseGain, hum, humGain } = this._analogGlitchNodes;
+      const now = this.ctx ? this.ctx.currentTime : 0;
+      if (noiseGain && this.ctx) {
+        noiseGain.gain.linearRampToValueAtTime(0.001, now + 0.1);
+      }
+      if (humGain && this.ctx) {
+        humGain.gain.linearRampToValueAtTime(0.001, now + 0.1);
+      }
+      setTimeout(() => {
+        try { noiseSource?.stop(); } catch (e) {}
+        try { hum?.stop(); } catch (e) {}
+      }, 120);
+    } catch (e) {}
+    this._analogGlitchNodes = null;
+  }
+
   // --- VICTORY 06:00:00 AM FANFARE ---
   playVictoryFanfare() {
     if (!this.ctx) return;

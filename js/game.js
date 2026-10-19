@@ -121,6 +121,7 @@ class GameEngine {
     this.setupThreeJS();
     this.setupEventListeners();
     this.setupStaticCanvas();
+    this.setupAnalogTvGlitch();
     this.setupFnafMenu();
     this.setupCustomNightModal();
     this.setupSettingsModal();
@@ -390,6 +391,143 @@ class GameEngine {
       requestAnimationFrame(renderStatic);
     };
     requestAnimationFrame(renderStatic);
+  }
+
+  // --- ANALOG TV LOSS-OF-SIGNAL GLITCH SYSTEM (POST-JUMPSCARE VHS/CRT SEVER) ---
+  setupAnalogTvGlitch() {
+    this.analogCanvas = document.getElementById('analog-tv-canvas');
+    if (!this.analogCanvas) return;
+    this.analogCtx = this.analogCanvas.getContext('2d', { alpha: false });
+    this.analogWidth = 320;
+    this.analogHeight = 240;
+    this.analogCanvas.width = this.analogWidth;
+    this.analogCanvas.height = this.analogHeight;
+    this.analogImgData = this.analogCtx.createImageData(this.analogWidth, this.analogHeight);
+    this.analogGlitchActive = false;
+    this._analogGlitchRaf = null;
+    this._gameOverModalTimer = null;
+  }
+
+  triggerAnalogLossOfSignal(reason = 'ANOMALY INFILTRATION') {
+    if (this.analogGlitchActive) return;
+    this.analogGlitchActive = true;
+
+    const glitchEl = document.getElementById('analog-tv-glitch');
+    if (glitchEl) {
+      glitchEl.classList.remove('hidden');
+      glitchEl.classList.add('active');
+    }
+
+    // Play synthesized vintage CRT TV static hiss with 60Hz hum & crackles
+    if (window.Sound && typeof window.Sound.playAnalogLossOfSignal === 'function') {
+      window.Sound.playAnalogLossOfSignal();
+    }
+
+    const w = this.analogWidth || 320;
+    const h = this.analogHeight || 240;
+    const ctx = this.analogCtx;
+    const imgData = this.analogImgData;
+    if (!ctx || !imgData) return;
+
+    const data = imgData.data;
+    const startTime = performance.now();
+    let lastDraw = 0;
+
+    const renderGlitch = (now) => {
+      if (!this.analogGlitchActive) return;
+
+      // Throttle to ~50-60 FPS for authentic cathode ray phosphor grain
+      if (now - lastDraw > 16) {
+        lastDraw = now;
+        const elapsed = (now - startTime) / 1000;
+        const isInitialShock = elapsed < 2.0;
+
+        // Random horizontal tracking sync error bar
+        const tearY = (Math.random() * h) | 0;
+        const tearH = ((Math.random() * 28) + 6) | 0;
+        const tearShift = isInitialShock ? ((Math.random() - 0.5) * 44) | 0 : ((Math.random() - 0.5) * 12) | 0;
+
+        // Blinding phosphor flash burst or sync dropout
+        const flashBurst = isInitialShock && (Math.random() < 0.14);
+        const blackoutLine = Math.random() < 0.25 ? ((Math.random() * h) | 0) : -1;
+
+        for (let y = 0; y < h; y++) {
+          const isTear = y >= tearY && y < (tearY + tearH);
+          const isBlackout = (y >= blackoutLine && y < blackoutLine + 3);
+          const shift = isTear ? tearShift : 0;
+
+          for (let x = 0; x < w; x++) {
+            const sampleX = Math.max(0, Math.min(w - 1, x + shift));
+            const idx = (y * w + sampleX) * 4;
+
+            if (isBlackout) {
+              data[idx] = 10;
+              data[idx + 1] = 10;
+              data[idx + 2] = 12;
+            } else if (flashBurst) {
+              const b = (Math.random() * 70 + 185) | 0;
+              data[idx] = b;
+              data[idx + 1] = b;
+              data[idx + 2] = b;
+            } else {
+              // Classic analog CRT static snow (distribution with dark pits and bright specs)
+              const r = Math.random();
+              let val;
+              if (r < 0.35) {
+                val = (Math.random() * 45) | 0; // Dark shadows
+              } else if (r < 0.75) {
+                val = (Math.random() * 140 + 80) | 0; // Mid-grey grain
+              } else {
+                val = (Math.random() * 55 + 200) | 0; // Pure white snow
+              }
+
+              // Subtle chromatic phosphor tinting
+              data[idx] = Math.min(255, val + ((Math.random() * 18 - 9) | 0));
+              data[idx + 1] = Math.min(255, val + ((Math.random() * 12 - 6) | 0));
+              data[idx + 2] = Math.min(255, val + ((Math.random() * 24 - 8) | 0));
+            }
+            data[idx + 3] = 255;
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+      }
+
+      this._analogGlitchRaf = requestAnimationFrame(renderGlitch);
+    };
+
+    if (this._analogGlitchRaf) cancelAnimationFrame(this._analogGlitchRaf);
+    this._analogGlitchRaf = requestAnimationFrame(renderGlitch);
+
+    // After 2.0s of raw loss-of-signal shock, reveal the Game Over modal on top of the static
+    if (this._gameOverModalTimer) clearTimeout(this._gameOverModalTimer);
+    this._gameOverModalTimer = setTimeout(() => {
+      if (!this.gameOver) return;
+      const goScreen = document.getElementById('gameover-screen');
+      const goReason = document.getElementById('gameover-reason-val');
+      if (goReason) goReason.textContent = reason;
+      if (goScreen) goScreen.classList.remove('hidden');
+    }, 2000);
+  }
+
+  stopAnalogLossOfSignal() {
+    this.analogGlitchActive = false;
+    if (this._analogGlitchRaf) {
+      cancelAnimationFrame(this._analogGlitchRaf);
+      this._analogGlitchRaf = null;
+    }
+    if (this._gameOverModalTimer) {
+      clearTimeout(this._gameOverModalTimer);
+      this._gameOverModalTimer = null;
+    }
+    const glitchEl = document.getElementById('analog-tv-glitch');
+    if (glitchEl) {
+      glitchEl.classList.remove('active');
+      glitchEl.classList.add('hidden');
+    }
+    if (window.Sound && typeof window.Sound.stopAnalogLossOfSignal === 'function') {
+      window.Sound.stopAnalogLossOfSignal();
+    }
   }
 
   setupThreeJS() {
@@ -1823,6 +1961,7 @@ class GameEngine {
   }
 
   returnToMainMenu() {
+    this.stopAnalogLossOfSignal();
     this.isRunning = false;
     this.isPaused = false;
     this.gameOver = false;
@@ -1901,6 +2040,7 @@ class GameEngine {
 
   // --- GAME START & RESTART ---
   startGame() {
+    this.stopAnalogLossOfSignal();
     window.Sound.init();
     window.Sound.resume();
     window.Sound.startGameMusic();
@@ -1974,6 +2114,7 @@ class GameEngine {
   }
 
   restartGame() {
+    this.stopAnalogLossOfSignal();
     this.muteCassette();
     document.getElementById('gameover-screen')?.classList.add('hidden');
     window.Sound.startGameMusic();
@@ -2767,10 +2908,13 @@ class GameEngine {
         activeVideo.classList.add('hidden');
       }
       this.jumpscareActive = false;
-      const goScreen = document.getElementById('gameover-screen');
-      const goReason = document.getElementById('gameover-reason-val');
-      if (goReason) goReason.textContent = reason;
-      if (goScreen) goScreen.classList.remove('hidden');
+
+      // Clear red horror flash overlay
+      const flash = document.getElementById('jumpscare-flash');
+      if (flash) flash.classList.remove('active');
+
+      // Trigger violent Analog CRT TV Loss-of-Signal Glitch!
+      this.triggerAnalogLossOfSignal(reason);
     };
 
     if (videoContainer && activeVideo) {
