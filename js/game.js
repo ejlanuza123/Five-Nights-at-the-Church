@@ -260,9 +260,9 @@ class GameEngine {
 
     // 2. Preload Jumpscare MP4 Videos into dedicated in-memory video elements
     const jumpscareVideos = [
-      { key: 'weepingAngel', id: 'jumpscare-video-angel', src: 'assets/jumpscares/angel_jumpscare.mp4' },
-      { key: 'haloedSaint', id: 'jumpscare-video-saint', src: 'assets/jumpscares/michael_jumpscare.mp4' },
-      { key: 'veiledMourner', id: 'jumpscare-video-mourner', src: 'assets/jumpscares/mary_jumpscare.mp4' }
+      { key: 'weepingAngel', id: 'jumpscare-video-angel', src: 'assets/jumpscares/angel_jumpscare.mp4?v=20261019_v48' },
+      { key: 'haloedSaint', id: 'jumpscare-video-saint', src: 'assets/jumpscares/michael_jumpscare.mp4?v=20261019_v48' },
+      { key: 'veiledMourner', id: 'jumpscare-video-mourner', src: 'assets/jumpscares/mary_jumpscare.mp4?v=20261019_v48' }
     ];
     this.jumpscareUrls = {};
     let loadedVideos = 0;
