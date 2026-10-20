@@ -689,6 +689,7 @@ class GameEngine {
     this._angelDoorRetreatTimer = setTimeout(() => {
       this._angelDoorRetreatTimer = null;
       if (this.isLeftDoorClosed && this.aiConfig.weepingAngel.stage === 3) {
+        this.vibrate([80, 60, 120]);
         window.Sound.playStoneGrind(0.85);
         window.Sound.playLeftFootstep(0.65);
         this.banishAngel();
@@ -709,6 +710,7 @@ class GameEngine {
     this._saintDoorRetreatTimer = setTimeout(() => {
       this._saintDoorRetreatTimer = null;
       if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 3) {
+        this.vibrate([100, 70, 140]);
         window.Sound.playStoneGrind(0.85);
         window.Sound.playLeftFootstep(0.65);
         this.banishSaint();
@@ -729,6 +731,7 @@ class GameEngine {
     this._mournerVentRetreatTimer = setTimeout(() => {
       this._mournerVentRetreatTimer = null;
       if (this.isVentClosed && this.aiConfig.veiledMourner.stage === 3) {
+        this.vibrate([60, 50, 90]);
         window.Sound.playStoneGrind(0.7);
         window.Sound.playVentSound(false);
         this.banishMourner();
@@ -2273,10 +2276,20 @@ class GameEngine {
     }
   }
 
+  // Mobile Haptic Vibration helper (PWA & Mobile Webkit / Chromium / Capacitor)
+  vibrate(pattern) {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) {}
+    }
+  }
+
   // --- MODERN DEFENSE CONTROLS ---
   toggleLeftDoor() {
     if (this.isBlackout || this.gameOver || this.victory) return;
     this.isLeftDoorClosed = !this.isLeftDoorClosed;
+    this.vibrate(35);
     window.Sound.playDoorSound(this.isLeftDoorClosed);
 
     // Update Maglock LED color: Red = Armed/Locked, Green = Unarmed/Open
@@ -2294,6 +2307,7 @@ class GameEngine {
   toggleLeftDoorLight() {
     if (this.isBlackout || this.gameOver || this.victory) return;
     this.isLeftDoorLightOn = !this.isLeftDoorLightOn;
+    this.vibrate(15);
     window.Sound.playLightClick();
 
     if (this.world.lights.doorLight) {
@@ -2310,6 +2324,7 @@ class GameEngine {
   toggleVent() {
     if (this.isBlackout || this.gameOver || this.victory) return;
     this.isVentClosed = !this.isVentClosed;
+    this.vibrate(35);
     window.Sound.playVentSound(this.isVentClosed);
 
     const btn = document.getElementById('btn-vent-toggle');
@@ -2322,6 +2337,7 @@ class GameEngine {
   toggleVentLight() {
     if (this.isBlackout || this.gameOver || this.victory) return;
     this.isVentLightOn = !this.isVentLightOn;
+    this.vibrate(15);
     window.Sound.playLightClick();
 
     if (this.world.lights.ventLight) {
@@ -2338,6 +2354,7 @@ class GameEngine {
   toggleWindowSpot() {
     if (this.isBlackout || this.gameOver || this.victory) return;
     this.isWindowSpotOn = !this.isWindowSpotOn;
+    this.vibrate(25);
     
     // Play realistic heavy toggle click & halogen surge
     window.Sound.playFlashlightSwitch(this.isWindowSpotOn);
@@ -2429,6 +2446,7 @@ class GameEngine {
   toggleCCTV() {
     if (this.isBlackout || this.gameOver || this.victory) return;
     this.isCCTVOpen = !this.isCCTVOpen;
+    this.vibrate(20);
     window.Sound.playCameraFlip(this.isCCTVOpen);
 
     const overlay = document.getElementById('cctv-overlay');
@@ -2597,6 +2615,7 @@ class GameEngine {
   switchCamera(camId) {
     if (this.isBlackout) return;
     this.activeCameraId = camId;
+    this.vibrate(10);
     window.Sound.playCameraBeep();
 
     document.querySelectorAll('.map-cam-btn').forEach(btn => btn.classList.remove('active'));
@@ -2699,6 +2718,7 @@ class GameEngine {
   triggerBlackout() {
     this.isBlackout = true;
     this.muteCassette();
+    this.vibrate([150, 100, 250]);
     window.Sound.playPowerShutdown();
 
     if (this.isLeftDoorClosed) this.toggleLeftDoor();
@@ -3058,6 +3078,7 @@ class GameEngine {
     window.Sound.pauseBGM();
     window.Sound.stopHeartbeat();
     window.Sound.playJumpscare();
+    this.vibrate([200, 80, 400, 100, 600]);
 
     // Red horror strobe flash
     const flash = document.getElementById('jumpscare-flash');

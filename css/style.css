@@ -4834,3 +4834,78 @@ kbd.key-badge {
 
 
 
+
+
+/* ================= MOBILE PORTRAIT ORIENTATION GUARD ================= */
+#orientation-lock-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: radial-gradient(circle at center, #0a0f1d 0%, #020408 100%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media screen and (orientation: portrait) and (max-width: 900px) {
+  #orientation-lock-screen {
+    display: flex !important;
+  }
+}
+
+.orientation-phone-icon {
+  width: 68px;
+  height: 68px;
+  color: #00f0ff;
+  margin-bottom: 22px;
+  animation: mobilePhoneRotate 2.4s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.6));
+}
+
+@keyframes mobilePhoneRotate {
+  0%, 30% { transform: rotate(0deg); }
+  70%, 100% { transform: rotate(90deg); }
+}
+
+.orientation-title {
+  font-family: var(--font-gothic), 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #00f0ff;
+  margin-bottom: 10px;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.7);
+}
+
+.orientation-subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #94a3b8;
+  max-width: 290px;
+  line-height: 1.6;
+}
+
+/* Enhanced mobile control hitboxes & thumb-friendly ergonomics */
+@media (max-width: 900px) and (orientation: landscape) {
+  .ctrl-btn {
+    min-height: 48px;
+    min-width: 48px;
+    touch-action: manipulation;
+  }
+  .camera-flip-trigger {
+    height: 46px;
+    touch-action: manipulation;
+  }
+  .map-cam-btn {
+    min-height: 38px;
+    min-width: 38px;
+    touch-action: manipulation;
+  }
+}

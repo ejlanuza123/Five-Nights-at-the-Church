@@ -1,0 +1,25 @@
+{
+  "name": "Five Nights at the Church",
+  "short_name": "FNATC",
+  "description": "Photorealistic 3D Gothic Horror Church Night Shift Security Game",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#030406",
+  "theme_color": "#030406",
+  "icons": [
+    {
+      "src": "assets/office/door_peeking_angel.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/office/door_peeking_saint.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

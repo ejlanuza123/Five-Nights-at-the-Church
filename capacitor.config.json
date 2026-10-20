@@ -1,0 +1,21 @@
+{
+  "appId": "com.fnaf.church",
+  "appName": "Five Nights at the Church",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2500,
+      "backgroundColor": "#030406"
+    },
+    "ScreenOrientation": {
+      "orientation": "landscape"
+    }
+  }
+}

@@ -8,10 +8,24 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
-  <link rel="stylesheet" href="css/style.css?v=20261019_v50">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css?v=20261020_v51">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
+  <!-- Mobile Portrait Orientation Guard -->
+  <div id="orientation-lock-screen">
+    <div class="orientation-phone-icon">
+      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="14" y="6" width="20" height="36" rx="3" />
+        <path d="M22 36h4" />
+        <path d="M4 24h6M38 24h6" stroke-dasharray="2 2" />
+        <path d="M38 18l4 6-4 6" />
+      </svg>
+    </div>
+    <div class="orientation-title">ROTATE YOUR DEVICE</div>
+    <div class="orientation-subtitle">PARISH ARCHIVAL SURVEILLANCE REQUIRES WIDESCREEN LANDSCAPE</div>
+  </div>
   <div id="game-container">
     <!-- WebGL 3D Render Canvas -->
     <canvas id="webgl-canvas"></canvas>
@@ -1057,9 +1071,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261019_v50"></script>
-  <script src="js/textures.js?v=20261019_v50"></script>
-  <script src="js/models.js?v=20261019_v50"></script>
-  <script src="js/game.js?v=20261019_v50"></script>
+  <script src="js/audio.js?v=20261020_v51"></script>
+  <script src="js/textures.js?v=20261020_v51"></script>
+  <script src="js/models.js?v=20261020_v51"></script>
+  <script src="js/game.js?v=20261020_v51"></script>
 </body>
 </html>
