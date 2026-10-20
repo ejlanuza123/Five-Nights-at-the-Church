@@ -5408,3 +5408,43 @@ kbd.key-badge {
     font-size: 8.5px !important;
   }
 }
+
+/* HIGH-PERFORMANCE GPU ACCELERATION FOR MOBILE (HELIO G99 / MALI-G57) */
+@media (max-width: 1024px), (pointer: coarse) {
+  /* Eliminate costly GPU framebuffer read-backs and Gaussian blurs on mobile */
+  *, *::before, *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Disable heavy procedural sub-micron gradient that throttles mobile fill-rate */
+  .film-grain {
+    display: none !important;
+  }
+
+  .crt-scanlines {
+    opacity: 0.15 !important;
+    background-size: 100% 4px !important;
+  }
+
+  /* Solidified sleek mobile panel backgrounds */
+  .hud-btn,
+  .hud-pill,
+  .cctv-map-container,
+  .stat-card,
+  .warning-modal-box,
+  .lobby-card,
+  .fnaf-btn {
+    background-color: rgba(10, 14, 22, 0.94) !important;
+  }
+
+  /* Hardware Layer Promotion for composite smoothness */
+  #webgl-canvas,
+  #game-container,
+  #cctv-overlay,
+  #cctv-feed-img,
+  #cctv-static-canvas {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+}

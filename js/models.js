@@ -777,6 +777,12 @@ class WorldBuilder {
     const deskTaskLight = new THREE.PointLight(0xffe6b0, 1.4, 4.5);
     deskTaskLight.position.set(0.1, 2.2, -1.2);
     deskTaskLight.castShadow = true;
+    const isMobileDevice = typeof navigator !== 'undefined' && (
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
+    );
+    deskTaskLight.shadow.mapSize.width = isMobileDevice ? 512 : 1024;
+    deskTaskLight.shadow.mapSize.height = isMobileDevice ? 512 : 1024;
+    deskTaskLight.shadow.bias = -0.002;
     officeGroup.add(deskTaskLight);
     this.lights.candleLight = deskTaskLight; // Mapped to desk task light
 
@@ -1309,7 +1315,7 @@ class WorldBuilder {
               const mats = Array.isArray(child.material) ? child.material : [child.material];
               mats.forEach((mat) => {
                 if (!mat) return;
-                mat.side = THREE.DoubleSide;
+                mat.side = THREE.FrontSide;
                 if (roughness !== null) {
                   mat.roughness = roughness;
                 } else if (mat.roughness !== undefined) {
