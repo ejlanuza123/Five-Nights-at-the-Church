@@ -620,7 +620,8 @@ body::-webkit-scrollbar,
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #000;
   object-position: center;
   z-index: 1;
   pointer-events: none;
@@ -1380,6 +1381,7 @@ body::-webkit-scrollbar,
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #000;
   pointer-events: none;
 }
 
@@ -4638,6 +4640,7 @@ kbd.key-badge {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #000;
   object-position: center top;
   filter: contrast(1.15) brightness(0.92);
   transition: transform 0.3s ease;
@@ -4892,20 +4895,226 @@ kbd.key-badge {
   line-height: 1.6;
 }
 
-/* Enhanced mobile control hitboxes & thumb-friendly ergonomics */
-@media (max-width: 900px) and (orientation: landscape) {
+/* Desktop key hint and camera prefix styling */
+.key-hint {
+  color: rgba(148, 163, 184, 0.7);
+  font-size: 0.9em;
+  margin-left: 3px;
+}
+
+.cam-prefix {
+  display: inline;
+}
+
+/* ================= MOBILE ERGONOMICS & RESPONSIVE COMPACT LAYOUT ================= */
+@media (max-height: 520px), (max-width: 900px) and (orientation: landscape) {
+  /* 1. Office Defense Wall Panels: compact and neatly positioned */
+  .door-panel-left {
+    top: 50% !important;
+    left: 8px !important;
+    transform: translateY(-50%) !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+    border-radius: 6px !important;
+    width: auto !important;
+  }
+
+  .vent-panel-right {
+    right: 8px !important;
+    bottom: 26px !important;
+    transform: none !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+    border-radius: 6px !important;
+    width: auto !important;
+  }
+
+  .window-panel-center {
+    bottom: 26px !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .panel-title {
+    font-size: 8px !important;
+    letter-spacing: 1px !important;
+    padding-bottom: 2px !important;
+  }
+
   .ctrl-btn {
-    min-height: 48px;
-    min-width: 48px;
-    touch-action: manipulation;
+    padding: 5px 8px !important;
+    font-size: 9.5px !important;
+    letter-spacing: 0.5px !important;
+    gap: 6px !important;
+    min-height: 32px !important;
+    min-width: unset !important;
+    border-radius: 4px !important;
+    touch-action: manipulation !important;
+    white-space: nowrap !important;
   }
+
+  .btn-indicator {
+    width: 6px !important;
+    height: 6px !important;
+  }
+
+  /* Hide physical keyboard shortcuts [Q], [Z], [E], [R], [W], [L] on mobile */
+  .key-hint {
+    display: none !important;
+  }
+
+  /* Hide "CAM " prefix on mobile map buttons to prevent overlapping */
+  .cam-prefix {
+    display: none !important;
+  }
+
+  /* Sleek Camera Flip Bar */
   .camera-flip-trigger {
-    height: 46px;
-    touch-action: manipulation;
+    height: 26px !important;
+    width: min(260px, 45vw) !important;
+    bottom: 0 !important;
+    padding: 0 8px !important;
+    touch-action: manipulation !important;
   }
+
+  .flip-icon {
+    width: 12px !important;
+    height: 8px !important;
+  }
+
+  .flip-text {
+    font-size: 9px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .flip-subtext {
+    display: none !important;
+  }
+
+  /* 2. CCTV Surveillance Overlay & Screen Feed */
+  #cctv-overlay {
+    padding: 8px 12px !important;
+    background: #000000 !important;
+  }
+
+  /* Full camera scene visibility without cropping or distortion */
+  .cctv-screen-img {
+    object-fit: contain !important;
+    object-position: center !important;
+    background: #000000 !important;
+  }
+
+  /* Compact CCTV Header */
+  .cctv-header {
+    padding: 0 !important;
+    gap: 6px !important;
+  }
+
+  .cctv-cam-tag {
+    padding: 3px 8px !important;
+    gap: 6px !important;
+  }
+
+  .cctv-rec-dot {
+    width: 7px !important;
+    height: 7px !important;
+  }
+
+  .cctv-rec-text {
+    font-size: 9px !important;
+  }
+
+  .cctv-cam-name {
+    font-size: 9.5px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .cctv-timestamp {
+    font-size: 8.5px !important;
+  }
+
+  .cctv-nv-badge {
+    padding: 3px 6px !important;
+    font-size: 8px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .cctv-status-badge {
+    display: none !important;
+  }
+
+  /* 3. CCTV Blueprint Minimap & Map Camera Buttons */
+  .cctv-bottom {
+    bottom: 4px !important;
+    right: 8px !important;
+    gap: 6px !important;
+    align-items: flex-end !important;
+  }
+
+  .cctv-control-box {
+    gap: 4px !important;
+  }
+
+  .cctv-light-btn {
+    padding: 4px 8px !important;
+    font-size: 8.5px !important;
+    letter-spacing: 0.5px !important;
+    border-radius: 4px !important;
+    touch-action: manipulation !important;
+  }
+
+  .cctv-map-container {
+    width: 170px !important;
+    height: 125px !important;
+    padding: 4px 6px !important;
+    background: rgba(10, 15, 26, 0.78) !important;
+    border-radius: 6px !important;
+    backdrop-filter: blur(8px) !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.7) !important;
+  }
+
+  .map-title {
+    font-size: 7.5px !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .church-map-svg {
+    height: 94px !important;
+  }
+
   .map-cam-btn {
-    min-height: 38px;
-    min-width: 38px;
-    touch-action: manipulation;
+    min-height: 20px !important;
+    min-width: 24px !important;
+    font-size: 8px !important;
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+    letter-spacing: 0.2px !important;
+    touch-action: manipulation !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5) !important;
+  }
+
+  .cctv-flip-down {
+    bottom: 6px !important;
+    padding: 4px 14px !important;
+    font-size: 9px !important;
+    letter-spacing: 0.5px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* Analog TV Loss-of-Signal Box */
+  .cctv-no-signal-box {
+    padding: 12px 18px !important;
+    gap: 6px !important;
+    transform: scale(0.85) !important;
+  }
+
+  .cctv-no-signal-title {
+    font-size: 16px !important;
+    letter-spacing: 3px !important;
+  }
+
+  .cctv-no-signal-channel {
+    font-size: 9px !important;
   }
 }

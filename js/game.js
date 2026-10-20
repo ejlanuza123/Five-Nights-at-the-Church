@@ -1943,35 +1943,35 @@ class GameEngine {
     const btnDoor = document.getElementById('btn-door-toggle');
     if (btnDoor) {
       const span = btnDoor.querySelector('span');
-      if (span) span.textContent = `LOCK DOOR [${doorKey}]`;
+      if (span) span.innerHTML = `LOCK DOOR<span class="key-hint"> [${doorKey}]</span>`;
       btnDoor.title = `Lock / Unlock Heavy Wooden Church Door [${doorKey}]`;
     }
 
     const btnDoorLight = document.getElementById('btn-door-light');
     if (btnDoorLight) {
       const span = btnDoorLight.querySelector('span');
-      if (span) span.textContent = `DOOR LIGHT [${doorLightKey}]`;
+      if (span) span.innerHTML = `DOOR LIGHT<span class="key-hint"> [${doorLightKey}]</span>`;
       btnDoorLight.title = `Toggle Door Downlight [${doorLightKey}]`;
     }
 
     const btnWinSpot = document.getElementById('btn-window-spot');
     if (btnWinSpot) {
       const span = btnWinSpot.querySelector('span');
-      if (span) span.textContent = `WINDOW SPOTLIGHT [${winSpotKey}]`;
+      if (span) span.innerHTML = `WINDOW SPOTLIGHT<span class="key-hint"> [${winSpotKey}]</span>`;
       btnWinSpot.title = `Toggle Window Spotlight [${winSpotKey}]`;
     }
 
     const btnVent = document.getElementById('btn-vent-toggle');
     if (btnVent) {
       const span = btnVent.querySelector('span');
-      if (span) span.textContent = `SEAL VENT [${ventKey}]`;
+      if (span) span.innerHTML = `SEAL VENT<span class="key-hint"> [${ventKey}]</span>`;
       btnVent.title = `Seal / Open Steel Shutter Damper [${ventKey}]`;
     }
 
     const btnVentLight = document.getElementById('btn-vent-light');
     if (btnVentLight) {
       const span = btnVentLight.querySelector('span');
-      if (span) span.textContent = `VENT LIGHT [${ventLightKey}]`;
+      if (span) span.innerHTML = `VENT LIGHT<span class="key-hint"> [${ventLightKey}]</span>`;
       btnVentLight.title = `Toggle Vent Duct Light [${ventLightKey}]`;
     }
 
@@ -1980,12 +1980,12 @@ class GameEngine {
     if (cctvSubtext) cctvSubtext.textContent = `[${cctvKey}]`;
 
     const cctvFlipDown = document.getElementById('cctv-flip-down-btn');
-    if (cctvFlipDown) cctvFlipDown.textContent = `MINIMIZE FEED [${cctvKey}]`;
+    if (cctvFlipDown) cctvFlipDown.innerHTML = `MINIMIZE FEED<span class="key-hint"> [${cctvKey}]</span>`;
 
     const btnCctvLight = document.getElementById('btn-cctv-light');
     if (btnCctvLight) {
       const span = btnCctvLight.querySelector('span');
-      if (span) span.textContent = `IR NIGHT VISION [${nvKey}]`;
+      if (span) span.innerHTML = `IR NIGHT VISION<span class="key-hint"> [${nvKey}]</span>`;
       btnCctvLight.title = `Toggle Camera Night Vision [${nvKey}]`;
     }
 

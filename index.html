@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261020_v51">
+  <link rel="stylesheet" href="css/style.css?v=20261020_v52">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
@@ -135,11 +135,11 @@
       <div class="door-panel-left">
         <div class="panel-title">ARCHED DOOR</div>
         <button class="ctrl-btn" id="btn-door-toggle" title="Lock / Unlock Heavy Wooden Church Door [Q]">
-          <span>LOCK DOOR [Q]</span>
+          <span>LOCK DOOR<span class="key-hint"> [Q]</span></span>
           <span class="btn-indicator"></span>
         </button>
         <button class="ctrl-btn" id="btn-door-light" title="Toggle Door Downlight [Z]">
-          <span>DOOR LIGHT [Z]</span>
+          <span>DOOR LIGHT<span class="key-hint"> [Z]</span></span>
           <span class="btn-indicator"></span>
         </button>
       </div>
@@ -147,7 +147,7 @@
       <!-- Center Window Spotlight (Observation Window Spotlight) -->
       <div class="window-panel-center">
         <button class="ctrl-btn" id="btn-window-spot" title="Toggle Window Halogen Spotlight [W / F]">
-          <span>WINDOW SPOTLIGHT [W]</span>
+          <span>WINDOW SPOTLIGHT<span class="key-hint"> [W]</span></span>
           <span class="btn-indicator"></span>
         </button>
       </div>
@@ -156,11 +156,11 @@
       <div class="vent-panel-right">
         <div class="panel-title">WALL VENT</div>
         <button class="ctrl-btn" id="btn-vent-toggle" title="Seal / Open Steel Shutter Damper [E]">
-          <span>SEAL VENT [E]</span>
+          <span>SEAL VENT<span class="key-hint"> [E]</span></span>
           <span class="btn-indicator"></span>
         </button>
         <button class="ctrl-btn" id="btn-vent-light" title="Inspect Air Vent Grille [R / C]">
-          <span>VENT LIGHT [R]</span>
+          <span>VENT LIGHT<span class="key-hint"> [R]</span></span>
           <span class="btn-indicator"></span>
         </button>
       </div>
@@ -227,7 +227,7 @@
       <div class="cctv-bottom">
         <div class="cctv-control-box">
           <button class="cctv-light-btn" id="btn-cctv-light">
-            <span>IR NIGHT VISION [L]</span>
+            <span>IR NIGHT VISION<span class="key-hint"> [L]</span></span>
           </button>
         </div>
 
@@ -291,15 +291,15 @@
           </svg>
 
           <!-- Interactive Camera Buttons on Map -->
-          <button class="map-cam-btn active" id="cam-btn-1" data-cam="1">CAM 01</button>
-          <button class="map-cam-btn" id="cam-btn-2" data-cam="2">CAM 02</button>
-          <button class="map-cam-btn" id="cam-btn-3" data-cam="3">CAM 03</button>
-          <button class="map-cam-btn" id="cam-btn-4" data-cam="4">CAM 04</button>
-          <button class="map-cam-btn" id="cam-btn-5" data-cam="5">CAM 05</button>
+          <button class="map-cam-btn active" id="cam-btn-1" data-cam="1"><span class="cam-prefix">CAM </span>01</button>
+          <button class="map-cam-btn" id="cam-btn-2" data-cam="2"><span class="cam-prefix">CAM </span>02</button>
+          <button class="map-cam-btn" id="cam-btn-3" data-cam="3"><span class="cam-prefix">CAM </span>03</button>
+          <button class="map-cam-btn" id="cam-btn-4" data-cam="4"><span class="cam-prefix">CAM </span>04</button>
+          <button class="map-cam-btn" id="cam-btn-5" data-cam="5"><span class="cam-prefix">CAM </span>05</button>
         </div>
       </div>
 
-      <button class="cctv-flip-down" id="cctv-flip-down-btn">MINIMIZE FEED [SPACEBAR]</button>
+      <button class="cctv-flip-down" id="cctv-flip-down-btn">MINIMIZE FEED<span class="key-hint"> [SPACEBAR]</span></button>
     </div>
 
     <!-- Embedded Cathedral & Dark Ambient Music Audio Tracks -->
@@ -1071,9 +1071,9 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261020_v51"></script>
-  <script src="js/textures.js?v=20261020_v51"></script>
-  <script src="js/models.js?v=20261020_v51"></script>
-  <script src="js/game.js?v=20261020_v51"></script>
+  <script src="js/audio.js?v=20261020_v52"></script>
+  <script src="js/textures.js?v=20261020_v52"></script>
+  <script src="js/models.js?v=20261020_v52"></script>
+  <script src="js/game.js?v=20261020_v52"></script>
 </body>
 </html>
