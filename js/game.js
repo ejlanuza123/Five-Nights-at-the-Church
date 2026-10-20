@@ -260,16 +260,10 @@ class GameEngine {
       updateUI();
     });
 
-    // 2. Preload Jumpscare MP4 Videos into dedicated in-memory video elements
-    const jumpscareVideos = [
-      { key: 'weepingAngel', id: 'jumpscare-video-angel', src: 'assets/jumpscares/angel_jumpscare.mp4?v=20261019_v48' },
-      { key: 'haloedSaint', id: 'jumpscare-video-saint', src: 'assets/jumpscares/michael_jumpscare.mp4?v=20261019_v48' },
-      { key: 'veiledMourner', id: 'jumpscare-video-mourner', src: 'assets/jumpscares/mary_jumpscare.mp4?v=20261019_v48' }
-    ];
+    // 2. Direct hardware-accelerated video streaming (avoids loading 100MB blobs into JS heap on mobile)
     this.jumpscareUrls = {};
     let loadedVideos = 0;
 
-        // Direct hardware-accelerated streaming: avoids loading 100MB blobs into JS heap on mobile
     const cleanVideos = [
       { key: 'weepingAngel', id: 'jumpscare-video-angel', src: 'assets/jumpscares/angel_jumpscare.mp4' },
       { key: 'haloedSaint', id: 'jumpscare-video-saint', src: 'assets/jumpscares/michael_jumpscare.mp4' },
@@ -1112,8 +1106,6 @@ class GameEngine {
       if (modal && !modal.classList.contains('hidden')) return;
       const setModal = document.getElementById('settings-modal');
       if (setModal && !setModal.classList.contains('hidden')) return;
-      const optModal = document.getElementById('options-modal');
-      if (optModal && !optModal.classList.contains('hidden')) return;
       if (e.target.closest('#hud-overlay') || e.target.closest('.screen-modal')) return;
       this.isMouseDown = true;
       this.prevMouseX = e.clientX;
@@ -1163,14 +1155,10 @@ class GameEngine {
       if (e.target && e.target.closest('#options-modal, #settings-modal, #manual-modal, .screen-modal, .settings-scroll-content, .keybinds-list')) {
         return;
       }
-      const optModal = document.getElementById('options-modal');
-      if (optModal && !optModal.classList.contains('hidden')) return;
       const modal = document.getElementById('manual-modal');
       if (modal && !modal.classList.contains('hidden')) return;
       const setModal = document.getElementById('settings-modal');
       if (setModal && !setModal.classList.contains('hidden')) return;
-      const optModal = document.getElementById('options-modal');
-      if (optModal && !optModal.classList.contains('hidden')) return;
       if (e.target.closest('#hud-overlay') || e.target.closest('.screen-modal') || e.target.closest('button')) return;
 
       if (e.touches && e.touches.length === 1) {
