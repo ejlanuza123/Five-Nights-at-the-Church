@@ -4535,6 +4535,7 @@ kbd.key-badge {
 }
 
 .cassette-subtitles {
+  display: none !important;
   font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
   line-height: 1.45;
@@ -5446,5 +5447,130 @@ kbd.key-badge {
   #cctv-static-canvas {
     transform: translateZ(0);
     will-change: transform;
+  }
+}
+
+/* ==========================================================================
+   MOBILE SIZING & TOUCH SCROLLING FIXES (FACILITY BREACHED, KEYBINDS, CASSETTE)
+   ========================================================================== */
+@media (max-width: 900px), (pointer: coarse) {
+  /* 1. Facility Breached Sign Scaling on Mobile */
+  #gameover-screen {
+    padding: 18px 24px !important;
+  }
+
+  .gameover-title {
+    font-size: 26px !important;
+    letter-spacing: 2px !important;
+    margin-bottom: 6px !important;
+    text-shadow: 0 0 18px rgba(239, 68, 68, 0.7) !important;
+  }
+
+  .gameover-reason {
+    font-size: 12.5px !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 12px !important;
+  }
+
+  #gameover-screen .primary-btn {
+    padding: 8px 18px !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+  }
+
+  /* 2. Mixtape / Cassette Player Widget - Compact & Subtitles Removed */
+  .cassette-widget {
+    top: 50px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+    padding: 6px 10px !important;
+  }
+
+  .cassette-header-row {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .cassette-subtitles {
+    display: none !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .cassette-title {
+    font-size: 10.5px !important;
+    letter-spacing: 1px !important;
+  }
+
+  .cassette-mute-btn {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+  }
+
+  /* 3. Key Mapping Modal Scrolling Fix on Mobile Touch Devices */
+  #options-modal,
+  #settings-modal,
+  #manual-modal {
+    touch-action: pan-y !important;
+    overflow-y: auto !important;
+  }
+
+  .options-box,
+  .settings-box {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    height: 94vh !important;
+    max-height: 94vh !important;
+    padding: 10px 14px 8px 14px !important;
+    touch-action: pan-y !important;
+  }
+
+  .options-header-top {
+    padding-bottom: 6px !important;
+  }
+
+  .options-main-title {
+    font-size: 16px !important;
+    letter-spacing: 1px !important;
+  }
+
+  .settings-scroll-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: calc(94vh - 110px) !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain !important;
+    padding-right: 6px !important;
+  }
+
+  .settings-tab-pane,
+  .keybinds-list {
+    touch-action: pan-y !important;
+  }
+
+  .keybind-row {
+    padding: 6px 8px !important;
+    gap: 8px !important;
+    touch-action: pan-y !important;
+  }
+
+  .keybind-name {
+    font-size: 11px !important;
+  }
+
+  .keybind-desc {
+    font-size: 9px !important;
+  }
+
+  .keybind-slot-btn {
+    min-width: 48px !important;
+    height: 28px !important;
+    font-size: 10.5px !important;
+    padding: 2px 6px !important;
   }
 }

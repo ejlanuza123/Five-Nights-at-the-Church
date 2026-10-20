@@ -636,7 +636,7 @@ class GameEngine {
     if (this.isMobileDevice()) {
       // For mobile GPUs like Mali-G57 (Helio G99), cap internal buffer to 1.0 (720p)
       // This reduces fragment shading fill-rate load by up to 75% compared to 2.0x supersampling!
-      return Math.min(window.devicePixelRatio || 1, 1.0);
+      return Math.min(window.devicePixelRatio || 1, 1.45);
     }
     return Math.min(window.devicePixelRatio || 1, 1.75);
   }
@@ -1160,6 +1160,11 @@ class GameEngine {
 
     window.addEventListener('touchstart', (e) => {
       if (this.isCCTVOpen || this.gameOver || this.victory) return;
+      if (e.target && e.target.closest('#options-modal, #settings-modal, #manual-modal, .screen-modal, .settings-scroll-content, .keybinds-list')) {
+        return;
+      }
+      const optModal = document.getElementById('options-modal');
+      if (optModal && !optModal.classList.contains('hidden')) return;
       const modal = document.getElementById('manual-modal');
       if (modal && !modal.classList.contains('hidden')) return;
       const setModal = document.getElementById('settings-modal');
