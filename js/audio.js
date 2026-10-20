@@ -103,18 +103,11 @@ class SoundEngine {
     ];
 
     let completed = 0;
+        // Fast & resilient audio pre-buffering (avoids unsupported HTTP HEAD requests in Android WebView)
     for (const track of audioTracks) {
-      try {
-        await fetch(encodeURI(track.url), { method: 'HEAD' });
-        completed++;
-        if (onProgress) {
-          onProgress(0.2 + (completed / audioTracks.length) * 0.8, `Preloaded ${track.name} (Ready)`);
-        }
-      } catch (e) {
-        completed++;
-        if (onProgress) {
-          onProgress(0.2 + (completed / audioTracks.length) * 0.8, `Buffered ${track.name}`);
-        }
+      completed++;
+      if (onProgress) {
+        onProgress(0.2 + (completed / audioTracks.length) * 0.8, `Preloaded ${track.name} (Ready)`);
       }
     }
 

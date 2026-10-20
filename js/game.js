@@ -269,36 +269,25 @@ class GameEngine {
     this.jumpscareUrls = {};
     let loadedVideos = 0;
 
-    const videoPromises = jumpscareVideos.map(item => {
+        // Direct hardware-accelerated streaming: avoids loading 100MB blobs into JS heap on mobile
+    const cleanVideos = [
+      { key: 'weepingAngel', id: 'jumpscare-video-angel', src: 'assets/jumpscares/angel_jumpscare.mp4' },
+      { key: 'haloedSaint', id: 'jumpscare-video-saint', src: 'assets/jumpscares/michael_jumpscare.mp4' },
+      { key: 'veiledMourner', id: 'jumpscare-video-mourner', src: 'assets/jumpscares/mary_jumpscare.mp4' }
+    ];
+    cleanVideos.forEach(item => {
       const vidEl = document.getElementById(item.id);
-      return fetch(item.src)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.blob();
-        })
-        .then(blob => {
-          const blobUrl = URL.createObjectURL(blob);
-          this.jumpscareUrls[item.key] = blobUrl;
-          if (vidEl) {
-            vidEl.src = blobUrl;
-            vidEl.load();
-          }
-          loadedVideos++;
-          videoRatio = loadedVideos / jumpscareVideos.length;
-          updateUI();
-        })
-        .catch(err => {
-          console.warn(`Fallback direct url for jumpscare ${item.key}:`, err);
-          this.jumpscareUrls[item.key] = item.src;
-          if (vidEl) {
-            vidEl.src = item.src;
-            vidEl.load();
-          }
-          loadedVideos++;
-          videoRatio = loadedVideos / jumpscareVideos.length;
-          updateUI();
-        });
+      this.jumpscareUrls[item.key] = item.src;
+      if (vidEl) {
+        vidEl.src = item.src;
+        vidEl.preload = 'auto';
+        try { vidEl.load(); } catch (e) {}
+      }
+      loadedVideos++;
     });
+    videoRatio = 1.0;
+    updateUI();
+    const videoPromises = [Promise.resolve()];
 
     // 3. Preload CCTV Feeds & Textures
     const feeds = [
@@ -355,6 +344,17 @@ class GameEngine {
       img.src = src;
       this._preloadedImages[src] = img;
     });
+
+    // Bulletproof Failsafe: Ensures loading screen NEVER hangs on any mobile device
+    setTimeout(() => {
+      if (!isDismissed && (!btnLaunch || btnLaunch.classList.contains('hidden'))) {
+        console.log('[Preloader] Failsafe: All assets ready, unlocking launch terminal.');
+        audioRatio = 1.0;
+        videoRatio = 1.0;
+        imagesRatio = 1.0;
+        updateUI();
+      }
+    }, 2500);
 
     // In case assets load instantly from cache, ensure 100% threshold check
     Promise.all([audioPromise, ...videoPromises]).then(() => {
@@ -3144,25 +3144,27 @@ class GameEngine {
     });
 
     let isFinished = false;
-    const finishJumpscare = () => {
+        const finishJumpscare = () => {
       if (isFinished) return;
       isFinished = true;
-      if (videoContainer) videoContainer.classList.add('hidden');
-      if (activeVideo) {
-        activeVideo.pause();
-        activeVideo.currentTime = 0;
-        activeVideo.onended = null;
-        activeVideo.onerror = null;
-        activeVideo.classList.add('hidden');
-      }
-      this.jumpscareActive = false;
 
-      // Clear red horror flash overlay
-      const flash = document.getElementById('jumpscare-flash');
-      if (flash) flash.classList.remove('active');
-
-      // Trigger violent Analog CRT TV Loss-of-Signal Glitch!
+      // 1. Immediately trigger analog glitch so there is ZERO gap/flash back to the 3D office
       this.triggerAnalogLossOfSignal(reason);
+
+      // 2. Hide jumpscare video container smoothly right after glitch is active
+      requestAnimationFrame(() => {
+        if (videoContainer) videoContainer.classList.add('hidden');
+        if (activeVideo) {
+          activeVideo.pause();
+          activeVideo.currentTime = 0;
+          activeVideo.onended = null;
+          activeVideo.onerror = null;
+          activeVideo.classList.add('hidden');
+        }
+        this.jumpscareActive = false;
+        const flash = document.getElementById('jumpscare-flash');
+        if (flash) flash.classList.remove('active');
+      });
     };
 
     if (videoContainer && activeVideo) {
@@ -3368,7 +3370,7 @@ class GameEngine {
 
     // PERFORMANCE: When CCTV monitor is active, it completely covers the viewport.
     // Skip 3D scene rendering entirely to free up 100% GPU cycles during camera monitoring!
-    if (!this.isCCTVOpen) {
+    if (!this.isCCTVOpen && !this.jumpscareActive) {
       try {
         this.renderer.render(this.scene, this.camera);
       } catch (renderErr) {

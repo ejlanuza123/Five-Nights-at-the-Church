@@ -5574,3 +5574,15 @@ kbd.key-badge {
     padding: 2px 6px !important;
   }
 }
+
+/* Jumpscare Video Hardware Plane Promotion */
+#jumpscare-video-container {
+  transform: translateZ(0);
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+.jumpscare-video-el {
+  transform: translateZ(0);
+  will-change: transform;
+}
