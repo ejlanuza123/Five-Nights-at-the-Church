@@ -7,8 +7,10 @@
     "start": "node server.js",
     "dev": "node server.js",
     "build:mobile": "node build-mobile.js",
+    "generate:icons": "node generate-icons.js",
     "cap:sync": "npm run build:mobile && npx cap sync android",
-    "build:apk": "npm run cap:sync && cd android && .\\gradlew.bat assembleDebug"
+    "build:apk": "npm run cap:sync && cd android && .\\gradlew.bat assembleDebug",
+    "build:release": "npm run cap:sync && cd android && .\\gradlew.bat assembleRelease"
   },
   "keywords": [
     "fnaf",
