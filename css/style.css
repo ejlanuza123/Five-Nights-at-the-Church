@@ -4303,44 +4303,7 @@ kbd.key-badge {
     font-size: 10px;
   }
 
-  /* Lobby Menu in Landscape */
-  .fnaf-menu-container {
-    padding: 10px 20px;
-    width: 100%;
-    max-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .fnaf-title-block {
-    margin-bottom: 6px;
-  }
-  .fnaf-game-title {
-    font-size: 24px;
-    flex-direction: row;
-    gap: 8px;
-    line-height: 1.0;
-  }
-  .title-word {
-    display: inline-block;
-  }
-  .fnaf-sub-title {
-    display: none;
-  }
-  .fnaf-menu-options {
-    margin: 8px 0;
-    gap: 6px;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(200px, 1fr));
-  }
-  .fnaf-menu-item {
-    font-size: 15px;
-    padding: 3px 0;
-  }
-  .fnaf-menu-footer {
-    display: none;
-  }
+  /* Lobby Menu, Preloader & Warning are unified in bottom mobile block */
 
   /* Modals in Landscape */
   .manual-box, .settings-box, .options-box {
@@ -5116,5 +5079,332 @@ kbd.key-badge {
 
   .cctv-no-signal-channel {
     font-size: 9px !important;
+  }
+
+  /* ================= 4. LOADING SCREEN (PRELOADER) MOBILE OPTIMIZATION ================= */
+  #game-preloader {
+    padding: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .preloader-container {
+    padding: 10px 16px !important;
+    max-width: 480px !important;
+    width: 92vw !important;
+    max-height: 96dvh !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+  }
+
+  .preloader-cross {
+    font-size: 22px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .preloader-parish {
+    font-size: 8.5px !important;
+    letter-spacing: 2px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .preloader-title {
+    font-size: 18px !important;
+    letter-spacing: 1.5px !important;
+    margin: 0 0 3px 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  .preloader-doc-tag {
+    font-size: 7.5px !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 8px !important;
+    opacity: 0.8 !important;
+  }
+
+  .preloader-progress-box {
+    max-width: 320px !important;
+    gap: 4px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .preloader-bar-outer {
+    height: 8px !important;
+    border-radius: 4px !important;
+  }
+
+  .preloader-status-row {
+    font-size: 9px !important;
+  }
+
+  .preloader-status-text {
+    font-size: 8.5px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .preloader-percent-badge {
+    font-size: 10.5px !important;
+  }
+
+  .preloader-launch-btn {
+    padding: 8px 20px !important;
+    font-size: 11.5px !important;
+    letter-spacing: 1.5px !important;
+    margin-top: 4px !important;
+    min-height: 38px !important;
+    border-radius: 6px !important;
+    touch-action: manipulation !important;
+  }
+
+  .preloader-launch-btn .launch-kbd,
+  .launch-kbd,
+  .preloader-kbd {
+    display: none !important;
+  }
+
+  .preloader-security-note {
+    font-size: 7px !important;
+    margin-top: 6px !important;
+    line-height: 1.25 !important;
+    gap: 2px !important;
+    color: #475569 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  /* ================= 5. SENSORY & CONTENT WARNING SCREEN MOBILE OPTIMIZATION ================= */
+  #warning-screen {
+    padding: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .warning-container {
+    padding: 12px 18px !important;
+    max-width: 460px !important;
+    width: 92vw !important;
+    max-height: 94dvh !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    border-radius: 6px !important;
+  }
+
+  .warning-icon-box {
+    margin-bottom: 2px !important;
+  }
+
+  .warning-symbol {
+    font-size: 22px !important;
+  }
+
+  .warning-heading {
+    font-size: 18px !important;
+    letter-spacing: 3px !important;
+    margin: 0 0 4px 0 !important;
+  }
+
+  .warning-divider {
+    width: 60px !important;
+    height: 1.5px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .warning-text-primary {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    margin: 0 0 6px 0 !important;
+    max-width: 420px !important;
+  }
+
+  .warning-text-secondary {
+    font-size: 8.5px !important;
+    line-height: 1.3 !important;
+    margin: 0 0 10px 0 !important;
+    max-width: 400px !important;
+    opacity: 0.8 !important;
+  }
+
+  .warning-continue-btn {
+    padding: 8px 22px !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    min-height: 38px !important;
+    border-radius: 5px !important;
+    touch-action: manipulation !important;
+  }
+
+  .warning-btn-kbd {
+    display: none !important;
+  }
+
+  /* ================= 6. LOBBY / MAIN TITLE MENU MOBILE OPTIMIZATION ================= */
+  .fnaf-menu-container {
+    padding: 10px 0 10px 18px !important;
+    width: min(390px, 55vw) !important;
+    max-width: 55vw !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 3px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    box-sizing: border-box !important;
+    z-index: 10 !important;
+  }
+
+  .fnaf-title-block {
+    margin-bottom: 4px !important;
+  }
+
+  .fnaf-game-title {
+    font-size: 18px !important;
+    line-height: 1.05 !important;
+    letter-spacing: 1.2px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  .title-word {
+    display: inline-block !important;
+  }
+
+  .fnaf-sub-title {
+    font-size: 7px !important;
+    letter-spacing: 0.8px !important;
+    color: #64748b !important;
+    margin-top: 2px !important;
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 300px !important;
+  }
+
+  .menu-stars-row {
+    margin-top: 2px !important;
+    gap: 4px !important;
+  }
+
+  .star-icon {
+    font-size: 13px !important;
+  }
+
+  .fnaf-menu-options {
+    margin: 4px 0 !important;
+    gap: 2px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .fnaf-menu-item {
+    padding: 3px 0 !important;
+    min-height: 28px !important;
+    gap: 6px !important;
+    touch-action: manipulation !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .fnaf-arrow {
+    font-size: 12px !important;
+    color: #64748b !important;
+  }
+
+  .fnaf-text {
+    font-size: 13.5px !important;
+    letter-spacing: 1px !important;
+    white-space: nowrap !important;
+  }
+
+  .fnaf-night-badge,
+  .fnaf-badge-red,
+  .fnaf-badge-gold {
+    font-size: 7.5px !important;
+    padding: 1.5px 5px !important;
+    margin-left: 4px !important;
+    letter-spacing: 0.8px !important;
+  }
+
+  .fnaf-settings-badge {
+    font-size: 7px !important;
+    padding: 1px 4px !important;
+    margin-left: 4px !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+  }
+
+  .fnaf-night-picker {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    padding: 4px 0 !important;
+    width: 100% !important;
+  }
+
+  .fnaf-night-picker.hidden {
+    display: none !important;
+  }
+
+  .night-chip {
+    padding: 3px 6px !important;
+    font-size: 8px !important;
+    min-height: 24px !important;
+    border-radius: 3px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* Twitching statue silhouette grounded cleanly on right side */
+  .menu-statue-layer {
+    position: absolute !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: min(340px, 48vw) !important;
+    height: 90% !important;
+    background-position: 80% 30% !important;
+    opacity: 0.55 !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+  }
+
+  .statue-eye {
+    width: 6px !important;
+    height: 6px !important;
+  }
+
+  .fnaf-menu-footer {
+    display: none !important;
+  }
+
+  /* Night Transition Card on Mobile */
+  .night-card-box {
+    padding: 16px 24px !important;
+    gap: 8px !important;
+  }
+
+  .night-card-main-night {
+    font-size: 26px !important;
+    letter-spacing: 4px !important;
+  }
+
+  .night-card-clock {
+    font-size: 32px !important;
+    letter-spacing: 3px !important;
+  }
+
+  .night-card-sub {
+    font-size: 10px !important;
+  }
+
+  .night-card-tip {
+    font-size: 8.5px !important;
   }
 }
