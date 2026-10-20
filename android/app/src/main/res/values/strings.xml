@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Five Nights at the Church</string>
+    <string name="title_activity_main">Five Nights at the Church</string>
+    <string name="package_name">com.fnaf.church</string>
+    <string name="custom_url_scheme">com.fnaf.church</string>
+</resources>

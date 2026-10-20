@@ -1,7 +1,7 @@
 {
   "appId": "com.fnaf.church",
   "appName": "Five Nights at the Church",
-  "webDir": ".",
+  "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https"

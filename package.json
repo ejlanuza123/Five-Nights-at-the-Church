@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build:mobile": "node build-mobile.js",
+    "cap:sync": "npm run build:mobile && npx cap sync android",
+    "build:apk": "npm run cap:sync && cd android && .\\gradlew.bat assembleDebug"
   },
   "keywords": [
     "fnaf",
@@ -19,6 +22,9 @@
   "author": "Antigravity",
   "license": "MIT",
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "jimp": "^1.6.1"
   }
 }
