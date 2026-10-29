@@ -309,6 +309,7 @@ class SoundEngine {
       this.masterGain.connect(this.ctx.destination);
 
       this.isInitialized = true;
+      this._initNoiseBuffers();
       if (this.ctx.state === 'suspended') {
         this.ctx.resume();
       }
@@ -321,6 +322,29 @@ class SoundEngine {
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
+  }
+
+  _initNoiseBuffers() {
+    if (!this.ctx) return;
+    try {
+      const sr = this.ctx.sampleRate || 44100;
+      const len = Math.floor(sr * 2.5);
+      this.sharedWhiteNoiseBuffer = this.ctx.createBuffer(1, len, sr);
+      const data = this.sharedWhiteNoiseBuffer.getChannelData(0);
+      for (let i = 0; i < len; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+    } catch (e) {
+      console.warn('Failed to pre-allocate shared noise buffer:', e);
+    }
+  }
+
+  getWhiteNoiseBuffer(duration = 1.0) {
+    if (!this.ctx) return null;
+    if (!this.sharedWhiteNoiseBuffer) {
+      this._initNoiseBuffers();
+    }
+    return this.sharedWhiteNoiseBuffer;
   }
 
   setMasterVolume(val) {
@@ -1166,15 +1190,12 @@ class SoundEngine {
     sub.start(now);
     sub.stop(now + 0.9);
 
-    // White noise feedback burst
-    const bufferSize = this.ctx.sampleRate * 1.0;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1);
-    }
+    // White noise feedback burst (using pre-cached buffer to eliminate main-thread freeze)
+    const noiseBuf = this.getWhiteNoiseBuffer(1.0);
     const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
+    if (noiseBuf) {
+      noise.buffer = noiseBuf;
+    }
 
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = 'bandpass';
@@ -1197,15 +1218,12 @@ class SoundEngine {
     this.stopAnalogLossOfSignal();
     const now = this.ctx.currentTime;
 
-    // 1. Continuous White Noise Static Buffer (Simulates untuned RF/VHF static snow)
-    const bufferSize = this.ctx.sampleRate * 2.0;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1);
-    }
+    // 1. Continuous White Noise Static Buffer (Pre-cached buffer for 0ms hitch)
+    const noiseBuf = this.getWhiteNoiseBuffer(2.0);
     const noiseSource = this.ctx.createBufferSource();
-    noiseSource.buffer = buffer;
+    if (noiseBuf) {
+      noiseSource.buffer = noiseBuf;
+    }
     noiseSource.loop = true;
 
     // Resonant bandpass filter tuned to vintage CRT television static

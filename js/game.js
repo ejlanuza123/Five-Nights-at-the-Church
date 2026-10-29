@@ -80,6 +80,8 @@ class GameEngine {
     this.jumpscareActive = false;
     this.jumpscareTimer = 0;
     this.jumpscareEntity = null;
+    this._jumpscareVideoPlaying = false;
+    this._videosWarmedUp = false;
 
     // Customizable Keybindings & Lobby Preferences
     const defaultKeys = {
@@ -273,7 +275,11 @@ class GameEngine {
       const vidEl = document.getElementById(item.id);
       this.jumpscareUrls[item.key] = item.src;
       if (vidEl) {
-        vidEl.src = item.src;
+        if (!vidEl.src || !vidEl.src.includes(item.src)) {
+          vidEl.src = item.src;
+        }
+        vidEl.muted = true;
+        vidEl.playsInline = true;
         vidEl.preload = 'auto';
         try { vidEl.load(); } catch (e) {}
       }
@@ -2140,12 +2146,16 @@ class GameEngine {
     document.getElementById('custom-night-modal')?.classList.add('hidden');
 
     const videoContainer = document.getElementById('jumpscare-video-container');
-    if (videoContainer) videoContainer.classList.add('hidden');
+    if (videoContainer) {
+      videoContainer.classList.remove('active');
+      videoContainer.classList.add('hidden');
+    }
     ['jumpscare-video-angel', 'jumpscare-video-saint', 'jumpscare-video-mourner'].forEach(id => {
       const v = document.getElementById(id);
       if (v) {
         v.pause();
         v.currentTime = 0;
+        v.classList.remove('active');
         v.classList.add('hidden');
       }
     });
@@ -2177,6 +2187,7 @@ class GameEngine {
     window.Sound.startGameMusic();
     window.Sound.startAmbientOrgan();
     window.Sound.playChurchBell(1.0, 1);
+    this.warmUpJumpscareVideos();
 
     document.getElementById('fnaf-main-menu')?.classList.add('hidden');
     document.getElementById('night-transition-screen')?.classList.add('hidden');
@@ -2190,12 +2201,16 @@ class GameEngine {
     document.getElementById('cctv-anomaly-burst')?.classList.remove('active');
 
     const videoContainer = document.getElementById('jumpscare-video-container');
-    if (videoContainer) videoContainer.classList.add('hidden');
+    if (videoContainer) {
+      videoContainer.classList.remove('active');
+      videoContainer.classList.add('hidden');
+    }
     ['jumpscare-video-angel', 'jumpscare-video-saint', 'jumpscare-video-mourner'].forEach(id => {
       const v = document.getElementById(id);
       if (v) {
         v.pause();
         v.currentTime = 0;
+        v.classList.remove('active');
         v.classList.add('hidden');
       }
     });
@@ -3070,12 +3085,42 @@ class GameEngine {
     }
   }
 
+  // --- HARDWARE VIDEO DECODER PRE-WARMING (ZERO LATENCY JUMPSCARE PLAYBACK) ---
+  warmUpJumpscareVideos() {
+    if (this._videosWarmedUp) return;
+    this._videosWarmedUp = true;
+    const videoIds = ['jumpscare-video-angel', 'jumpscare-video-saint', 'jumpscare-video-mourner'];
+    videoIds.forEach(id => {
+      const vid = document.getElementById(id);
+      if (vid) {
+        vid.muted = true;
+        vid.playsInline = true;
+        if (vid.readyState === 0) {
+          try { vid.load(); } catch (e) {}
+        }
+        // Pre-roll first frame on mobile to initialize hardware MediaCodec
+        const p = vid.play();
+        if (p !== undefined) {
+          p.then(() => {
+            vid.pause();
+            vid.currentTime = 0;
+            vid.muted = false;
+          }).catch(() => {
+            vid.currentTime = 0;
+            vid.muted = false;
+          });
+        }
+      }
+    });
+  }
+
   // --- CINEMATIC VIDEO & 3D JUMPSCARE SEQUENCE ---
   triggerJumpscare(entityName, reason = 'ANOMALY INFILTRATION') {
     if (this.gameOver) return;
     this.gameOver = true;
     this.jumpscareActive = true;
     this.jumpscareTimer = 0;
+    this._jumpscareVideoPlaying = false;
     this.clearAngelDoorRetreatTimer();
     this.clearSaintDoorRetreatTimer();
     this.clearMournerVentRetreatTimer();
@@ -3123,16 +3168,17 @@ class GameEngine {
     const activeVideo = videoElements[entityName] || videoElements.haloedSaint;
     const videoContainer = document.getElementById('jumpscare-video-container');
 
-    // Hide and pause any other jumpscare videos
+    // Deactivate and pause any other jumpscare videos
     Object.values(videoElements).forEach(v => {
-      if (v) {
+      if (v && v !== activeVideo) {
+        v.classList.remove('active');
         v.classList.add('hidden');
         v.pause();
       }
     });
 
     let isFinished = false;
-        const finishJumpscare = () => {
+    const finishJumpscare = () => {
       if (isFinished) return;
       isFinished = true;
 
@@ -3141,14 +3187,19 @@ class GameEngine {
 
       // 2. Hide jumpscare video container smoothly right after glitch is active
       requestAnimationFrame(() => {
-        if (videoContainer) videoContainer.classList.add('hidden');
+        if (videoContainer) {
+          videoContainer.classList.remove('active');
+          videoContainer.classList.add('hidden');
+        }
         if (activeVideo) {
           activeVideo.pause();
           activeVideo.currentTime = 0;
           activeVideo.onended = null;
           activeVideo.onerror = null;
+          activeVideo.classList.remove('active');
           activeVideo.classList.add('hidden');
         }
+        this._jumpscareVideoPlaying = false;
         this.jumpscareActive = false;
         const flash = document.getElementById('jumpscare-flash');
         if (flash) flash.classList.remove('active');
@@ -3156,22 +3207,42 @@ class GameEngine {
     };
 
     if (videoContainer && activeVideo) {
+      // Reveal active video element immediately
       activeVideo.classList.remove('hidden');
-      activeVideo.currentTime = 0;
+
+      // Only reset currentTime if needed, avoiding async seek pipeline stall
+      if (activeVideo.currentTime > 0.05) {
+        activeVideo.currentTime = 0;
+      }
 
       // Adjust volume to match SFX & Master sliders
       const sfxVol = (window.Sound && window.Sound.sfxVolume !== undefined) ? window.Sound.sfxVolume : 0.8;
       const masterVol = (window.Sound && window.Sound.masterVolume !== undefined) ? window.Sound.masterVolume : 0.8;
       activeVideo.volume = Math.max(0, Math.min(1, sfxVol * masterVol));
+      activeVideo.muted = false;
 
+      // Reveal container and video immediately
       videoContainer.classList.remove('hidden');
+      videoContainer.classList.add('active');
+      activeVideo.classList.add('active');
+
+      const onVideoStarted = () => {
+        this._jumpscareVideoPlaying = true;
+      };
+
+      if (activeVideo.readyState >= 2) {
+        onVideoStarted();
+      } else {
+        activeVideo.addEventListener('playing', onVideoStarted, { once: true });
+        activeVideo.addEventListener('timeupdate', onVideoStarted, { once: true });
+      }
 
       const playPromise = activeVideo.play();
       if (playPromise !== undefined) {
-        playPromise.catch(err => {
+        playPromise.then(onVideoStarted).catch(err => {
           console.warn('Video play interrupted, fallback to muted or timer:', err);
           activeVideo.muted = true;
-          activeVideo.play().catch(() => {});
+          activeVideo.play().then(onVideoStarted).catch(() => {});
         });
       }
 
@@ -3183,13 +3254,12 @@ class GameEngine {
         finishJumpscare();
       };
 
-      // Fallback timer matching video duration (~3.2s)
+      // Fallback timer matching video duration (~3.4s)
       setTimeout(finishJumpscare, 3400);
     } else {
       setTimeout(finishJumpscare, 1300);
     }
   }
-
   // --- RENDER & ANIMATION LOOP ---
   renderLoop() {
     requestAnimationFrame(() => this.renderLoop());
@@ -3358,7 +3428,11 @@ class GameEngine {
 
     // PERFORMANCE: When CCTV monitor is active, it completely covers the viewport.
     // Skip 3D scene rendering entirely to free up 100% GPU cycles during camera monitoring!
-    if (!this.isCCTVOpen && !this.jumpscareActive) {
+    // PERFORMANCE & CINEMATIC CONTINUITY:
+    // When CCTV monitor is active, it completely covers the viewport, skip 3D rendering.
+    // During jumpscare: KEEP RENDERING the 3D scene (with violent camera shake & lunging statue)
+    // until the video is actively playing frames! This guarantees ZERO visual stutter or black gap!
+    if (!this.isCCTVOpen && (!this.jumpscareActive || !this._jumpscareVideoPlaying)) {
       try {
         this.renderer.render(this.scene, this.camera);
       } catch (renderErr) {
