@@ -1982,11 +1982,24 @@ body::-webkit-scrollbar,
   position: absolute;
   inset: 0;
   z-index: 100;
-  background: #030406;
+  background: #060910;
   overflow: hidden;
   display: flex;
   user-select: none;
   transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+
+/* Atmospheric Full Church Sanctuary Background Scene in Lobby */
+.menu-church-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('../assets/cctv/church_cam_normal.png');
+  background-size: cover;
+  background-position: center 38%;
+  filter: contrast(1.15) brightness(0.78) saturate(0.85);
+  opacity: 0.95;
+  pointer-events: none;
 }
 
 #fnaf-main-menu.hidden {
@@ -2030,7 +2043,7 @@ body::-webkit-scrollbar,
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: radial-gradient(circle at 40% 50%, transparent 20%, rgba(2, 3, 5, 0.8) 70%, #000000 100%);
+  background: linear-gradient(90deg, rgba(3, 5, 9, 0.85) 0%, rgba(3, 5, 9, 0.50) 45%, rgba(0, 0, 0, 0.20) 100%);
 }
 
 /* Spasmodic Glitching Statue Silhouette in the shadows (Right) */
@@ -2044,7 +2057,7 @@ body::-webkit-scrollbar,
   background-image: url('../assets/cctv/church_cam_normal.png');
   background-size: cover;
   background-position: 85% 35%;
-  filter: contrast(1.8) brightness(0.4) grayscale(0.85) drop-shadow(-15px 0 35px rgba(0,0,0,0.9));
+  filter: contrast(1.3) brightness(0.75) saturate(0.85) drop-shadow(-15px 0 35px rgba(0,0,0,0.85));
   transform-origin: bottom center;
   transition: filter 0.05s ease, transform 0.05s ease;
   pointer-events: none;
@@ -5265,137 +5278,199 @@ kbd.key-badge {
     display: none !important;
   }
 
-  /* ================= 6. LOBBY / MAIN TITLE MENU MOBILE OPTIMIZATION ================= */
+  /* ================= 6. LOBBY / MAIN TITLE MENU MOBILE OPTIMIZATION (AUTHENTIC FNAF MOBILE APP) ================= */
+  /* Full atmospheric, lighter church sanctuary background in lobby */
+  .menu-church-bg {
+    background-position: center 36% !important;
+    filter: contrast(1.18) brightness(0.82) saturate(0.9) !important;
+    opacity: 0.96 !important;
+  }
+
+  .menu-vignette {
+    background: linear-gradient(90deg, rgba(3, 5, 9, 0.85) 0%, rgba(3, 5, 9, 0.45) 45%, rgba(0, 0, 0, 0.15) 100%) !important;
+  }
+
+  /* FNAF Mobile App Style Single-Column Left Container */
   .fnaf-menu-container {
     position: relative !important;
     z-index: 10 !important;
-    padding: 12px 18px 8px 22px !important;
-    width: min(530px, 64vw) !important;
-    max-width: 64vw !important;
+    padding: 12px 0 10px 22px !important;
+    width: min(320px, 48vw) !important;
+    max-width: 48vw !important;
     height: 100% !important;
     max-height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
-    gap: 6px !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    gap: 4px !important;
+    overflow: visible !important;
     box-sizing: border-box !important;
   }
 
   .fnaf-title-block {
-    margin: 0 0 4px 0 !important;
+    margin: 0 0 6px 0 !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
   }
 
-  /* Compact 2-line title: FIVE NIGHTS / AT THE CHURCH */
+  /* Classic FNAF Title: Compact vertical stacked words */
   .fnaf-game-title {
-    display: grid !important;
-    grid-template-columns: auto auto !important;
-    column-gap: 8px !important;
-    row-gap: 1px !important;
-    justify-content: start !important;
-    align-items: baseline !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0px !important;
     margin: 0 !important;
-    font-size: 25px !important;
-    line-height: 0.98 !important;
-    letter-spacing: 1.8px !important;
-    text-shadow: 2px 2px 0px #000, 3px 3px 12px rgba(0, 0, 0, 0.9) !important;
+    font-size: 21px !important;
+    line-height: 0.92 !important;
+    letter-spacing: 1.5px !important;
+    text-shadow: 2px 2px 0px #000, 3px 3px 10px rgba(0, 0, 0, 0.95) !important;
   }
 
   .title-word {
-    display: inline-block !important;
+    display: block !important;
     margin: 0 !important;
   }
 
   .title-word.church-accent {
     color: #dc2626 !important;
-    text-shadow: 0 0 20px rgba(220, 38, 38, 0.8), 2px 2px 0 #000 !important;
+    text-shadow: 0 0 16px rgba(220, 38, 38, 0.85), 2px 2px 0 #000 !important;
   }
 
   .fnaf-sub-title {
     font-family: var(--font-mono) !important;
-    font-size: 7.5px !important;
-    letter-spacing: 1.2px !important;
+    font-size: 7px !important;
+    letter-spacing: 1px !important;
     color: #94a3b8 !important;
-    margin-top: 4px !important;
-    display: block !important;
+    margin-top: 3px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    max-width: 480px !important;
+    max-width: 280px !important;
   }
 
   .menu-stars-row {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    margin-top: 4px !important;
+    gap: 4px !important;
+    margin-top: 3px !important;
   }
 
   .star-icon {
-    font-size: 14px !important;
+    font-size: 13px !important;
     color: #fbbf24 !important;
-    text-shadow: 0 0 10px rgba(251, 191, 36, 0.8) !important;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.8) !important;
   }
 
-  /* Ergonomic 2-Column Button Grid for Landscape Phones */
+  /* Authentic FNAF Mobile Vertical Button Stack (Single Column, Left-Aligned) */
   .fnaf-menu-options {
-    display: grid !important;
-    grid-template-columns: minmax(170px, 1fr) minmax(170px, 1fr) !important;
-    gap: 6px 10px !important;
-    margin: 6px 0 2px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    margin: 4px 0 2px 0 !important;
     width: 100% !important;
-    box-sizing: border-box !important;
     overflow: visible !important;
   }
 
-  /* Grid mapping: Column 1 = Campaign & Options, Column 2 = Challenges & Nights */
-  #btn-menu-continue {
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-    border-left-color: #38bdf8 !important;
+  /* Sleek, Minimalist FNAF Mobile Text Items (NO bulky grey card boxes!) */
+  .fnaf-menu-item {
+    position: relative !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 3px 0 !important;
+    min-height: 26px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    touch-action: manipulation !important;
+    cursor: pointer !important;
+    transition: transform 0.12s ease !important;
+    width: fit-content !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
 
-  #btn-menu-newgame {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
-    border-left-color: #cbd5e1 !important;
+  .fnaf-menu-item:active {
+    transform: translateX(5px) scale(1.02) !important;
+    background: transparent !important;
   }
 
-  #btn-menu-options {
-    grid-column: 1 !important;
-    grid-row: 3 !important;
-    border-left-color: #0ea5e9 !important;
+  .fnaf-arrow {
+    font-family: var(--font-mono) !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #64748b !important;
+    letter-spacing: -1.5px !important;
+    flex-shrink: 0 !important;
+    transition: color 0.12s ease, transform 0.12s ease !important;
   }
 
-  #btn-menu-night6 {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    border-left-color: #ef4444 !important;
+  .fnaf-menu-item:active .fnaf-arrow,
+  .fnaf-menu-item:hover .fnaf-arrow {
+    color: #dc2626 !important;
+    transform: translateX(2px) !important;
   }
 
-  #btn-menu-customnight {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    border-left-color: #f59e0b !important;
+  .fnaf-text {
+    font-family: var(--font-gothic), Impact, 'Arial Black', sans-serif !important;
+    font-size: 14.5px !important;
+    letter-spacing: 1.4px !important;
+    color: #cbd5e1 !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+    transition: color 0.12s ease, text-shadow 0.12s ease !important;
   }
 
-  #btn-menu-nightselect {
-    grid-column: 2 !important;
-    grid-row: 3 !important;
-    border-left-color: #a855f7 !important;
+  .fnaf-menu-item:active .fnaf-text,
+  .fnaf-menu-item:hover .fnaf-text {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.75) !important;
   }
 
-  /* Expandable Night Picker Sub-Menu beneath grid */
-  #menu-night-picker {
-    grid-column: 1 / -1 !important;
-    grid-row: 4 !important;
-    margin-top: 3px !important;
+  /* Compact inline status pill badges next to menu options */
+  .fnaf-night-badge {
+    font-family: var(--font-mono) !important;
+    font-size: 7.5px !important;
+    font-weight: 700 !important;
+    color: #38bdf8 !important;
+    background: rgba(56, 189, 248, 0.14) !important;
+    border: 1px solid rgba(56, 189, 248, 0.35) !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
+    letter-spacing: 0.6px !important;
+    margin-left: 6px !important;
+  }
+
+  .fnaf-badge-red {
+    font-family: var(--font-mono) !important;
+    font-size: 7.5px !important;
+    font-weight: 800 !important;
+    color: #f87171 !important;
+    background: rgba(239, 68, 68, 0.16) !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
+    letter-spacing: 0.6px !important;
+    margin-left: 6px !important;
+  }
+
+  .fnaf-badge-gold {
+    font-family: var(--font-mono) !important;
+    font-size: 7.5px !important;
+    font-weight: 800 !important;
+    color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.16) !important;
+    border: 1px solid rgba(251, 191, 36, 0.4) !important;
+    padding: 1px 5px !important;
+    border-radius: 3px !important;
+    letter-spacing: 0.6px !important;
+    margin-left: 6px !important;
+  }
+
+  .fnaf-settings-badge {
+    display: none !important; /* Hide long badge to keep options button sleek */
   }
 
   /* Hide physical desktop F11 key shortcut button on mobile */
@@ -5403,129 +5478,17 @@ kbd.key-badge {
     display: none !important;
   }
 
-  /* Tactile, touch-friendly menu item cards */
-  .fnaf-menu-item {
-    position: relative !important;
-    background: rgba(15, 23, 42, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-left: 3.5px solid #64748b !important;
-    border-radius: 6px !important;
-    padding: 6px 10px !important;
-    min-height: 38px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 7px !important;
-    touch-action: manipulation !important;
-    cursor: pointer !important;
-    transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    user-select: none !important;
-    -webkit-user-select: none !important;
-  }
-
-  .fnaf-menu-item:active {
-    background: rgba(30, 41, 59, 0.9) !important;
-    transform: scale(0.97) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-  }
-
-  .fnaf-arrow {
-    font-family: var(--font-mono) !important;
-    font-size: 13px !important;
-    font-weight: 900 !important;
-    color: #94a3b8 !important;
-    letter-spacing: -1.5px !important;
-    flex-shrink: 0 !important;
-    transition: transform 0.15s ease !important;
-  }
-
-  .fnaf-menu-item:active .fnaf-arrow {
-    transform: translateX(2px) !important;
-    color: #dc2626 !important;
-  }
-
-  .fnaf-text {
-    font-family: var(--font-gothic), Impact, 'Arial Black', sans-serif !important;
-    font-size: 13.5px !important;
-    letter-spacing: 1.2px !important;
-    color: #f1f5f9 !important;
-    text-transform: uppercase !important;
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
-  }
-
-  .fnaf-night-badge {
-    font-family: var(--font-mono) !important;
-    font-size: 8px !important;
-    font-weight: 700 !important;
-    color: #38bdf8 !important;
-    background: rgba(56, 189, 248, 0.15) !important;
-    border: 1px solid rgba(56, 189, 248, 0.4) !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    letter-spacing: 0.8px !important;
-    margin-left: auto !important;
-    white-space: nowrap !important;
-  }
-
-  .fnaf-badge-red {
-    font-family: var(--font-mono) !important;
-    font-size: 8px !important;
-    font-weight: 800 !important;
-    color: #ef4444 !important;
-    background: rgba(239, 68, 68, 0.18) !important;
-    border: 1px solid rgba(239, 68, 68, 0.4) !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    letter-spacing: 0.8px !important;
-    margin-left: auto !important;
-    white-space: nowrap !important;
-  }
-
-  .fnaf-badge-gold {
-    font-family: var(--font-mono) !important;
-    font-size: 8px !important;
-    font-weight: 800 !important;
-    color: #fbbf24 !important;
-    background: rgba(251, 191, 36, 0.18) !important;
-    border: 1px solid rgba(251, 191, 36, 0.4) !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    letter-spacing: 0.8px !important;
-    margin-left: auto !important;
-    white-space: nowrap !important;
-  }
-
-  .fnaf-settings-badge {
-    font-family: var(--font-mono) !important;
-    font-size: 7.5px !important;
-    font-weight: 800 !important;
-    color: #38bdf8 !important;
-    background: rgba(56, 189, 248, 0.15) !important;
-    border: 1px solid rgba(56, 189, 248, 0.4) !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    letter-spacing: 0.5px !important;
-    margin-left: auto !important;
-    white-space: nowrap !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-  }
-
-  /* Night Selection Chips Grid */
+  /* Night Selection Chips Sub-Menu (Compact Row) */
   .fnaf-night-picker {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 4px !important;
-    padding: 5px 8px !important;
-    background: rgba(15, 23, 42, 0.8) !important;
-    border: 1px solid rgba(168, 85, 247, 0.35) !important;
-    border-radius: 6px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+    gap: 3px !important;
+    padding: 4px 6px !important;
+    background: rgba(15, 23, 42, 0.85) !important;
+    border: 1px solid rgba(168, 85, 247, 0.3) !important;
+    border-radius: 4px !important;
+    width: fit-content !important;
+    margin-top: 2px !important;
   }
 
   .fnaf-night-picker.hidden {
@@ -5533,30 +5496,27 @@ kbd.key-badge {
   }
 
   .night-chip {
-    flex: 1 1 calc(33.333% - 4px) !important;
-    padding: 5px 6px !important;
-    font-size: 8.5px !important;
+    padding: 3px 6px !important;
+    font-size: 8px !important;
     font-weight: 700 !important;
-    min-height: 28px !important;
-    border-radius: 4px !important;
+    min-height: 22px !important;
+    border-radius: 3px !important;
     touch-action: manipulation !important;
     text-align: center !important;
-    white-space: nowrap !important;
-    box-sizing: border-box !important;
   }
 
-  /* Twitching Freddy stone statue silhouette on right side */
+  /* Twitching Freddy stone statue silhouette on right side (Atmospheric & Visible) */
   .menu-statue-layer {
     position: absolute !important;
-    right: 2% !important;
+    right: 4% !important;
     bottom: 0 !important;
-    width: min(380px, 45vw) !important;
+    width: min(360px, 42vw) !important;
     height: 94% !important;
     background-position: 80% 30% !important;
-    opacity: 0.6 !important;
+    opacity: 0.88 !important;
     pointer-events: none !important;
     z-index: 1 !important;
-    filter: contrast(1.7) brightness(0.45) grayscale(0.85) drop-shadow(-10px 0 25px rgba(0,0,0,0.95)) !important;
+    filter: contrast(1.35) brightness(0.74) saturate(0.85) drop-shadow(-10px 0 20px rgba(0,0,0,0.85)) !important;
   }
 
   .statue-eye {
@@ -5575,12 +5535,12 @@ kbd.key-badge {
     left: 52% !important;
   }
 
-  /* Clean, single-line copyright info at bottom */
+  /* Clean single-line footer */
   .fnaf-menu-footer {
     display: block !important;
-    font-size: 7.5px !important;
+    font-size: 7px !important;
     color: #475569 !important;
-    letter-spacing: 0.8px !important;
+    letter-spacing: 0.6px !important;
     margin-top: 4px !important;
     opacity: 0.8 !important;
   }
@@ -5588,7 +5548,6 @@ kbd.key-badge {
   .fnaf-menu-footer div:nth-child(2) {
     display: none !important;
   }
-
   /* Night Transition Card on Mobile */
   .night-card-box {
     padding: 16px 24px !important;
@@ -5722,60 +5681,212 @@ kbd.key-badge {
     overflow-y: auto !important;
   }
 
+  /* Options Modal: Perfectly fitted to mobile landscape with tidy, touch-friendly controls */
   .options-box,
   .settings-box {
-    width: 96vw !important;
-    max-width: 96vw !important;
-    height: 94vh !important;
-    max-height: 94vh !important;
-    padding: 10px 14px 8px 14px !important;
+    width: min(720px, 94vw) !important;
+    max-width: 94vw !important;
+    height: min(345px, 95dvh) !important;
+    max-height: 95dvh !important;
+    padding: 8px 14px 6px 14px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
     touch-action: pan-y !important;
   }
 
   .options-header-top {
-    padding-bottom: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 2px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .options-seal-block {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .options-gear-icon {
+    font-size: 13px !important;
   }
 
   .options-main-title {
-    font-size: 16px !important;
-    letter-spacing: 1px !important;
+    font-size: 13px !important;
+    letter-spacing: 0.8px !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
   }
 
+  .options-doc-id {
+    display: none !important; /* Hide long parish archive subtitle on mobile */
+  }
+
+  .options-close-x {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    font-size: 18px !important;
+    line-height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border-radius: 4px !important;
+  }
+
+  /* Options Tab Navigation Bar: 4 neat, equal-width tabs across top */
+  .options-nav-tabs {
+    display: flex !important;
+    gap: 4px !important;
+    margin-top: 3px !important;
+    padding: 2px !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    border-radius: 6px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .settings-nav-tab {
+    flex: 1 1 0 !important;
+    padding: 4px 4px !important;
+    font-size: 8.5px !important;
+    font-weight: 700 !important;
+    min-height: 26px !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+    justify-content: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+    touch-action: manipulation !important;
+  }
+
+  .settings-nav-tab .tab-num {
+    font-size: 7.5px !important;
+    padding: 1px 3px !important;
+  }
+
+  /* Scrollable Content Area: smoothly constrained within viewport */
   .settings-scroll-content {
     flex: 1 1 auto !important;
     min-height: 0 !important;
-    max-height: calc(94vh - 110px) !important;
-    overflow-y: scroll !important;
+    max-height: calc(95dvh - 96px) !important;
+    overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     touch-action: pan-y !important;
     overscroll-behavior-y: contain !important;
-    padding-right: 6px !important;
+    padding-right: 4px !important;
+    margin: 4px 0 !important;
   }
 
-  .settings-tab-pane,
-  .keybinds-list {
-    touch-action: pan-y !important;
+  /* Tab 1: How to Play Instructions */
+  .manual-objective-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
   }
 
-  .keybind-row {
+  .objective-card {
     padding: 6px 8px !important;
-    gap: 8px !important;
-    touch-action: pan-y !important;
+    border-radius: 5px !important;
   }
 
-  .keybind-name {
-    font-size: 11px !important;
+  .objective-icon {
+    font-size: 13px !important;
+    margin-bottom: 2px !important;
   }
 
-  .keybind-desc {
+  .objective-text strong {
     font-size: 9px !important;
   }
 
+  .objective-text p {
+    font-size: 7.5px !important;
+    line-height: 1.25 !important;
+    margin-top: 2px !important;
+  }
+
+  .commands-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+  }
+
+  .command-card {
+    padding: 5px 8px !important;
+    gap: 6px !important;
+    border-radius: 5px !important;
+  }
+
+  .key-badge {
+    font-size: 8.5px !important;
+    padding: 2px 4px !important;
+    min-width: 16px !important;
+  }
+
+  .command-name {
+    font-size: 8.5px !important;
+  }
+
+  .command-desc {
+    font-size: 7.5px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Tab 2: Key Mapping / Touch Notice */
+  .keybinds-list {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px !important;
+  }
+
+  .keybind-row {
+    padding: 4px 8px !important;
+    border-radius: 5px !important;
+    min-height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+  }
+
+  .keybind-name {
+    font-size: 9.5px !important;
+  }
+
+  .keybind-desc {
+    display: none !important;
+  }
+
   .keybind-slot-btn {
-    min-width: 48px !important;
-    height: 28px !important;
-    font-size: 10.5px !important;
-    padding: 2px 6px !important;
+    min-width: 36px !important;
+    height: 24px !important;
+    font-size: 9px !important;
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+  }
+
+  .settings-actions-bar {
+    grid-column: 1 / -1 !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .settings-secondary-btn {
+    font-size: 9px !important;
+    padding: 4px 12px !important;
+    min-height: 26px !important;
+    border-radius: 4px !important;
   }
 
   /* 4. Victory 06:00 AM Screen Mobile Layout */
@@ -5931,110 +6042,93 @@ kbd.key-badge {
     touch-action: manipulation !important;
   }
 
-  /* 6. Audio Controls Touch Sliders & Options Polish */
+  /* Tab 3: Audio Sliders & Controls */
   .audio-controls-list {
-    gap: 8px !important;
-    padding: 4px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
   }
 
   .audio-slider-row {
-    padding: 6px 10px !important;
-    gap: 4px !important;
-    background: rgba(15, 23, 42, 0.6) !important;
-    border-radius: 6px !important;
+    padding: 5px 8px !important;
+    border-radius: 5px !important;
   }
 
   .audio-slider-title {
-    font-size: 9.5px !important;
+    font-size: 9px !important;
   }
 
   .audio-slider-val {
-    font-size: 10.5px !important;
+    font-size: 9.5px !important;
   }
 
   .settings-range {
-    height: 30px !important;
-    touch-action: manipulation !important;
-  }
-
-  .settings-range::-webkit-slider-thumb {
-    width: 22px !important;
-    height: 22px !important;
+    height: 24px !important;
   }
 
   .audio-toggle-row {
-    padding: 6px 10px !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
+    padding: 5px 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    border-radius: 5px !important;
   }
 
   .audio-toggle-label {
-    font-size: 10px !important;
-    min-height: 30px !important;
+    font-size: 9px !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
   }
 
   .settings-checkbox {
-    width: 20px !important;
-    height: 20px !important;
-    touch-action: manipulation !important;
+    width: 18px !important;
+    height: 18px !important;
   }
 
   .settings-test-audio-btn {
-    padding: 5px 10px !important;
-    font-size: 9px !important;
-    min-height: 30px !important;
+    padding: 4px 10px !important;
+    font-size: 8.5px !important;
+    min-height: 26px !important;
     border-radius: 4px !important;
-    touch-action: manipulation !important;
+    white-space: nowrap !important;
   }
 
-  /* Speed tab on mobile landscape */
+  /* Tab 4: Speed Cards (3-Column Row) */
   .speed-options-grid {
+    display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: 6px !important;
+    gap: 5px !important;
   }
 
   .speed-option-card {
-    padding: 8px !important;
-    gap: 4px !important;
+    padding: 6px 8px !important;
+    border-radius: 5px !important;
   }
 
   .speed-tag {
-    font-size: 11px !important;
+    font-size: 9px !important;
+    padding: 1px 5px !important;
   }
 
   .speed-title {
-    font-size: 9.5px !important;
+    font-size: 8.5px !important;
   }
 
   .speed-desc {
-    font-size: 8px !important;
+    font-size: 7.5px !important;
     line-height: 1.25 !important;
   }
 
-  /* Options Nav Tabs scroll & wrap on narrow screens */
-  .options-nav-tabs {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important;
-    gap: 4px !important;
-  }
-
-  .settings-nav-tab {
-    padding: 5px 8px !important;
-    font-size: 8.5px !important;
-    min-height: 30px !important;
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
-  }
-
+  /* Options Footer: Sleek, Touch-Friendly Action Buttons */
   .options-footer {
-    margin-top: 6px !important;
-    padding-top: 6px !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
+    margin-top: 4px !important;
+    padding-top: 4px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
   }
 
   .options-footer-status {
@@ -6044,6 +6138,7 @@ kbd.key-badge {
   .options-footer-actions {
     width: 100% !important;
     display: flex !important;
+    align-items: center !important;
     justify-content: space-between !important;
     gap: 8px !important;
   }
@@ -6051,16 +6146,33 @@ kbd.key-badge {
   .options-quit-btn,
   .options-save-btn {
     flex: 1 !important;
-    min-height: 36px !important;
-    font-size: 10.5px !important;
-    padding: 6px 10px !important;
+    min-height: 32px !important;
+    max-height: 34px !important;
+    font-size: 9.5px !important;
+    padding: 4px 10px !important;
+    border-radius: 5px !important;
     touch-action: manipulation !important;
+    display: inline-flex !important;
+    align-items: center !important;
     justify-content: center !important;
+    gap: 6px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px !important;
   }
 
-  .save-btn-key,
-  .options-doc-id kbd,
-  .custom-start-btn kbd {
+  .options-quit-btn {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+    color: #fca5a5 !important;
+  }
+
+  .options-save-btn {
+    background: rgba(14, 165, 233, 0.22) !important;
+    border: 1px solid #38bdf8 !important;
+    color: #e0f2fe !important;
+  }
+
+  .save-btn-key {
     display: none !important;
   }
 
