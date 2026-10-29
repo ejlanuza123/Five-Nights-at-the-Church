@@ -646,6 +646,9 @@ class GameEngine {
     const height = window.innerHeight;
 
     const isMobile = this.isMobileDevice();
+    if (isMobile) {
+      document.body.classList.add('is-mobile');
+    }
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: !isMobile, // Disable 4x MSAA on high-density mobile screens (saves ~35% bandwidth)
@@ -1157,14 +1160,16 @@ class GameEngine {
     let isTouchActive = false;
 
     window.addEventListener('touchstart', (e) => {
+      const optModal = document.getElementById('options-modal');
+      if (optModal && !optModal.classList.contains('hidden')) return;
+      const setModal = document.getElementById('settings-modal');
+      if (setModal && !setModal.classList.contains('hidden')) return;
+      const modal = document.getElementById('manual-modal');
+      if (modal && !modal.classList.contains('hidden')) return;
       if (this.isCCTVOpen || this.gameOver || this.victory) return;
       if (e.target && e.target.closest('#options-modal, #settings-modal, #manual-modal, .screen-modal, .settings-scroll-content, .keybinds-list')) {
         return;
       }
-      const modal = document.getElementById('manual-modal');
-      if (modal && !modal.classList.contains('hidden')) return;
-      const setModal = document.getElementById('settings-modal');
-      if (setModal && !setModal.classList.contains('hidden')) return;
       if (e.target.closest('#hud-overlay') || e.target.closest('.screen-modal') || e.target.closest('button')) return;
 
       if (e.touches && e.touches.length === 1) {
@@ -1175,6 +1180,8 @@ class GameEngine {
     }, { passive: true });
 
     window.addEventListener('touchmove', (e) => {
+      const optModal = document.getElementById('options-modal');
+      if (optModal && !optModal.classList.contains('hidden')) return;
       if (!isTouchActive || this.isCCTVOpen || this.gameOver || this.victory) return;
       if (e.touches && e.touches.length === 1) {
         const deltaX = e.touches[0].clientX - touchStartX;
@@ -1690,18 +1697,36 @@ class GameEngine {
 
   setupMenuStatueTwitch() {
     const statueEl = document.getElementById('menu-statue-layer');
-    if (!statueEl) return;
+    const churchBgEl = document.getElementById('menu-church-bg') || document.querySelector('.menu-church-bg');
+    if (!statueEl && !churchBgEl) return;
+
+    // Preload anomaly image for instant zero-lag glitch transition
+    const anomalyImg = new Image();
+    anomalyImg.src = 'assets/cctv/church_cam_anomaly.png';
 
     const triggerTwitch = () => {
       if (this.isRunning) return;
       const idx = Math.floor(Math.random() * 3) + 1;
       const twitchClass = `twitch-${idx}`;
-      statueEl.classList.add(twitchClass);
+      if (statueEl) {
+        statueEl.classList.add(twitchClass);
+        statueEl.classList.add('anomaly');
+      }
+      if (churchBgEl) {
+        churchBgEl.classList.add('anomaly');
+      }
       window.Sound.playCameraStatic(0.12, 0.32);
 
+      const duration = 120 + Math.random() * 140;
       setTimeout(() => {
-        statueEl.classList.remove(twitchClass);
-      }, 100 + Math.random() * 120);
+        if (statueEl) {
+          statueEl.classList.remove(twitchClass);
+          statueEl.classList.remove('anomaly');
+        }
+        if (churchBgEl) {
+          churchBgEl.classList.remove('anomaly');
+        }
+      }, duration);
 
       const nextDelay = 2200 + Math.random() * 3200;
       setTimeout(triggerTwitch, nextDelay);
@@ -1905,6 +1930,42 @@ class GameEngine {
       try { localStorage.setItem('fnaf_church_muted', e.target.checked ? '1' : '0'); } catch (e) {}
     });
 
+    // HUD & Touch Controls Opacity calibration
+    const hudSlider = document.getElementById('slider-hud-opacity');
+    const hudVal = document.getElementById('val-hud-opacity');
+    const hudPreview = document.getElementById('hud-preview-display');
+    const btnResetHud = document.getElementById('btn-reset-hud-opacity');
+
+    const updateHudDisplay = (val) => {
+      const pct = Math.round(val * 100);
+      if (hudSlider) hudSlider.value = pct;
+      if (hudVal) hudVal.textContent = `${pct}%`;
+      if (hudPreview) hudPreview.style.opacity = val.toFixed(2);
+      document.documentElement.style.setProperty('--hud-opacity', val.toFixed(2));
+    };
+
+    try {
+      const savedHud = localStorage.getItem('fnaf_church_hud_opacity');
+      if (savedHud !== null) {
+        const val = Math.max(0.2, Math.min(1.0, parseFloat(savedHud)));
+        updateHudDisplay(val);
+      } else {
+        updateHudDisplay(1.0);
+      }
+    } catch (e) {}
+
+    hudSlider?.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10) / 100;
+      updateHudDisplay(val);
+      try { localStorage.setItem('fnaf_church_hud_opacity', val.toFixed(2)); } catch (e) {}
+    });
+
+    btnResetHud?.addEventListener('click', () => {
+      window.Sound.playMenuBlip();
+      updateHudDisplay(1.0);
+      try { localStorage.setItem('fnaf_church_hud_opacity', '1.0'); } catch (e) {}
+    });
+
     btnTestSound?.addEventListener('click', () => {
       window.Sound.init();
       window.Sound.resume();
@@ -2091,7 +2152,8 @@ class GameEngine {
   }
 
   toggleSettingsModal(forceState = null) {
-    this.toggleOptionsModal(forceState, 'tab-keybinds');
+    const defaultTab = this.isMobileDevice() ? 'tab-audio' : 'tab-keybinds';
+    this.toggleOptionsModal(forceState, defaultTab);
   }
 
   returnToMainMenu() {

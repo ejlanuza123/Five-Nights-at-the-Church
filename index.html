@@ -10,6 +10,7 @@
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css?v=20261020_v53">
+  <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
 </head>
 <body>
@@ -367,7 +368,7 @@
     <!-- Classic FNAF Style Main Title Menu -->
     <div id="fnaf-main-menu">
       <!-- Atmospheric Full Church Sanctuary Background Scene -->
-      <div class="menu-church-bg"></div>
+      <div id="menu-church-bg" class="menu-church-bg"></div>
       <!-- Animated CRT TV Static Noise Canvas -->
       <canvas id="menu-static-canvas" class="menu-static-canvas"></canvas>
       <div class="menu-scanlines"></div>
@@ -486,14 +487,17 @@
             <button class="settings-nav-tab active" data-tab="tab-howtoplay">
               <span class="tab-num">1</span> HOW TO PLAY
             </button>
-            <button class="settings-nav-tab" data-tab="tab-keybinds">
+            <button class="settings-nav-tab keybinds-tab" data-tab="tab-keybinds">
               <span class="tab-num">2</span> KEY MAPPING
             </button>
             <button class="settings-nav-tab" data-tab="tab-audio">
               <span class="tab-num">3</span> AUDIO &amp; VOLUME
             </button>
+            <button class="settings-nav-tab" data-tab="tab-hud">
+              <span class="tab-num">4</span> HUD OPACITY
+            </button>
             <button class="settings-nav-tab" data-tab="tab-speed">
-              <span class="tab-num">4</span> SHIFT TIMER SPEED
+              <span class="tab-num">5</span> SHIFT SPEED
             </button>
           </div>
         </div>
@@ -883,6 +887,48 @@
                   <span>MUTE ALL AUDIO</span>
                 </label>
                 <button class="settings-test-audio-btn" id="btn-test-sound">PLAY TEST AUDIO</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: HUD & Touch Controls Opacity Calibration -->
+          <div class="settings-tab-pane" id="tab-hud">
+            <div class="settings-pane-header">
+              <h3 class="manual-section-title">
+                <span class="sec-num">HUD</span>
+                <span>TACTILE CONTROLS &amp; HUD OPACITY</span>
+              </h3>
+              <p class="settings-hint">Calibrate on-screen button transparency (Doors, Vent, Spotlight, CCTV Flip Bar, Battery Gauge) for an unobstructed view of the church sanctuary.</p>
+            </div>
+
+            <div class="hud-options-layout">
+              <div class="hud-options-controls">
+                <div class="audio-slider-row">
+                  <div class="audio-label-group">
+                    <span class="audio-slider-title">OVERLAY CONTROLS OPACITY</span>
+                    <span class="audio-slider-val" id="val-hud-opacity">100%</span>
+                  </div>
+                  <input type="range" class="settings-range" id="slider-hud-opacity" min="20" max="100" value="100">
+                </div>
+
+                <div class="settings-actions-bar" style="margin-top: 8px;">
+                  <button class="settings-secondary-btn" id="btn-reset-hud-opacity">RESET TO DEFAULT (100%)</button>
+                </div>
+              </div>
+
+              <!-- Interactive Live Mini-Preview Widget -->
+              <div class="hud-preview-box">
+                <span class="hud-preview-label">LIVE HUD PREVIEW</span>
+                <div class="hud-preview-display" id="hud-preview-display">
+                  <div class="preview-mini-btn">
+                    <span>LOCK DOOR</span>
+                    <span class="preview-mini-led"></span>
+                  </div>
+                  <div class="preview-mini-bar">
+                    <span>BATTERY: 100%</span>
+                    <div class="preview-mini-meter"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
