@@ -5047,9 +5047,9 @@ kbd.key-badge {
   }
 
   .map-cam-btn {
-    min-height: 20px !important;
-    min-width: 24px !important;
-    font-size: 8px !important;
+    min-height: 25px !important;
+    min-width: 28px !important;
+    font-size: 8.5px !important;
     padding: 2px 4px !important;
     border-radius: 3px !important;
     letter-spacing: 0.2px !important;
@@ -5755,6 +5755,314 @@ kbd.key-badge {
     font-size: 10.5px !important;
     padding: 2px 6px !important;
   }
+
+  /* 4. Victory 06:00 AM Screen Mobile Layout */
+  #victory-screen {
+    padding: 12px 18px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    box-sizing: border-box !important;
+  }
+
+  .victory-clock {
+    font-size: 42px !important;
+    letter-spacing: 2px !important;
+    margin-bottom: 0 !important;
+    text-shadow: 0 0 20px rgba(234, 179, 8, 0.8) !important;
+  }
+
+  .victory-title {
+    font-size: 20px !important;
+    letter-spacing: 2.5px !important;
+    margin: 4px 0 !important;
+  }
+
+  .victory-desc {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    margin: 4px 0 10px 0 !important;
+    max-width: 440px !important;
+    opacity: 0.9 !important;
+  }
+
+  #victory-screen .title-divider {
+    width: 60px !important;
+    margin-bottom: 8px !important;
+  }
+
+  #victory-screen .primary-btn {
+    padding: 8px 18px !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    min-height: 38px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* 5. Custom Night AI Calibration Modal Mobile Layout */
+  #custom-night-modal {
+    touch-action: pan-y !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  .custom-night-box {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    max-height: 96dvh !important;
+    height: auto !important;
+    padding: 10px 14px 10px 14px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    box-sizing: border-box !important;
+  }
+
+  .custom-entities-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin: 6px 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .custom-portrait-wrap {
+    height: 75px !important;
+    background: #000 !important;
+  }
+
+  .custom-entity-details {
+    padding: 6px 8px !important;
+  }
+
+  .custom-entity-name {
+    font-size: 10.5px !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .custom-entity-sub {
+    font-size: 7.5px !important;
+    letter-spacing: 0.2px !important;
+    margin-bottom: 4px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .ai-spinner {
+    padding: 3px 6px !important;
+    gap: 6px !important;
+    border-radius: 4px !important;
+  }
+
+  .ai-spin-btn {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 15px !important;
+    touch-action: manipulation !important;
+  }
+
+  .ai-num {
+    font-size: 15px !important;
+  }
+
+  .custom-presets-bar {
+    padding: 5px 8px !important;
+    gap: 4px !important;
+    margin-bottom: 6px !important;
+    border-radius: 5px !important;
+  }
+
+  .preset-label {
+    font-size: 8.5px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .preset-btn {
+    padding: 4px 7px !important;
+    font-size: 8px !important;
+    min-height: 26px !important;
+    border-radius: 3px !important;
+    touch-action: manipulation !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .custom-footer {
+    padding-top: 6px !important;
+    gap: 10px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .custom-footer .secondary-btn,
+  .custom-start-btn {
+    padding: 6px 14px !important;
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    min-height: 36px !important;
+    border-radius: 5px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* 6. Audio Controls Touch Sliders & Options Polish */
+  .audio-controls-list {
+    gap: 8px !important;
+    padding: 4px 0 !important;
+  }
+
+  .audio-slider-row {
+    padding: 6px 10px !important;
+    gap: 4px !important;
+    background: rgba(15, 23, 42, 0.6) !important;
+    border-radius: 6px !important;
+  }
+
+  .audio-slider-title {
+    font-size: 9.5px !important;
+  }
+
+  .audio-slider-val {
+    font-size: 10.5px !important;
+  }
+
+  .settings-range {
+    height: 30px !important;
+    touch-action: manipulation !important;
+  }
+
+  .settings-range::-webkit-slider-thumb {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .audio-toggle-row {
+    padding: 6px 10px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .audio-toggle-label {
+    font-size: 10px !important;
+    min-height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .settings-checkbox {
+    width: 20px !important;
+    height: 20px !important;
+    touch-action: manipulation !important;
+  }
+
+  .settings-test-audio-btn {
+    padding: 5px 10px !important;
+    font-size: 9px !important;
+    min-height: 30px !important;
+    border-radius: 4px !important;
+    touch-action: manipulation !important;
+  }
+
+  /* Speed tab on mobile landscape */
+  .speed-options-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .speed-option-card {
+    padding: 8px !important;
+    gap: 4px !important;
+  }
+
+  .speed-tag {
+    font-size: 11px !important;
+  }
+
+  .speed-title {
+    font-size: 9.5px !important;
+  }
+
+  .speed-desc {
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Options Nav Tabs scroll & wrap on narrow screens */
+  .options-nav-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 4px !important;
+  }
+
+  .settings-nav-tab {
+    padding: 5px 8px !important;
+    font-size: 8.5px !important;
+    min-height: 30px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .options-footer {
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .options-footer-status {
+    display: none !important;
+  }
+
+  .options-footer-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  .options-quit-btn,
+  .options-save-btn {
+    flex: 1 !important;
+    min-height: 36px !important;
+    font-size: 10.5px !important;
+    padding: 6px 10px !important;
+    touch-action: manipulation !important;
+    justify-content: center !important;
+  }
+
+  .save-btn-key,
+  .options-doc-id kbd,
+  .custom-start-btn kbd {
+    display: none !important;
+  }
+
+  /* Mobile touch notification banner for keybinds */
+  .mobile-touch-hint {
+    background: rgba(14, 165, 233, 0.12) !important;
+    border: 1px solid rgba(14, 165, 233, 0.35) !important;
+    border-left: 3px solid #0ea5e9 !important;
+    color: #bae6fd !important;
+    padding: 6px 10px !important;
+    border-radius: 5px !important;
+    font-size: 9.5px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 8px !important;
+    font-family: var(--font-mono) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .touch-hint-icon {
+    font-size: 15px !important;
+    flex-shrink: 0 !important;
+  }
 }
 
 /* Jumpscare Video Hardware Plane Promotion */
@@ -5767,4 +6075,9 @@ kbd.key-badge {
 .jumpscare-video-el {
   transform: translateZ(0);
   will-change: transform;
+}
+
+/* Mobile Touch Notice on Desktop (hidden by default) */
+.mobile-touch-hint {
+  display: none;
 }
