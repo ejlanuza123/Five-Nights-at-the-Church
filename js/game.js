@@ -791,6 +791,8 @@ class GameEngine {
 
     // If player is currently viewing this camera on CCTV, immediately trigger violent static burst & error!
     if (this.isCCTVOpen && this.activeCameraId === camId) {
+      const overlay = document.getElementById('cctv-overlay');
+      if (overlay) overlay.classList.add('cam-glitching');
       window.Sound.playCameraErrorStatic(duration, 0.45);
       this.updateCCTVFeed();
     }
@@ -824,6 +826,8 @@ class GameEngine {
 
   onCameraErrorResolved(camId) {
     this.cctvLossOfSignal = false;
+    const overlay = document.getElementById('cctv-overlay');
+    if (overlay) overlay.classList.remove('cam-glitching');
     if (!this.isCCTVOpen || this.activeCameraId !== camId) return;
     const errorScreen = document.getElementById('cctv-error-screen');
     const anomalyBurst = document.getElementById('cctv-anomaly-burst');
@@ -1303,6 +1307,12 @@ class GameEngine {
     // CCTV Trigger Bar & Close Button
     document.getElementById('cctv-flip-bar')?.addEventListener('click', () => this.toggleCCTV());
     document.getElementById('cctv-flip-down-btn')?.addEventListener('click', () => this.toggleCCTV());
+    // On touch & mobile: tapping CCTV monitor during static/glitch immediately flips feed down
+    document.getElementById('cctv-overlay')?.addEventListener('click', (e) => {
+      if (this.isCCTVOpen && (this.cctvLossOfSignal || document.getElementById('cctv-overlay')?.classList.contains('cam-glitching'))) {
+        this.toggleCCTV();
+      }
+    });
 
     // CCTV Minimap camera buttons
     for (let c = 1; c <= 5; c++) {
@@ -1698,6 +1708,7 @@ class GameEngine {
   setupMenuStatueTwitch() {
     const statueEl = document.getElementById('menu-statue-layer');
     const churchBgEl = document.getElementById('menu-church-bg') || document.querySelector('.menu-church-bg');
+    const menuEl = document.getElementById('fnaf-main-menu');
     if (!statueEl && !churchBgEl) return;
 
     // Preload anomaly image for instant zero-lag glitch transition
@@ -1708,6 +1719,7 @@ class GameEngine {
       if (this.isRunning) return;
       const idx = Math.floor(Math.random() * 3) + 1;
       const twitchClass = `twitch-${idx}`;
+      if (menuEl) menuEl.classList.add('glitching');
       if (statueEl) {
         statueEl.classList.add(twitchClass);
         statueEl.classList.add('anomaly');
@@ -1715,9 +1727,9 @@ class GameEngine {
       if (churchBgEl) {
         churchBgEl.classList.add('anomaly');
       }
-      window.Sound.playCameraStatic(0.12, 0.32);
+      window.Sound.playCameraStatic(0.16, 0.38);
 
-      const duration = 120 + Math.random() * 140;
+      const duration = 140 + Math.random() * 150;
       setTimeout(() => {
         if (statueEl) {
           statueEl.classList.remove(twitchClass);
@@ -1726,7 +1738,32 @@ class GameEngine {
         if (churchBgEl) {
           churchBgEl.classList.remove('anomaly');
         }
+        if (menuEl) {
+          menuEl.classList.remove('glitching');
+        }
       }, duration);
+
+      // 35% chance of rapid follow-up shudder (FNAF title screen double-glitch)
+      if (Math.random() < 0.35) {
+        setTimeout(() => {
+          if (this.isRunning) return;
+          if (menuEl) menuEl.classList.add('glitching');
+          if (churchBgEl) churchBgEl.classList.add('anomaly');
+          if (statueEl) {
+            statueEl.classList.add('anomaly');
+            statueEl.classList.add('twitch-2');
+          }
+          window.Sound.playCameraStatic(0.09, 0.32);
+          setTimeout(() => {
+            if (churchBgEl) churchBgEl.classList.remove('anomaly');
+            if (statueEl) {
+              statueEl.classList.remove('anomaly');
+              statueEl.classList.remove('twitch-2');
+            }
+            if (menuEl) menuEl.classList.remove('glitching');
+          }, 85);
+        }, duration + 65);
+      }
 
       const nextDelay = 2200 + Math.random() * 3200;
       setTimeout(triggerTwitch, nextDelay);
@@ -2549,15 +2586,21 @@ class GameEngine {
     const overlay = document.getElementById('cctv-overlay');
     if (overlay) {
       overlay.classList.toggle('active', this.isCCTVOpen);
+      if (!this.isCCTVOpen) {
+        overlay.classList.remove('cam-glitching');
+      }
     }
 
     if (this.isCCTVOpen) {
+      document.body.classList.add('cctv-open');
       // Automatically close/turn off window spotlight when looking at cameras
       if (this.isWindowSpotOn) {
         this.toggleWindowSpot();
       }
       this.triggerStatic(0.15);
       this.switchCamera(this.activeCameraId);
+    } else {
+      document.body.classList.remove('cctv-open');
     }
   }
 
@@ -2656,6 +2699,11 @@ class GameEngine {
     const isError = (this.cameraErrorTimers && (this.cameraErrorTimers[camId] || 0) > 0);
     this.cctvLossOfSignal = isError;
 
+    const overlay = document.getElementById('cctv-overlay');
+    if (overlay) {
+      overlay.classList.toggle('cam-glitching', isError);
+    }
+
     const errorScreen = document.getElementById('cctv-error-screen');
     const anomalyBurst = document.getElementById('cctv-anomaly-burst');
     const imgEl = document.getElementById('cctv-screen-img');
@@ -2724,6 +2772,10 @@ class GameEngine {
     }
 
     const isError = (this.cameraErrorTimers && (this.cameraErrorTimers[camId] || 0) > 0);
+    const overlay = document.getElementById('cctv-overlay');
+    if (overlay) {
+      overlay.classList.toggle('cam-glitching', isError);
+    }
     if (isError) {
       // Camera is in motion error state! Play harsh glitch static!
       window.Sound.playCameraErrorStatic(this.cameraErrorTimers[camId], 0.4);
@@ -2754,9 +2806,17 @@ class GameEngine {
 
   triggerStatic(duration = 0.15) {
     this.cctvLossOfSignal = true;
+    const overlay = document.getElementById('cctv-overlay');
+    if (overlay && this.isCCTVOpen) {
+      overlay.classList.add('cam-glitching');
+    }
     clearTimeout(this._staticLossTimeout);
     this._staticLossTimeout = setTimeout(() => {
-      this.cctvLossOfSignal = (this.cameraErrorTimers && (this.cameraErrorTimers[this.activeCameraId] || 0) > 0);
+      const isStillError = (this.cameraErrorTimers && (this.cameraErrorTimers[this.activeCameraId] || 0) > 0);
+      this.cctvLossOfSignal = isStillError;
+      if (overlay) {
+        overlay.classList.toggle('cam-glitching', isStillError);
+      }
     }, duration * 1000);
 
     const staticEl = document.getElementById('static-screen');
