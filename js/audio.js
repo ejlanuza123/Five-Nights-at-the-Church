@@ -916,52 +916,98 @@ class SoundEngine {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
 
-    // Sleek digital interface UI sound
+    // 1. Mechanical tablet pivot click & slide
     const osc = this.ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(isUp ? 440 : 880, now);
-    osc.frequency.exponentialRampToValueAtTime(isUp ? 880 : 330, now + 0.12);
+    osc.type = isUp ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(isUp ? 220 : 660, now);
+    osc.frequency.exponentialRampToValueAtTime(isUp ? 880 : 180, now + 0.16);
 
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.18, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
 
     osc.connect(gain);
     gain.connect(this.masterGain);
     osc.start(now);
-    osc.stop(now + 0.14);
+    osc.stop(now + 0.18);
 
-    this.playCameraStatic(0.12, 0.2);
+    if (isUp) {
+      // 2. High-voltage CRT flyback charge whine / monitor wake surge
+      const crtWhine = this.ctx.createOscillator();
+      crtWhine.type = 'sawtooth';
+      crtWhine.frequency.setValueAtTime(3200, now);
+      crtWhine.frequency.exponentialRampToValueAtTime(14000, now + 0.28);
+      const crtGain = this.ctx.createGain();
+      crtGain.gain.setValueAtTime(0.06, now);
+      crtGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      crtWhine.connect(crtGain);
+      crtGain.connect(this.masterGain);
+      crtWhine.start(now);
+      crtWhine.stop(now + 0.32);
+    }
   }
 
-  playCameraStatic(duration = 0.15, volume = 0.25) {
+  playCameraStatic(duration = 0.25, volume = 0.3) {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
 
-    // Digital packet loss noise burst
-    const bufferSize = this.ctx.sampleRate * duration;
+    // Authentic full-spectrum analog TV / CRT video noise
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
+
+    // Generate textured RF thermal static + electrical video crackles
+    let b0 = 0, b1 = 0, b2 = 0;
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.7;
+      const white = Math.random() * 2 - 1;
+      // Pink/brown filtered thermal noise algorithm for authentic analog TV hiss
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      const pink = b0 + b1 + b2 + white * 0.45;
+      // Random analog sync pops / scanline dropouts
+      const crackle = Math.random() < 0.004 ? (Math.random() * 2 - 1) * 1.5 : 0;
+      data[i] = (pink * 0.4 + crackle) * 0.7;
     }
 
     const noise = this.ctx.createBufferSource();
     noise.buffer = buffer;
 
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1600, now);
-    filter.Q.setValueAtTime(1.8, now);
+    // Dual-stage filtering for authentic CCTV CRT bandwidth:
+    const hpFilter = this.ctx.createBiquadFilter();
+    hpFilter.type = 'highpass';
+    hpFilter.frequency.setValueAtTime(180, now);
 
+    const lpFilter = this.ctx.createBiquadFilter();
+    lpFilter.type = 'lowpass';
+    lpFilter.frequency.setValueAtTime(6500, now);
+
+    // 60Hz CRT Mains AC Hum (cathode ray tube power transformer resonance)
+    const humOsc = this.ctx.createOscillator();
+    humOsc.type = 'sine';
+    humOsc.frequency.setValueAtTime(60, now);
+    const humGain = this.ctx.createGain();
+    humGain.gain.setValueAtTime(volume * 0.25, now);
+    humGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    humOsc.connect(humGain);
+    humGain.connect(this.masterGain);
+    humOsc.start(now);
+    humOsc.stop(now + duration);
+
+    // Noise envelope with rapid analog surge and smooth decay
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(volume, now);
+    gain.gain.setValueAtTime(volume * 0.8, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    noise.connect(filter);
-    filter.connect(gain);
+    noise.connect(hpFilter);
+    hpFilter.connect(lpFilter);
+    lpFilter.connect(gain);
     gain.connect(this.masterGain);
+
     noise.start(now);
+    noise.stop(now + duration);
   }
 
   playCameraBeep() {

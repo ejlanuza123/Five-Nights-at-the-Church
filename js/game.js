@@ -1309,6 +1309,10 @@ class GameEngine {
     document.getElementById('cctv-flip-down-btn')?.addEventListener('click', () => this.toggleCCTV());
     // On touch & mobile: tapping CCTV monitor during static/glitch immediately flips feed down
     document.getElementById('cctv-overlay')?.addEventListener('click', (e) => {
+      // Do not close CCTV if user is interacting with map, camera buttons, or UI controls!
+      if (e.target.closest('.cctv-bottom') || e.target.closest('.cctv-header') || e.target.closest('.cctv-flip-down') || e.target.closest('button')) {
+        return;
+      }
       if (this.isCCTVOpen && (this.cctvLossOfSignal || document.getElementById('cctv-overlay')?.classList.contains('cam-glitching'))) {
         this.toggleCCTV();
       }
@@ -2556,7 +2560,6 @@ class GameEngine {
     if (this.isBlackout || this.gameOver || this.victory) return;
     this.isCCTVOpen = !this.isCCTVOpen;
     this.vibrate(20);
-    window.Sound.playCameraFlip(this.isCCTVOpen);
 
     const overlay = document.getElementById('cctv-overlay');
     if (overlay) {
@@ -2572,9 +2575,12 @@ class GameEngine {
       if (this.isWindowSpotOn) {
         this.toggleWindowSpot();
       }
-      this.triggerStatic(0.15);
-      this.switchCamera(this.activeCameraId);
+      window.Sound.playCameraFlip(true);
+      // Authentic analog CRT video noise burst when opening CCTV tablet (380ms)
+      this.triggerStatic(0.38, true);
+      this.switchCamera(this.activeCameraId, true);
     } else {
+      window.Sound.playCameraFlip(false);
       document.body.classList.remove('cctv-open');
     }
   }
@@ -2732,11 +2738,13 @@ class GameEngine {
     }
   }
 
-  switchCamera(camId) {
+  switchCamera(camId, isInitialOpen = false) {
     if (this.isBlackout) return;
     this.activeCameraId = camId;
     this.vibrate(10);
-    window.Sound.playCameraBeep();
+    if (!isInitialOpen) {
+      window.Sound.playCameraBeep();
+    }
 
     document.querySelectorAll('.map-cam-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`cam-btn-${camId}`)?.classList.add('active');
@@ -2754,9 +2762,9 @@ class GameEngine {
     if (isError) {
       // Camera is in motion error state! Play harsh glitch static!
       window.Sound.playCameraErrorStatic(this.cameraErrorTimers[camId], 0.4);
-    } else {
-      // Standard camera switch scanline static (pure, authentic, no anomaly storm)
-      this.triggerStatic(0.12);
+    } else if (!isInitialOpen) {
+      // Standard camera switch scanline static (pure, authentic 200ms channel switch)
+      this.triggerStatic(0.20);
     }
 
     this.updateCCTVFeed();
@@ -2779,18 +2787,26 @@ class GameEngine {
     this.triggerStatic(0.12);
   }
 
-  triggerStatic(duration = 0.15) {
+  triggerStatic(duration = 0.25, isInitialOpen = false) {
     this.cctvLossOfSignal = true;
     const overlay = document.getElementById('cctv-overlay');
     if (overlay && this.isCCTVOpen) {
       overlay.classList.add('cam-glitching');
     }
+    const canvas = document.getElementById('cctv-static-canvas');
+    if (canvas) {
+      canvas.classList.add('loss-of-signal');
+    }
+
     clearTimeout(this._staticLossTimeout);
     this._staticLossTimeout = setTimeout(() => {
       const isStillError = (this.cameraErrorTimers && (this.cameraErrorTimers[this.activeCameraId] || 0) > 0);
       this.cctvLossOfSignal = isStillError;
       if (overlay) {
         overlay.classList.toggle('cam-glitching', isStillError);
+      }
+      if (canvas && !isStillError) {
+        canvas.classList.remove('loss-of-signal');
       }
     }, duration * 1000);
 
@@ -2802,7 +2818,7 @@ class GameEngine {
         staticEl.classList.remove('active');
       }, duration * 1000);
     }
-    window.Sound.playCameraStatic(duration, 0.28);
+    window.Sound.playCameraStatic(duration, isInitialOpen ? 0.38 : 0.28);
   }
 
   // --- POWER & BACKUP GENERATOR SYSTEM ---

@@ -1084,7 +1084,29 @@ body::-webkit-scrollbar,
   transition: opacity 0.08s ease, visibility 0.08s ease;
 }
 
-/* CCTV Glitch State: When camera signal is lost or glitching, hide CCTV buttons, blueprint map, and UI controls */
+/* CCTV HUD Controls, Minimap & Camera Buttons ALWAYS stay visible and interactive, even during camera glitches & errors */
+.cctv-header, .cctv-bottom, .cctv-flip-down {
+  position: relative;
+  z-index: 100 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.cctv-map-container,
+.cctv-light-btn,
+.cctv-control-box {
+  position: relative;
+  z-index: 101 !important;
+  pointer-events: auto !important;
+}
+
+.map-cam-btn {
+  position: absolute;
+  z-index: 102 !important;
+  pointer-events: auto !important;
+}
+
 #cctv-overlay.cam-glitching .cctv-bottom,
 #cctv-overlay.cam-glitching .cctv-header,
 #cctv-overlay.cam-glitching .cctv-control-box,
@@ -1099,9 +1121,9 @@ body::-webkit-scrollbar,
 #cctv-overlay:has(.cctv-error-screen:not(.hidden)) .map-cam-btn,
 #cctv-overlay:has(.cctv-error-screen:not(.hidden)) .cctv-light-btn,
 #cctv-overlay:has(.cctv-error-screen:not(.hidden)) .cctv-flip-down {
-  opacity: 0 !important;
-  pointer-events: none !important;
-  visibility: hidden !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
 }
 
 .cctv-header {
