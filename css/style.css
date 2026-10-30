@@ -1548,7 +1548,7 @@ body::-webkit-scrollbar,
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  background: #000000;
+  background: transparent;
 }
 
 #jumpscare-video-container.hidden {

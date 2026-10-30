@@ -275,14 +275,27 @@ class GameEngine {
       const vidEl = document.getElementById(item.id);
       this.jumpscareUrls[item.key] = item.src;
       if (vidEl) {
-        if (!vidEl.src || !vidEl.src.includes(item.src)) {
-          vidEl.src = item.src;
-        }
         vidEl.muted = true;
         vidEl.playsInline = true;
         vidEl.preload = 'auto';
-        try { vidEl.load(); } catch (e) {}
       }
+      // Preload MP4 as in-memory Blob URL for zero-latency instant video decoding
+      fetch(item.src)
+        .then(res => res.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          this.jumpscareUrls[item.key] = blobUrl;
+          if (vidEl) {
+            vidEl.src = blobUrl;
+            try { vidEl.load(); } catch (e) {}
+          }
+        })
+        .catch(() => {
+          if (vidEl && (!vidEl.src || !vidEl.src.includes(item.src))) {
+            vidEl.src = item.src;
+            try { vidEl.load(); } catch (e) {}
+          }
+        });
       loadedVideos++;
     });
     videoRatio = 1.0;
@@ -2576,6 +2589,19 @@ class GameEngine {
         this.toggleWindowSpot();
       }
       window.Sound.playCameraFlip(true);
+
+      // Night 6 Aggressive Vent Entity: Raising monitor while Mourner has emerged or is at unsealed vent
+      if (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) {
+        if (this.aiConfig.veiledMourner.stage === 4) {
+          this.triggerJumpscare('veiledMourner', 'THE MEMORIAL PENITENT EMERGED FROM THE HVAC DUCT');
+          return;
+        } else if (this.aiConfig.veiledMourner.stage === 3 && !this.isVentClosed) {
+          this.aiConfig.veiledMourner.stage = 4;
+          this.setMournerStage(4);
+          window.Sound.playVentClatter(1.0);
+        }
+      }
+
       // Authentic analog CRT video noise burst when opening CCTV tablet (380ms)
       this.triggerStatic(0.38, true);
       this.switchCamera(this.activeCameraId, true);
@@ -3127,6 +3153,69 @@ class GameEngine {
     const ai = this.aiConfig.veiledMourner;
     if (ai.level <= 0) return;
 
+    const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && ai.level >= 14));
+
+    // Continuous attack checks when at the vent opening (stage 3) or inside the office (stage 4)
+    if (ai.stage === 3 || ai.stage === 4) {
+      if (this.isVentClosed && ai.stage === 3) {
+        ai.attackTimer = 0;
+        if (!this._mournerVentRetreatTimer) {
+          this.startMournerVentRetreatTimer();
+        }
+      } else {
+        if (this._mournerVentRetreatTimer) {
+          this.clearMournerVentRetreatTimer();
+        }
+
+        ai.attackTimer += delta;
+
+        if (ai.stage === 3) {
+          if (!ai._ventWarningPlayed) {
+            ai._ventWarningPlayed = true;
+            window.Sound.playVentClatter(0.85);
+          }
+
+          // On Night 6, viewing CCTV while at an unsealed vent triggers immediate emergence
+          if (isNight6OrHard && this.isCCTVOpen) {
+            ai.stage = 4;
+            this.setMournerStage(4);
+            ai.attackTimer = 0;
+            ai._ventWarningPlayed = false;
+            window.Sound.playVentClatter(1.0);
+            window.Sound.playStoneGrind(0.9);
+            this.vibrate([100, 50, 150]);
+          } else {
+            // Stage 3 -> 4 exit window
+            // Night 6: 1.5 seconds!
+            // Night 4-5: 2.6 seconds
+            // Earlier: 3.8 seconds
+            const exitVentThreshold = isNight6OrHard ? 1.5 : (this.currentNight >= 4 ? 2.6 : 3.8);
+            if (ai.attackTimer >= exitVentThreshold) {
+              ai.stage = 4;
+              this.setMournerStage(4);
+              ai.attackTimer = 0;
+              ai._ventWarningPlayed = false;
+              window.Sound.playVentClatter(1.0);
+              window.Sound.playStoneGrind(0.9);
+              this.vibrate([100, 50, 150]);
+            }
+          }
+        } else if (ai.stage === 4) {
+          // She is OUT of the vent and inside the office!
+          // Night 6: jumpscares aggressively in 0.35s (or immediately if CCTV is open)!
+          const attackThreshold = isNight6OrHard ? 0.35 : 0.8;
+          if (ai.attackTimer >= attackThreshold || (isNight6OrHard && this.isCCTVOpen)) {
+            this.triggerJumpscare('veiledMourner', 'THE MEMORIAL PENITENT EMERGED FROM THE HVAC DUCT');
+            return;
+          }
+        }
+      }
+      return; // Continuous delta timing handles attack state
+    } else {
+      ai.attackTimer = 0;
+      ai._ventWarningPlayed = false;
+    }
+
     ai.timer += delta;
     if (ai.timer >= 4.5) {
       ai.timer = 0;
@@ -3180,19 +3269,6 @@ class GameEngine {
           this.setMournerStage(nextStage);
           window.Sound.playStoneGrind(0.6);
           window.Sound.playVentClatter(0.8 + nextStage * 0.05); // 3D stereo vent scraping clatter panned +0.88!
-        } else if (ai.stage === 3) {
-          if (this.isVentClosed) {
-            ai.attackTimer = 0;
-            if (!this._mournerVentRetreatTimer) {
-              this.startMournerVentRetreatTimer();
-            }
-          } else {
-            window.Sound.playVentClatter(0.75); // Subtle acoustic warning at vent opening
-            ai.attackTimer += 1.5;
-            if (ai.attackTimer >= 4.0) {
-              this.triggerJumpscare('veiledMourner', 'THE MEMORIAL PENITENT CRAWLED THROUGH THE UNSEALED HVAC DUCT');
-            }
-          }
         }
       }
     }
@@ -3217,10 +3293,10 @@ class GameEngine {
           p.then(() => {
             vid.pause();
             vid.currentTime = 0;
-            vid.muted = false;
+            vid.muted = true;
           }).catch(() => {
             vid.currentTime = 0;
-            vid.muted = false;
+            vid.muted = true;
           });
         }
       }
@@ -3303,6 +3379,7 @@ class GameEngine {
         if (videoContainer) {
           videoContainer.classList.remove('active');
           videoContainer.classList.add('hidden');
+          videoContainer.style.backgroundColor = '';
         }
         if (activeVideo) {
           activeVideo.pause();
@@ -3323,39 +3400,32 @@ class GameEngine {
       // Reveal active video element immediately
       activeVideo.classList.remove('hidden');
 
-      // Only reset currentTime if needed, avoiding async seek pipeline stall
-      if (activeVideo.currentTime > 0.05) {
-        activeVideo.currentTime = 0;
-      }
+      // Keep muted: Autoplay policies NEVER reject muted video playback.
+      // Audio is synthesized in real-time with zero latency by window.Sound.playJumpscare()
+      activeVideo.muted = true;
+      activeVideo.playsInline = true;
 
-      // Adjust volume to match SFX & Master sliders
-      const sfxVol = (window.Sound && window.Sound.sfxVolume !== undefined) ? window.Sound.sfxVolume : 0.8;
-      const masterVol = (window.Sound && window.Sound.masterVolume !== undefined) ? window.Sound.masterVolume : 0.8;
-      activeVideo.volume = Math.max(0, Math.min(1, sfxVol * masterVol));
-      activeVideo.muted = false;
-
-      // Reveal container and video immediately
+      // Reveal container and video element
       videoContainer.classList.remove('hidden');
       videoContainer.classList.add('active');
       activeVideo.classList.add('active');
 
       const onVideoStarted = () => {
-        this._jumpscareVideoPlaying = true;
+        if (!this._jumpscareVideoPlaying) {
+          this._jumpscareVideoPlaying = true;
+          if (videoContainer) videoContainer.style.backgroundColor = '#000000';
+        }
       };
 
-      if (activeVideo.readyState >= 2) {
-        onVideoStarted();
-      } else {
-        activeVideo.addEventListener('playing', onVideoStarted, { once: true });
-        activeVideo.addEventListener('timeupdate', onVideoStarted, { once: true });
-      }
+      // Listen for actual frame presentation (avoid pausing ThreeJS prematurely)
+      activeVideo.addEventListener('playing', onVideoStarted, { once: true });
+      activeVideo.addEventListener('timeupdate', onVideoStarted, { once: true });
 
       const playPromise = activeVideo.play();
       if (playPromise !== undefined) {
-        playPromise.then(onVideoStarted).catch(err => {
+        playPromise.catch(err => {
           console.warn('Video play interrupted, fallback to muted or timer:', err);
-          activeVideo.muted = true;
-          activeVideo.play().then(onVideoStarted).catch(() => {});
+          onVideoStarted();
         });
       }
 
