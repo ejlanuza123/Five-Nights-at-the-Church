@@ -1706,10 +1706,9 @@ class GameEngine {
   }
 
   setupMenuStatueTwitch() {
-    const statueEl = document.getElementById('menu-statue-layer');
     const churchBgEl = document.getElementById('menu-church-bg') || document.querySelector('.menu-church-bg');
     const menuEl = document.getElementById('fnaf-main-menu');
-    if (!statueEl && !churchBgEl) return;
+    if (!churchBgEl && !menuEl) return;
 
     // Preload anomaly image for instant zero-lag glitch transition
     const anomalyImg = new Image();
@@ -1717,30 +1716,14 @@ class GameEngine {
 
     const triggerTwitch = () => {
       if (this.isRunning) return;
-      const idx = Math.floor(Math.random() * 3) + 1;
-      const twitchClass = `twitch-${idx}`;
       if (menuEl) menuEl.classList.add('glitching');
-      if (statueEl) {
-        statueEl.classList.add(twitchClass);
-        statueEl.classList.add('anomaly');
-      }
-      if (churchBgEl) {
-        churchBgEl.classList.add('anomaly');
-      }
+      if (churchBgEl) churchBgEl.classList.add('anomaly');
       window.Sound.playCameraStatic(0.16, 0.38);
 
       const duration = 140 + Math.random() * 150;
       setTimeout(() => {
-        if (statueEl) {
-          statueEl.classList.remove(twitchClass);
-          statueEl.classList.remove('anomaly');
-        }
-        if (churchBgEl) {
-          churchBgEl.classList.remove('anomaly');
-        }
-        if (menuEl) {
-          menuEl.classList.remove('glitching');
-        }
+        if (churchBgEl) churchBgEl.classList.remove('anomaly');
+        if (menuEl) menuEl.classList.remove('glitching');
       }, duration);
 
       // 35% chance of rapid follow-up shudder (FNAF title screen double-glitch)
@@ -1749,17 +1732,9 @@ class GameEngine {
           if (this.isRunning) return;
           if (menuEl) menuEl.classList.add('glitching');
           if (churchBgEl) churchBgEl.classList.add('anomaly');
-          if (statueEl) {
-            statueEl.classList.add('anomaly');
-            statueEl.classList.add('twitch-2');
-          }
           window.Sound.playCameraStatic(0.09, 0.32);
           setTimeout(() => {
             if (churchBgEl) churchBgEl.classList.remove('anomaly');
-            if (statueEl) {
-              statueEl.classList.remove('anomaly');
-              statueEl.classList.remove('twitch-2');
-            }
             if (menuEl) menuEl.classList.remove('glitching');
           }, 85);
         }, duration + 65);
