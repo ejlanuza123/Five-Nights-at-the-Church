@@ -1,21 +1,26 @@
 /**
  * Build Script for Mobile Packaging (Five Nights at the Church)
- * Bundles pure web assets into www/ for Capacitor Android & iOS builds.
+ * Bundles pure web assets into www/ and android/app/src/main/assets/public for Capacitor Android & iOS builds.
  */
 const fs = require('fs');
 const path = require('path');
 
 const rootDir = __dirname;
 const wwwDir = path.join(rootDir, 'www');
+const androidPublicDir = path.join(rootDir, 'android', 'app', 'src', 'main', 'assets', 'public');
 
 console.log('--- Five Nights at the Church: Mobile Asset Packager ---');
 console.log('Source directory:', rootDir);
-console.log('Target directory:', wwwDir);
+console.log('Target directories:');
+console.log(' - Web/Capacitor bundle:', wwwDir);
+console.log(' - Android native public assets:', androidPublicDir);
 
-// Ensure www exists
-if (!fs.existsSync(wwwDir)) {
-  fs.mkdirSync(wwwDir, { recursive: true });
-}
+// Ensure target directories exist
+[wwwDir, androidPublicDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 function copyRecursive(src, dest) {
   if (!fs.existsSync(src)) return;
@@ -36,9 +41,9 @@ function copyRecursive(src, dest) {
 const topFiles = ['index.html', 'manifest.json'];
 topFiles.forEach(file => {
   const src = path.join(rootDir, file);
-  const dest = path.join(wwwDir, file);
   if (fs.existsSync(src)) {
-    fs.copyFileSync(src, dest);
+    fs.copyFileSync(src, path.join(wwwDir, file));
+    fs.copyFileSync(src, path.join(androidPublicDir, file));
     console.log(`[Copied] ${file}`);
   }
 });
@@ -47,10 +52,10 @@ topFiles.forEach(file => {
 const folders = ['css', 'js', 'libs', 'assets'];
 folders.forEach(folder => {
   const src = path.join(rootDir, folder);
-  const dest = path.join(wwwDir, folder);
   if (fs.existsSync(src)) {
     console.log(`[Copying directory] ${folder}...`);
-    copyRecursive(src, dest);
+    copyRecursive(src, path.join(wwwDir, folder));
+    copyRecursive(src, path.join(androidPublicDir, folder));
   }
 });
 
@@ -75,4 +80,4 @@ if (fs.existsSync(capAppBuildGradle)) {
   }
 }
 
-console.log('>>> Mobile asset bundle successfully exported to www/ !');
+console.log('>>> Mobile assets successfully synced to www/ and android/app/src/main/assets/public !');

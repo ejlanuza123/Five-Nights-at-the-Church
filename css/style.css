@@ -5,6 +5,101 @@ body.is-mobile #tab-keybinds {
   display: none !important;
 }
 
+/* Responsive Labels for Desktop vs Mobile */
+.label-mobile {
+  display: none;
+}
+.label-full {
+  display: inline;
+}
+
+body.is-mobile .label-full {
+  display: none !important;
+}
+body.is-mobile .label-mobile {
+  display: inline !important;
+}
+
+/* Compact, authentic FNAF-style Power & Battery Box on Mobile */
+body.is-mobile .hud-power-box,
+body.is-mobile #hud-overlay .hud-power-box {
+  min-width: unset !important;
+  width: auto !important;
+  max-width: 135px !important;
+  padding: 3px 7px !important;
+  border-radius: 4px !important;
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.is-mobile .power-readout,
+body.is-mobile #hud-overlay .power-readout {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 4px !important;
+  margin-bottom: 2px !important;
+}
+
+body.is-mobile .power-label,
+body.is-mobile #hud-overlay .power-label {
+  font-size: 8px !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1 !important;
+}
+
+body.is-mobile .power-value,
+body.is-mobile #hud-overlay .power-value {
+  font-size: 14px !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 6px rgba(34, 197, 94, 0.4) !important;
+}
+
+body.is-mobile .usage-row,
+body.is-mobile #hud-overlay .usage-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin-top: 1px !important;
+}
+
+body.is-mobile .usage-label,
+body.is-mobile #hud-overlay .usage-label {
+  font-size: 7.5px !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1 !important;
+}
+
+body.is-mobile .usage-bars,
+body.is-mobile #hud-overlay .usage-bars {
+  display: flex !important;
+  gap: 2px !important;
+}
+
+body.is-mobile .usage-bar,
+body.is-mobile #hud-overlay .usage-bar {
+  width: 4.5px !important;
+  height: 8.5px !important;
+  border-radius: 1px !important;
+  border-width: 0.5px !important;
+}
+
+body.is-mobile .usage-bar.active:nth-child(1),
+body.is-mobile .usage-bar.active:nth-child(2) {
+  box-shadow: 0 0 2px var(--c-green) !important;
+}
+body.is-mobile .usage-bar.active:nth-child(3),
+body.is-mobile .usage-bar.active:nth-child(4) {
+  box-shadow: 0 0 2px var(--c-amber) !important;
+}
+body.is-mobile .usage-bar.active:nth-child(5),
+body.is-mobile .usage-bar.active:nth-child(6) {
+  box-shadow: 0 0 3px var(--c-red) !important;
+}
+body.is-mobile .usage-bar.active:nth-child(7) {
+  box-shadow: 0 0 4px #dc2626 !important;
+}
+
 /* While CCTV monitor is active, guarantee office controls and defense buttons are completely hidden */
 body.cctv-open .office-overlay-controls,
 #cctv-overlay.active ~ .office-overlay-controls {
@@ -4099,23 +4194,53 @@ kbd.key-badge {
     height: 3px;
     margin-top: 3px;
   }
+  .label-full {
+    display: none !important;
+  }
+  .label-mobile {
+    display: inline !important;
+  }
   .hud-power-box {
-    padding: 5px 8px;
+    min-width: unset !important;
+    width: auto !important;
+    max-width: 135px !important;
+    padding: 3px 7px !important;
+    border-radius: 4px !important;
+    background: rgba(15, 23, 42, 0.88) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
   }
   .power-readout {
-    font-size: 11px;
-    gap: 4px;
+    font-size: 9.5px !important;
+    gap: 4px !important;
+    margin-bottom: 2px !important;
+  }
+  .power-label {
+    font-size: 8px !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
   }
   .power-value {
-    font-size: 13px;
+    font-size: 14px !important;
+    line-height: 1 !important;
   }
   .usage-row {
-    font-size: 9.5px;
-    gap: 5px;
+    font-size: 8px !important;
+    gap: 4px !important;
+    margin-top: 1px !important;
+  }
+  .usage-label {
+    font-size: 7.5px !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+  }
+  .usage-bars {
+    gap: 2px !important;
   }
   .usage-bar {
-    width: 5px;
-    height: 11px;
+    width: 4.5px !important;
+    height: 8.5px !important;
+    border-radius: 1px !important;
+    border-width: 0.5px !important;
   }
 
   /* Office Wall Pushbutton Controls */
@@ -5052,6 +5177,69 @@ kbd.key-badge {
 
 /* ================= MOBILE ERGONOMICS & RESPONSIVE COMPACT LAYOUT ================= */
 @media (max-height: 520px), (max-width: 900px) and (orientation: landscape) {
+  /* Compact In-Game Power & Battery Status */
+  .label-full {
+    display: none !important;
+  }
+  .label-mobile {
+    display: inline !important;
+  }
+
+  #hud-overlay {
+    padding: 6px 10px !important;
+  }
+
+  .hud-power-box {
+    min-width: unset !important;
+    width: auto !important;
+    max-width: 130px !important;
+    padding: 3px 7px !important;
+    border-radius: 4px !important;
+    background: rgba(15, 23, 42, 0.88) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .power-readout {
+    font-size: 9.5px !important;
+    gap: 4px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .power-label {
+    font-size: 8px !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+  }
+
+  .power-value {
+    font-size: 14px !important;
+    line-height: 1 !important;
+    text-shadow: 0 0 6px rgba(34, 197, 94, 0.4) !important;
+  }
+
+  .usage-row {
+    font-size: 8px !important;
+    gap: 4px !important;
+    margin-top: 1px !important;
+  }
+
+  .usage-label {
+    font-size: 7.5px !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+  }
+
+  .usage-bars {
+    gap: 2px !important;
+  }
+
+  .usage-bar {
+    width: 4.5px !important;
+    height: 8.5px !important;
+    border-radius: 1px !important;
+    border-width: 0.5px !important;
+  }
+
   /* 1. Office Defense Wall Panels: compact and neatly positioned */
   .door-panel-left {
     top: 50% !important;
@@ -5762,6 +5950,64 @@ kbd.key-badge {
    MOBILE SIZING & TOUCH SCROLLING FIXES (FACILITY BREACHED, KEYBINDS, CASSETTE)
    ========================================================================== */
 @media (max-width: 900px), (pointer: coarse) {
+  .label-full {
+    display: none !important;
+  }
+  .label-mobile {
+    display: inline !important;
+  }
+
+  .hud-power-box {
+    min-width: unset !important;
+    width: auto !important;
+    max-width: 135px !important;
+    padding: 3px 7px !important;
+    border-radius: 4px !important;
+    background: rgba(15, 23, 42, 0.88) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .power-readout {
+    font-size: 9.5px !important;
+    gap: 4px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .power-label {
+    font-size: 8px !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+  }
+
+  .power-value {
+    font-size: 14px !important;
+    line-height: 1 !important;
+    text-shadow: 0 0 6px rgba(34, 197, 94, 0.4) !important;
+  }
+
+  .usage-row {
+    font-size: 8px !important;
+    gap: 4px !important;
+    margin-top: 1px !important;
+  }
+
+  .usage-label {
+    font-size: 7.5px !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+  }
+
+  .usage-bars {
+    gap: 2px !important;
+  }
+
+  .usage-bar {
+    width: 4.5px !important;
+    height: 8.5px !important;
+    border-radius: 1px !important;
+    border-width: 0.5px !important;
+  }
+
   /* 1. Facility Breached Sign Scaling on Mobile */
   #gameover-screen {
     padding: 18px 24px !important;
