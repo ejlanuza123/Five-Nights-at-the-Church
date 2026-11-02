@@ -1819,33 +1819,52 @@ class GameEngine {
       clearTimeout(this._menuTwitchTimeout);
       this._menuTwitchTimeout = null;
     }
+    if (this._menuWeepTimeout) {
+      clearTimeout(this._menuWeepTimeout);
+      this._menuWeepTimeout = null;
+    }
 
     const triggerTwitch = () => {
       if (this.isRunning) return;
 
-      // Rare, momentary split-second statue twitch (authentic FNAF style)
+      // Authentic momentary FNAF statue twitch (face shifts to staring at player)
       if (menuEl) menuEl.classList.add('glitching');
       if (churchBgEl) churchBgEl.classList.add('anomaly');
-      window.Sound.playCameraStatic(0.10, 0.25);
+      window.Sound.playCameraStatic(0.18, 0.35);
 
       // Subtle, rare distant crying from the statue on the right
-      if (Math.random() < 0.20) {
+      if (Math.random() < 0.22) {
         window.Sound.playDistantWeeping('short', 0.65, 0.35);
       }
 
-      // Quick 90-130ms micro-twitch then immediately return to steady normal
-      const duration = 90 + Math.random() * 40;
+      // 160-240ms duration: clearly perceptible to human eye and reliably painted by mobile GPU
+      const duration = 160 + Math.random() * 80;
       setTimeout(() => {
         if (churchBgEl) churchBgEl.classList.remove('anomaly');
         if (menuEl) menuEl.classList.remove('glitching');
       }, duration);
 
-      // FNAF title screen twitches are spaced out (every 8 to 18 seconds)
-      const nextDelay = 8000 + Math.random() * 10000;
+      // 35% chance of rapid follow-up shudder (authentic FNAF title screen double-glitch)
+      if (Math.random() < 0.35) {
+        setTimeout(() => {
+          if (this.isRunning) return;
+          if (menuEl) menuEl.classList.add('glitching');
+          if (churchBgEl) churchBgEl.classList.add('anomaly');
+          window.Sound.playCameraStatic(0.10, 0.28);
+          setTimeout(() => {
+            if (churchBgEl) churchBgEl.classList.remove('anomaly');
+            if (menuEl) menuEl.classList.remove('glitching');
+          }, 90);
+        }, duration + 80);
+      }
+
+      // Authentic FNAF title screen twitches (every 3.5 to 6.5 seconds)
+      const nextDelay = 3500 + Math.random() * 3000;
       this._menuTwitchTimeout = setTimeout(triggerTwitch, nextDelay);
     };
 
-    this._menuTwitchTimeout = setTimeout(triggerTwitch, 5000);
+    // First twitch fires 2.5s after entering lobby
+    this._menuTwitchTimeout = setTimeout(triggerTwitch, 2500);
 
     // Ambient distant weeping loop in the main menu lobby (very faint, echoing from the right nave)
     const triggerMenuAmbientWeep = () => {
@@ -2363,6 +2382,8 @@ class GameEngine {
     }
     const churchBg = document.getElementById('menu-church-bg');
     if (churchBg) churchBg.classList.remove('anomaly');
+
+    this.setupMenuStatueTwitch();
 
     this.updateNightBadge();
   }
