@@ -722,6 +722,8 @@ class GameEngine {
     this.aiConfig.haloedSaint.attackTimer = 0;
     this.aiConfig.veiledMourner.attackTimer = 0;
     this.aiConfig.weepingAngel._doorWarningPlayed = false;
+    this.aiConfig.weepingAngel._weepTimer = 0;
+    this.aiConfig.weepingAngel._nextWeepInterval = 14 + Math.random() * 20;
     this.aiConfig.haloedSaint._doorWarningPlayed = false;
     this.aiConfig.veiledMourner._ventWarningPlayed = false;
     this._officeLightFlickerUntil = 0;
@@ -1046,6 +1048,8 @@ class GameEngine {
     if (angel) {
       angel.visible = false;
     }
+
+    window.Sound.playDistantWeeping('sob3', 0.2, 0.7); // Sorrowful muffled sobbing echoing back into the crypt tomb
 
     this.updateWindowHallwayView();
     if (this.isCCTVOpen) {
@@ -1755,6 +1759,11 @@ class GameEngine {
       if (churchBgEl) churchBgEl.classList.add('anomaly');
       window.Sound.playCameraStatic(0.16, 0.38);
 
+      // Subtle, rare distant crying from the statue on the right of the nave
+      if (Math.random() < 0.25) {
+        window.Sound.playDistantWeeping('short', 0.65, 0.38);
+      }
+
       const duration = 140 + Math.random() * 150;
       setTimeout(() => {
         if (churchBgEl) churchBgEl.classList.remove('anomaly');
@@ -1780,6 +1789,17 @@ class GameEngine {
     };
 
     setTimeout(triggerTwitch, 2400);
+
+    // Ambient distant weeping loop in the main menu lobby (very faint, echoing from the right nave)
+    const triggerMenuAmbientWeep = () => {
+      if (this.isRunning) return;
+      const fnafMenu = document.getElementById('fnaf-main-menu');
+      if (fnafMenu && !fnafMenu.classList.contains('hidden')) {
+        window.Sound.playDistantWeeping('random', 0.65, 0.32);
+      }
+      setTimeout(triggerMenuAmbientWeep, 35000 + Math.random() * 45000);
+    };
+    setTimeout(triggerMenuAmbientWeep, 18000);
   }
 
   startNightWithTransition(night = 1) {
@@ -2243,6 +2263,7 @@ class GameEngine {
 
     window.Sound.stopAmbientOrgan();
     window.Sound.stopHeartbeat();
+    window.Sound.stopDistantWeeping(0.35);
     window.Sound.startMenuDrone();
     window.Sound.startLobbyMusic();
 
@@ -3030,6 +3051,7 @@ class GameEngine {
     this.victory = true;
     this.isRunning = false;
     this.muteCassette();
+    window.Sound.stopDistantWeeping(0.4);
     window.Sound.stopBGM(true);
     window.Sound.playVictoryFanfare();
 
@@ -3066,6 +3088,27 @@ class GameEngine {
     const ai = this.aiConfig.weepingAngel;
     if (ai.level <= 0) return;
 
+    // Ambient distant cathedral weeping timer (Our Lady of Sorrows weeping in the dark)
+    ai._weepTimer = (ai._weepTimer || 0) + delta;
+    if (!ai._nextWeepInterval) ai._nextWeepInterval = 16 + Math.random() * 20;
+    if (ai.stage >= 0 && ai.stage <= 3 && ai._weepTimer >= ai._nextWeepInterval) {
+      ai._weepTimer = 0;
+      ai._nextWeepInterval = 25 + Math.random() * 32; // Random distant weeping every 25-57s
+      let pan = 0.0;
+      let volMult = 0.8;
+      if (ai.stage === 0) {
+        pan = -0.1; // Sanctuary altar
+        volMult = 0.75;
+      } else if (ai.stage === 1 || ai.stage === 2) {
+        pan = -0.45; // Hallway approach
+        volMult = 0.95;
+      } else if (ai.stage === 3) {
+        pan = -0.85; // Outside left door
+        volMult = 1.15;
+      }
+      window.Sound.playDistantWeeping('random', pan, volMult);
+    }
+
     const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && ai.level >= 14));
 
     // Continuous attack checks when at the left door (stage 3) or inside the office (stage 4)
@@ -3087,6 +3130,7 @@ class GameEngine {
             ai._doorWarningPlayed = true;
             window.Sound.playLeftFootstep(0.85);
             window.Sound.playStoneGrind(0.7);
+            window.Sound.playDistantWeeping('short', -0.88, 1.15); // Sorrowful sob right outside left door!
           }
 
           // On Night 6 / hard AI, viewing CCTV while at unsealed door triggers immediate blink into the office!
@@ -3157,12 +3201,14 @@ class GameEngine {
             ai.awakened = true;
             this.triggerCameraMotionError(1, 1.8);
             window.Sound.playStoneGrind(0.5);
+            window.Sound.playDistantWeeping('sob1', -0.15, 0.85); // Awakening sob from sanctuary altar
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
             ai.awakened = false;
             if (this.isWindowSpotOn) return;
             this.setAngelStage(1);
             window.Sound.playStoneGrind(0.7);
+            window.Sound.playDistantWeeping('short', -0.35, 0.9);
           }
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
@@ -3177,6 +3223,9 @@ class GameEngine {
           window.Sound.playStoneGrind(0.7);
           if (nextStage >= 2) {
             window.Sound.playLeftFootstep(0.85); // 3D stereo stone drag echoing down west door corridor
+          }
+          if (Math.random() < 0.65) {
+            window.Sound.playDistantWeeping('short', nextStage >= 2 ? -0.55 : -0.35, 0.95);
           }
         }
       }
@@ -3473,6 +3522,7 @@ class GameEngine {
     this.clearSaintDoorRetreatTimer();
     this.clearMournerVentRetreatTimer();
     this.muteCassette();
+    window.Sound.stopDistantWeeping(0.2);
 
     // Immediately shut down CCTV monitor overlay and spotlight if active
     if (this.isCCTVOpen) {

@@ -31,6 +31,9 @@ class SoundEngine {
     this.gameBaseVolume = 0.75;
     this.audioLoaded = false;
     this.jumpscareAudioBuffers = {};
+    this.weepingAudioBuffers = {};
+    this.activeWeepingSource = null;
+    this.activeWeepingAudioEl = null;
     this.initAudioElements();
   }
 
@@ -113,6 +116,7 @@ class SoundEngine {
     }
 
     this.preloadJumpscareAudio();
+    this.preloadWeepingAudio();
     this.audioLoaded = true;
     if (onProgress) onProgress(1.0, 'Cathedral & In-Game Soundtracks Ready');
     return true;
@@ -312,6 +316,8 @@ class SoundEngine {
 
       this.isInitialized = true;
       this._initNoiseBuffers();
+      this.preloadJumpscareAudio();
+      this.preloadWeepingAudio();
       if (this.ctx.state === 'suspended') {
         this.ctx.resume();
       }
@@ -1638,6 +1644,161 @@ class SoundEngine {
       nGain.connect(this.masterGain);
     }
     noise.start(now);
+  }
+
+  // Preload & decode authentic distant cathedral weeping audio into WebAudio memory buffers
+  preloadWeepingAudio() {
+    if (!this.weepingAudioBuffers) this.weepingAudioBuffers = {};
+    const weepingFiles = {
+      far: 'assets/audio/weeping_crying_far.mp3',
+      sob1: 'assets/audio/weeping_crying_1.mp3',
+      sob2: 'assets/audio/weeping_crying_2.mp3',
+      sob3: 'assets/audio/weeping_crying_3.mp3'
+    };
+    Object.entries(weepingFiles).forEach(([key, url]) => {
+      if (this.weepingAudioBuffers[key]) return;
+      fetch(url)
+        .then(r => r.arrayBuffer())
+        .then(ab => {
+          if (!this.ctx) {
+            try {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              this.ctx = new AudioCtx();
+            } catch (e) {}
+          }
+          if (this.ctx) {
+            this.ctx.decodeAudioData(ab, (decoded) => {
+              this.weepingAudioBuffers[key] = decoded;
+            }, (e) => console.warn('Decode error for weeping audio ' + key, e));
+          }
+        })
+        .catch(e => console.warn('Fetch error for weeping audio ' + key, e));
+    });
+  }
+
+  // --- DISTANT CATHEDRAL WEEPING (OUR LADY OF SORROWS / WEEPING ANGEL) ---
+  playDistantWeeping(variation = 'random', pan = 0.0, volMult = 1.0) {
+    if (this.isMuted) return null;
+    if (!this.ctx) {
+      this.init();
+    }
+    this.resume();
+
+    // Map variation argument to keys
+    const sobKeys = ['sob1', 'sob2', 'sob3'];
+    let chosenKey = 'sob1';
+    if (variation === 'short') {
+      chosenKey = sobKeys[Math.floor(Math.random() * sobKeys.length)];
+    } else if (variation === 'far') {
+      chosenKey = 'far';
+    } else if (sobKeys.includes(variation) || variation === 'far') {
+      chosenKey = variation;
+    } else {
+      // 'random': 40% full distant reverberation track, 60% short sorrowful sob
+      chosenKey = Math.random() < 0.40 ? 'far' : sobKeys[Math.floor(Math.random() * sobKeys.length)];
+    }
+
+    const baseVol = 0.28; // Subtle, muffled, distant cathedral level
+    const sfx = (this.sfxVolume !== undefined ? this.sfxVolume : 0.90);
+    const master = (this.masterVolume !== undefined ? this.masterVolume : 0.85);
+    const targetVol = Math.max(0.01, Math.min(1.0, baseVol * sfx * master * volMult));
+
+    // Smoothly fade out previous weeping if playing
+    if (this.activeWeepingSource) {
+      try {
+        const prev = this.activeWeepingSource;
+        const now = this.ctx ? this.ctx.currentTime : 0;
+        if (prev.gain && this.ctx) {
+          prev.gain.gain.setValueAtTime(prev.gain.gain.value, now);
+          prev.gain.gain.linearRampToValueAtTime(0.001, now + 0.4);
+          setTimeout(() => {
+            try { prev.src?.stop(); } catch (e) {}
+          }, 450);
+        }
+      } catch (e) {}
+      this.activeWeepingSource = null;
+    }
+
+    const buf = this.weepingAudioBuffers ? this.weepingAudioBuffers[chosenKey] : null;
+    if (buf && this.ctx && this.masterGain) {
+      const now = this.ctx.currentTime;
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+
+      // Cathedral stone archway dampening filter (rolls off harsh treble)
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2600, now);
+      filter.Q.setValueAtTime(0.8, now);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(targetVol, now + 0.35); // Soft distant swell
+
+      const panner = this.createPanner(pan);
+
+      src.connect(filter);
+      filter.connect(gain);
+      if (panner) {
+        gain.connect(panner);
+        panner.connect(this.masterGain);
+      } else {
+        gain.connect(this.masterGain);
+      }
+
+      const weepingRecord = { src, gain, panner, startTime: now };
+      this.activeWeepingSource = weepingRecord;
+      src.onended = () => {
+        if (this.activeWeepingSource === weepingRecord) {
+          this.activeWeepingSource = null;
+        }
+      };
+
+      src.start(now);
+      return weepingRecord;
+    } else {
+      // HTML5 Audio fallback
+      const fileMap = {
+        far: 'assets/audio/weeping_crying_far.mp3',
+        sob1: 'assets/audio/weeping_crying_1.mp3',
+        sob2: 'assets/audio/weeping_crying_2.mp3',
+        sob3: 'assets/audio/weeping_crying_3.mp3'
+      };
+      const url = fileMap[chosenKey] || fileMap.far;
+      try {
+        const audioEl = new Audio(url);
+        audioEl.volume = targetVol;
+        audioEl.play().catch(() => {});
+        this.activeWeepingAudioEl = audioEl;
+        return audioEl;
+      } catch (e) {
+        return null;
+      }
+    }
+  }
+
+  stopDistantWeeping(fadeDuration = 0.5) {
+    if (this.activeWeepingSource && this.ctx) {
+      try {
+        const now = this.ctx.currentTime;
+        const ws = this.activeWeepingSource;
+        if (ws.gain) {
+          ws.gain.gain.setValueAtTime(ws.gain.gain.value, now);
+          ws.gain.gain.linearRampToValueAtTime(0.001, now + fadeDuration);
+        }
+        setTimeout(() => {
+          try { ws.src?.stop(); } catch (e) {}
+        }, fadeDuration * 1000 + 50);
+      } catch (e) {}
+      this.activeWeepingSource = null;
+    }
+    if (this.activeWeepingAudioEl) {
+      try {
+        this.activeWeepingAudioEl.pause();
+        this.activeWeepingAudioEl.currentTime = 0;
+      } catch (e) {}
+      this.activeWeepingAudioEl = null;
+    }
   }
 
   // --- FATHER THOMAS'S CASSETTE TAPE RECORDER ("PHONE GUY") ---
