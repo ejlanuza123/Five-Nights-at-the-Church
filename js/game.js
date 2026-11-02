@@ -718,6 +718,13 @@ class GameEngine {
     this.aiConfig.weepingAngel.awakened = false;
     this.aiConfig.haloedSaint.awakened = false;
     this.aiConfig.veiledMourner.awakened = false;
+    this.aiConfig.weepingAngel.attackTimer = 0;
+    this.aiConfig.haloedSaint.attackTimer = 0;
+    this.aiConfig.veiledMourner.attackTimer = 0;
+    this.aiConfig.weepingAngel._doorWarningPlayed = false;
+    this.aiConfig.haloedSaint._doorWarningPlayed = false;
+    this.aiConfig.veiledMourner._ventWarningPlayed = false;
+    this._officeLightFlickerUntil = 0;
     this.setAngelStage(0);
     this.setSaintStage(0);
     this.setMournerStage(0);
@@ -786,6 +793,13 @@ class GameEngine {
     if (this._mournerVentRetreatTimer) {
       clearTimeout(this._mournerVentRetreatTimer);
       this._mournerVentRetreatTimer = null;
+    }
+  }
+
+  triggerOfficeLightFlicker(duration = 220) {
+    this._officeLightFlickerUntil = Date.now() + duration;
+    if (window.Sound && typeof window.Sound.playLightClick === 'function') {
+      window.Sound.playLightClick();
     }
   }
 
@@ -1022,6 +1036,7 @@ class GameEngine {
     ai.awakened = false;
     ai.attackTimer = 0;
     ai.timer = 0;
+    ai._doorWarningPlayed = false;
     this._lastAngelStage = -1;
     this.handleEntityMovement(prevLoc, 'CAM_02', 'weepingAngel');
 
@@ -1045,6 +1060,7 @@ class GameEngine {
     ai.awakened = false;
     ai.attackTimer = 0;
     ai.timer = 0;
+    ai._doorWarningPlayed = false;
     this._lastSaintStage = -1;
     this.handleEntityMovement(prevLoc, 'CAM_01', 'haloedSaint');
 
@@ -2590,15 +2606,48 @@ class GameEngine {
       }
       window.Sound.playCameraFlip(true);
 
-      // Night 6 Aggressive Vent Entity: Raising monitor while Mourner has emerged or is at unsealed vent
-      if (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) {
-        if (this.aiConfig.veiledMourner.stage === 4) {
-          this.triggerJumpscare('veiledMourner', 'THE MEMORIAL PENITENT EMERGED FROM THE HVAC DUCT');
-          return;
-        } else if (this.aiConfig.veiledMourner.stage === 3 && !this.isVentClosed) {
+      // High-Aggression Entity Checks on Monitor Raise (Night 6 or High AI)
+      const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && (
+        this.aiConfig.veiledMourner.level >= 14 ||
+        this.aiConfig.weepingAngel.level >= 14 ||
+        this.aiConfig.haloedSaint.level >= 14
+      )));
+
+      // If ANY entity is already inside the office (stage 4), raising monitor is fatal!
+      if (this.aiConfig.weepingAngel.stage === 4) {
+        this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
+        return;
+      }
+      if (this.aiConfig.haloedSaint.stage === 4) {
+        this.triggerJumpscare('haloedSaint', 'SANCTUS MICHAEL INFILTRATED THE PARISH SECURITY OFFICE');
+        return;
+      }
+      if (this.aiConfig.veiledMourner.stage === 4) {
+        this.triggerJumpscare('veiledMourner', 'THE MEMORIAL PENITENT EMERGED FROM THE HVAC DUCT');
+        return;
+      }
+
+      // If at unsealed entrance on Night 6 (or high AI), raising monitor allows them to immediately blink into the office!
+      if (isNight6OrHard) {
+        if (this.aiConfig.weepingAngel.stage === 3 && !this.isLeftDoorClosed) {
+          this.aiConfig.weepingAngel.stage = 4;
+          this.setAngelStage(4);
+          window.Sound.playStoneGrind(1.0);
+          window.Sound.playLeftFootstep(1.0);
+          this.triggerOfficeLightFlicker(220);
+        } else if (this.aiConfig.haloedSaint.stage === 3 && !this.isLeftDoorClosed) {
+          this.aiConfig.haloedSaint.stage = 4;
+          this.setSaintStage(4);
+          window.Sound.playStoneGrind(1.0);
+          window.Sound.playLeftFootstep(1.0);
+          this.triggerOfficeLightFlicker(220);
+        }
+        if (this.aiConfig.veiledMourner.stage === 3 && !this.isVentClosed) {
           this.aiConfig.veiledMourner.stage = 4;
           this.setMournerStage(4);
           window.Sound.playVentClatter(1.0);
+          window.Sound.playStoneGrind(0.9);
+          this.triggerOfficeLightFlicker(220);
         }
       }
 
@@ -3015,6 +3064,73 @@ class GameEngine {
     const ai = this.aiConfig.weepingAngel;
     if (ai.level <= 0) return;
 
+    const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && ai.level >= 14));
+
+    // Continuous attack checks when at the left door (stage 3) or inside the office (stage 4)
+    if (ai.stage === 3 || ai.stage === 4) {
+      if (this.isLeftDoorClosed && ai.stage === 3) {
+        ai.attackTimer = 0;
+        if (!this._angelDoorRetreatTimer) {
+          this.startAngelDoorRetreatTimer();
+        }
+      } else {
+        if (this._angelDoorRetreatTimer) {
+          this.clearAngelDoorRetreatTimer();
+        }
+
+        ai.attackTimer += delta;
+
+        if (ai.stage === 3) {
+          if (!ai._doorWarningPlayed) {
+            ai._doorWarningPlayed = true;
+            window.Sound.playLeftFootstep(0.85);
+            window.Sound.playStoneGrind(0.7);
+          }
+
+          // On Night 6 / hard AI, viewing CCTV while at unsealed door triggers immediate blink into the office!
+          if (isNight6OrHard && this.isCCTVOpen) {
+            ai.stage = 4;
+            this.setAngelStage(4);
+            ai.attackTimer = 0;
+            ai._doorWarningPlayed = false;
+            window.Sound.playStoneGrind(1.0);
+            window.Sound.playLeftFootstep(1.0);
+            this.triggerOfficeLightFlicker(220);
+            this.vibrate([100, 50, 150]);
+          } else {
+            // Stage 3 -> 4 blink window (blinks closer to player inside the office!)
+            // Night 6: 1.5 seconds!
+            // Night 4-5: 2.5 seconds
+            // Earlier: 3.6 seconds
+            const enterOfficeThreshold = isNight6OrHard ? 1.5 : (this.currentNight >= 4 ? 2.5 : 3.6);
+            if (ai.attackTimer >= enterOfficeThreshold) {
+              ai.stage = 4;
+              this.setAngelStage(4);
+              ai.attackTimer = 0;
+              ai._doorWarningPlayed = false;
+              window.Sound.playStoneGrind(1.0);
+              window.Sound.playLeftFootstep(1.0);
+              this.triggerOfficeLightFlicker(220);
+              this.vibrate([100, 50, 150]);
+            }
+          }
+        } else if (ai.stage === 4) {
+          // She has BLINKED CLOSER right inside the office beside the desk!
+          // Night 6: attacks aggressively in 0.35s (or immediately if CCTV is open)!
+          const attackThreshold = isNight6OrHard ? 0.35 : 0.8;
+          if (ai.attackTimer >= attackThreshold || (isNight6OrHard && this.isCCTVOpen)) {
+            this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
+            return;
+          }
+        }
+      }
+      return; // Continuous delta timing handles attack state
+    } else {
+      ai.attackTimer = 0;
+      ai._doorWarningPlayed = false;
+    }
+
+    // Movement roll timer for stages -1, 0, 1, 2
     ai.timer += delta;
     if (ai.timer >= 4.0) {
       ai.timer = 0;
@@ -3049,30 +3165,16 @@ class GameEngine {
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
           if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
-            // Cannot appear at window hallway while spotlight is shining down the hall!
             return;
           }
-          if (nextStage === 3 && this.aiConfig.haloedSaint.stage === 3) {
-            // Only ONE entity can appear at the door at a time! Saint Michael is already there.
+          if (nextStage === 3 && (this.aiConfig.haloedSaint.stage === 3 || this.aiConfig.haloedSaint.stage === 4)) {
+            // Only ONE entity can appear at the door/in the office at a time! Saint Michael is already there.
             return;
           }
           this.setAngelStage(nextStage);
           window.Sound.playStoneGrind(0.7);
           if (nextStage >= 2) {
             window.Sound.playLeftFootstep(0.85); // 3D stereo stone drag echoing down west door corridor
-          }
-        } else if (ai.stage === 3) {
-          if (this.isLeftDoorClosed) {
-            ai.attackTimer = 0;
-            if (!this._angelDoorRetreatTimer) {
-              this.startAngelDoorRetreatTimer();
-            }
-          } else {
-            window.Sound.playLeftFootstep(0.7); // Directional audio warning before attack
-            ai.attackTimer += 1.5;
-            if (ai.attackTimer >= 4.5) {
-              this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
-            }
           }
         }
       }
@@ -3083,6 +3185,73 @@ class GameEngine {
     const ai = this.aiConfig.haloedSaint;
     if (ai.level <= 0) return;
 
+    const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && ai.level >= 14));
+
+    // Continuous attack checks when at the left door (stage 3) or inside the office (stage 4)
+    if (ai.stage === 3 || ai.stage === 4) {
+      if (this.isLeftDoorClosed && ai.stage === 3) {
+        ai.attackTimer = 0;
+        if (!this._saintDoorRetreatTimer) {
+          this.startSaintDoorRetreatTimer();
+        }
+      } else {
+        if (this._saintDoorRetreatTimer) {
+          this.clearSaintDoorRetreatTimer();
+        }
+
+        ai.attackTimer += delta;
+
+        if (ai.stage === 3) {
+          if (!ai._doorWarningPlayed) {
+            ai._doorWarningPlayed = true;
+            window.Sound.playLeftFootstep(0.92);
+            window.Sound.playWindowWhisper(0.75);
+          }
+
+          // On Night 6 / hard AI, viewing CCTV while at unsealed door triggers immediate blink into the office!
+          if (isNight6OrHard && this.isCCTVOpen) {
+            ai.stage = 4;
+            this.setSaintStage(4);
+            ai.attackTimer = 0;
+            ai._doorWarningPlayed = false;
+            window.Sound.playStoneGrind(1.0);
+            window.Sound.playLeftFootstep(1.0);
+            this.triggerOfficeLightFlicker(220);
+            this.vibrate([100, 50, 150]);
+          } else {
+            // Stage 3 -> 4 blink window (blinks closer to player inside the office!)
+            // Night 6: 1.5 seconds!
+            // Night 4-5: 2.6 seconds
+            // Earlier: 3.8 seconds
+            const enterOfficeThreshold = isNight6OrHard ? 1.5 : (this.currentNight >= 4 ? 2.6 : 3.8);
+            if (ai.attackTimer >= enterOfficeThreshold) {
+              ai.stage = 4;
+              this.setSaintStage(4);
+              ai.attackTimer = 0;
+              ai._doorWarningPlayed = false;
+              window.Sound.playStoneGrind(1.0);
+              window.Sound.playLeftFootstep(1.0);
+              this.triggerOfficeLightFlicker(220);
+              this.vibrate([100, 50, 150]);
+            }
+          }
+        } else if (ai.stage === 4) {
+          // He has BLINKED CLOSER right inside the office beside the desk!
+          // Night 6: attacks aggressively in 0.35s (or immediately if CCTV is open)!
+          const attackThreshold = isNight6OrHard ? 0.35 : 0.8;
+          if (ai.attackTimer >= attackThreshold || (isNight6OrHard && this.isCCTVOpen)) {
+            this.triggerJumpscare('haloedSaint', 'SANCTUS MICHAEL INFILTRATED THE PARISH SECURITY OFFICE');
+            return;
+          }
+        }
+      }
+      return; // Continuous delta timing handles attack state
+    } else {
+      ai.attackTimer = 0;
+      ai._doorWarningPlayed = false;
+    }
+
+    // Movement roll timer for stages -1, 0, 1, 2
     ai.timer += delta;
     if (ai.timer >= 5.0) {
       ai.timer = 0;
@@ -3099,7 +3268,7 @@ class GameEngine {
       if (roll <= ai.level) {
         if (ai.stage === -1) {
           // Banishment recovery: advances from CAM_01 Nave back to CAM_05 Hallway
-          if (this.isWindowSpotOn) return; // Cannot appear at window hallway while lights are turned on
+          if (this.isWindowSpotOn) return;
           this.setSaintStage(1);
           window.Sound.playStoneGrind(0.8);
         } else if (ai.stage === 0) {
@@ -3117,11 +3286,10 @@ class GameEngine {
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
           if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
-            // Cannot appear at window hallway while spotlight is shining down the hall!
             return;
           }
-          if (nextStage === 3 && this.aiConfig.weepingAngel.stage === 3) {
-            // Only ONE entity can appear at the door at a time! Weeping Angel is already there.
+          if (nextStage === 3 && (this.aiConfig.weepingAngel.stage === 3 || this.aiConfig.weepingAngel.stage === 4)) {
+            // Only ONE entity can appear at the door/in the office at a time! Weeping Angel is already there.
             return;
           }
           this.setSaintStage(nextStage);
@@ -3130,19 +3298,6 @@ class GameEngine {
             window.Sound.playWindowWhisper(0.85); // Chilling Latin prayer chant outside center window!
           } else if (nextStage === 3) {
             window.Sound.playLeftFootstep(0.92); // Heavy grinding footsteps at left door!
-          }
-        } else if (ai.stage === 3) {
-          if (this.isLeftDoorClosed) {
-            ai.attackTimer = 0;
-            if (!this._saintDoorRetreatTimer) {
-              this.startSaintDoorRetreatTimer();
-            }
-          } else {
-            window.Sound.playLeftFootstep(0.72);
-            ai.attackTimer += 1.5;
-            if (ai.attackTimer >= 4.5) {
-              this.triggerJumpscare('haloedSaint', 'SANCTUS MICHAEL INFILTRATED THE PARISH SECURITY OFFICE');
-            }
           }
         }
       }
@@ -3183,6 +3338,7 @@ class GameEngine {
             ai._ventWarningPlayed = false;
             window.Sound.playVentClatter(1.0);
             window.Sound.playStoneGrind(0.9);
+            this.triggerOfficeLightFlicker(220);
             this.vibrate([100, 50, 150]);
           } else {
             // Stage 3 -> 4 exit window
@@ -3197,6 +3353,7 @@ class GameEngine {
               ai._ventWarningPlayed = false;
               window.Sound.playVentClatter(1.0);
               window.Sound.playStoneGrind(0.9);
+              this.triggerOfficeLightFlicker(220);
               this.vibrate([100, 50, 150]);
             }
           }
@@ -3563,9 +3720,23 @@ class GameEngine {
       }
     }
 
-    // Desk Task Lamp gentle flicker
+    // Desk Task Lamp gentle flicker & horror micro-blackout on entity blink
     if (this.world?.lights?.candleLight && !this.isBlackout) {
-      this.world.lights.candleLight.intensity = 1.35 + Math.sin(Date.now() * 0.007) * 0.05;
+      if (this._officeLightFlickerUntil && Date.now() < this._officeLightFlickerUntil) {
+        this.world.lights.candleLight.intensity = Math.random() < 0.6 ? 0.05 : 0.35;
+      } else {
+        this.world.lights.candleLight.intensity = 1.35 + Math.sin(Date.now() * 0.007) * 0.05;
+      }
+    }
+
+    // Door and Vent Inspection Lights flicker during entity blink
+    if (this._officeLightFlickerUntil && Date.now() < this._officeLightFlickerUntil) {
+      if (this.world?.lights?.doorLight && this.isLeftDoorLightOn) {
+        this.world.lights.doorLight.intensity = Math.random() < 0.5 ? 0.2 : 1.2;
+      }
+      if (this.world?.lights?.ventLight && this.isVentLightOn) {
+        this.world.lights.ventLight.intensity = Math.random() < 0.5 ? 0.2 : 1.0;
+      }
     }
 
     // Observation Window Halogen Spotlight Dynamics (Instant snap to pitch-black when closed, erratic horror flicker when catching entities)
@@ -3592,6 +3763,23 @@ class GameEngine {
     // Dynamic 3D Scene Spotlight on window frame & sill
     if (this.world?.lights?.windowSpot) {
       this.world.lights.windowSpot.intensity = this.windowSpotIntensity * 5.6;
+    }
+
+    // Uncanny subtle statue twitch / dread micro-lurches when an entity is inside the office (stage 4)
+    if (!this.jumpscareActive) {
+      const activeStage4Entity = (this.aiConfig.weepingAngel.stage === 4) ? this.world?.statues?.weepingAngel
+        : (this.aiConfig.haloedSaint.stage === 4) ? this.world?.statues?.haloedSaint
+        : (this.aiConfig.veiledMourner.stage === 4) ? this.world?.statues?.veiledMourner : null;
+
+      if (activeStage4Entity) {
+        if (Math.random() < 0.08) {
+          activeStage4Entity.position.y = (activeStage4Entity.name === 'VeiledMourner' ? 0.02 : 0.0) + (Math.random() - 0.5) * 0.025;
+          activeStage4Entity.rotation.z = (Math.random() - 0.5) * 0.04;
+        } else {
+          activeStage4Entity.position.y = activeStage4Entity.name === 'VeiledMourner' ? 0.02 : 0.0;
+          activeStage4Entity.rotation.z = 0;
+        }
+      }
     }
 
     // Jumpscare shake
