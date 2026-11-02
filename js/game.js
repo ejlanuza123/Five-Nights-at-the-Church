@@ -1755,46 +1755,41 @@ class GameEngine {
     const menuEl = document.getElementById('fnaf-main-menu');
     if (!churchBgEl && !menuEl) return;
 
-    // Preload anomaly image for instant zero-lag glitch transition
+    // Preload anomaly image for zero-lag twitch transition
     const anomalyImg = new Image();
     anomalyImg.src = 'assets/cctv/church_cam_anomaly.png';
 
+    if (this._menuTwitchTimeout) {
+      clearTimeout(this._menuTwitchTimeout);
+      this._menuTwitchTimeout = null;
+    }
+
     const triggerTwitch = () => {
       if (this.isRunning) return;
+
+      // Rare, momentary split-second statue twitch (authentic FNAF style)
       if (menuEl) menuEl.classList.add('glitching');
       if (churchBgEl) churchBgEl.classList.add('anomaly');
-      window.Sound.playCameraStatic(0.16, 0.38);
+      window.Sound.playCameraStatic(0.10, 0.25);
 
-      // Subtle, rare distant crying from the statue on the right of the nave
-      if (Math.random() < 0.25) {
-        window.Sound.playDistantWeeping('short', 0.65, 0.38);
+      // Subtle, rare distant crying from the statue on the right
+      if (Math.random() < 0.20) {
+        window.Sound.playDistantWeeping('short', 0.65, 0.35);
       }
 
-      const duration = 140 + Math.random() * 150;
+      // Quick 90-130ms micro-twitch then immediately return to steady normal
+      const duration = 90 + Math.random() * 40;
       setTimeout(() => {
         if (churchBgEl) churchBgEl.classList.remove('anomaly');
         if (menuEl) menuEl.classList.remove('glitching');
       }, duration);
 
-      // 35% chance of rapid follow-up shudder (FNAF title screen double-glitch)
-      if (Math.random() < 0.35) {
-        setTimeout(() => {
-          if (this.isRunning) return;
-          if (menuEl) menuEl.classList.add('glitching');
-          if (churchBgEl) churchBgEl.classList.add('anomaly');
-          window.Sound.playCameraStatic(0.09, 0.32);
-          setTimeout(() => {
-            if (churchBgEl) churchBgEl.classList.remove('anomaly');
-            if (menuEl) menuEl.classList.remove('glitching');
-          }, 85);
-        }, duration + 65);
-      }
-
-      const nextDelay = 2200 + Math.random() * 3200;
-      setTimeout(triggerTwitch, nextDelay);
+      // FNAF title screen twitches are spaced out (every 8 to 18 seconds)
+      const nextDelay = 8000 + Math.random() * 10000;
+      this._menuTwitchTimeout = setTimeout(triggerTwitch, nextDelay);
     };
 
-    setTimeout(triggerTwitch, 2400);
+    this._menuTwitchTimeout = setTimeout(triggerTwitch, 5000);
 
     // Ambient distant weeping loop in the main menu lobby (very faint, echoing from the right nave)
     const triggerMenuAmbientWeep = () => {
@@ -1810,6 +1805,12 @@ class GameEngine {
 
   startNightWithTransition(night = 1) {
     this.isNightTransitioning = true;
+    if (this._menuTwitchTimeout) {
+      clearTimeout(this._menuTwitchTimeout);
+      this._menuTwitchTimeout = null;
+    }
+    document.getElementById('fnaf-main-menu')?.classList.remove('glitching');
+    document.getElementById('menu-church-bg')?.classList.remove('anomaly');
     if (!this.isCustomNight) {
       this.currentNight = night;
     }
@@ -2300,7 +2301,12 @@ class GameEngine {
     if (hud) hud.style.display = '';
 
     const menu = document.getElementById('fnaf-main-menu');
-    if (menu) menu.classList.remove('hidden');
+    if (menu) {
+      menu.classList.remove('hidden');
+      menu.classList.remove('glitching');
+    }
+    const churchBg = document.getElementById('menu-church-bg');
+    if (churchBg) churchBg.classList.remove('anomaly');
 
     this.updateNightBadge();
   }
