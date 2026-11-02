@@ -59,6 +59,7 @@ class GameEngine {
     this._lastAngelStage = 0;
     this._lastSaintStage = 0;
     this._lastMournerStage = 0;
+    this._isVentCrawlingSoundPlaying = false;
 
     // AI Entities & Levels (Strictly tracked unique locations)
     this.aiConfig = {
@@ -733,6 +734,10 @@ class GameEngine {
     this._lastAngelStage = 0;
     this._lastSaintStage = 0;
     this._lastMournerStage = 0;
+    this._isVentCrawlingSoundPlaying = false;
+    if (window.Sound && window.Sound.stopVentGlitchSound) {
+      window.Sound.stopVentGlitchSound(0.05);
+    }
   }
 
   startAngelDoorRetreatTimer() {
@@ -800,6 +805,61 @@ class GameEngine {
     }
   }
 
+    // --- VENT CRAWLING & VENT CAM GLITCH AUDIO ENGINE ---
+  updateVentAudio() {
+    if (!this.isRunning || this.gameOver || this.victory || this.isBlackout) {
+      if (this._isVentCrawlingSoundPlaying) {
+        this._isVentCrawlingSoundPlaying = false;
+        if (window.Sound && window.Sound.stopVentGlitchSound) {
+          window.Sound.stopVentGlitchSound(0.15);
+        }
+      }
+      return;
+    }
+
+    const mourner = this.aiConfig?.veiledMourner;
+    // Mourner is crawling inside the vent at stages 1, 2, or 3 (or location CAM_04 / RIGHT_VENT)
+    const isMournerInVent = mourner && (
+      (mourner.stage >= 1 && mourner.stage <= 3) ||
+      mourner.location === 'CAM_04' ||
+      mourner.location === 'RIGHT_VENT'
+    );
+    // Vent camera (CAM 04) is glitching
+    const isVentCamGlitching = !!(this.cameraErrorTimers && (this.cameraErrorTimers[4] || 0) > 0);
+    const shouldPlay = !!(isMournerInVent || isVentCamGlitching);
+
+    if (shouldPlay) {
+      let desiredVol = 0.85;
+      if (mourner && mourner.stage === 3) {
+        desiredVol = 1.0; // Right at office vent grate opening
+      } else if (mourner && mourner.stage === 2) {
+        desiredVol = 0.85; // Deep inside HVAC duct
+      } else if (mourner && mourner.stage === 1) {
+        desiredVol = 0.70; // Entering HVAC duct
+      } else if (isVentCamGlitching) {
+        desiredVol = (this.isCCTVOpen && this.activeCameraId === 4) ? 0.95 : 0.80;
+      }
+
+      if (!this._isVentCrawlingSoundPlaying) {
+        this._isVentCrawlingSoundPlaying = true;
+        if (window.Sound && window.Sound.startVentGlitchSound) {
+          window.Sound.startVentGlitchSound(desiredVol);
+        }
+      } else {
+        if (window.Sound && window.Sound.setVentGlitchVolume) {
+          window.Sound.setVentGlitchVolume(desiredVol, 0.25);
+        }
+      }
+    } else {
+      if (this._isVentCrawlingSoundPlaying) {
+        this._isVentCrawlingSoundPlaying = false;
+        if (window.Sound && window.Sound.stopVentGlitchSound) {
+          window.Sound.stopVentGlitchSound(0.35);
+        }
+      }
+    }
+  }
+
   triggerOfficeLightFlicker(duration = 220) {
     this._officeLightFlickerUntil = Date.now() + duration;
     if (window.Sound && typeof window.Sound.playLightClick === 'function') {
@@ -825,11 +885,9 @@ class GameEngine {
       const overlay = document.getElementById('cctv-overlay');
       if (overlay) overlay.classList.add('cam-glitching');
       window.Sound.playCameraErrorStatic(duration, 0.45);
-      if (camId === 4) {
-        window.Sound.startVentGlitchSound();
-      }
       this.updateCCTVFeed();
     }
+    this.updateVentAudio();
   }
 
   handleEntityMovement(fromLoc, toLoc, entityName) {
@@ -862,9 +920,7 @@ class GameEngine {
     this.cctvLossOfSignal = false;
     const overlay = document.getElementById('cctv-overlay');
     if (overlay) overlay.classList.remove('cam-glitching');
-    if (camId === 4) {
-      window.Sound.stopVentGlitchSound(0.25);
-    }
+    this.updateVentAudio();
     if (!this.isCCTVOpen || this.activeCameraId !== camId) return;
     const errorScreen = document.getElementById('cctv-error-screen');
     const anomalyBurst = document.getElementById('cctv-anomaly-burst');
@@ -2426,7 +2482,7 @@ class GameEngine {
 
   updateNightDifficulty() {
     const nightMap = {
-      1: { angel: 2, saint: 1, mourner: 0 },
+      1: { angel: 2, saint: 1, mourner: 1 },
       2: { angel: 4, saint: 3, mourner: 2 },
       3: { angel: 7, saint: 6, mourner: 5 },
       4: { angel: 11, saint: 9, mourner: 8 },
@@ -2692,8 +2748,8 @@ class GameEngine {
       this.switchCamera(this.activeCameraId, true);
     } else {
       window.Sound.playCameraFlip(false);
-      window.Sound.stopVentGlitchSound(0.2);
       document.body.classList.remove('cctv-open');
+      this.updateVentAudio();
     }
   }
 
@@ -2873,18 +2929,13 @@ class GameEngine {
     }
     if (isError) {
       window.Sound.playCameraErrorStatic(this.cameraErrorTimers[camId], 0.4);
-      if (camId === 4) {
-        window.Sound.startVentGlitchSound();
-      } else {
-        window.Sound.stopVentGlitchSound(0.2);
-      }
     } else {
-      window.Sound.stopVentGlitchSound(0.2);
       if (!isInitialOpen) {
-      // Standard camera switch scanline static (pure, authentic 200ms channel switch)
-      this.triggerStatic(0.20);
+        // Standard camera switch scanline static (pure, authentic 200ms channel switch)
+        this.triggerStatic(0.20);
+      }
     }
-    }
+    this.updateVentAudio();
 
     this.updateCCTVFeed();
   }
@@ -3100,11 +3151,15 @@ class GameEngine {
 
   // --- AI STATUE MOVEMENT ENGINE ---
   updateAI(delta) {
-    if (!this.isRunning || this.isBlackout || this.gameOver || this.victory) return;
+    if (!this.isRunning || this.isBlackout || this.gameOver || this.victory) {
+      this.updateVentAudio();
+      return;
+    }
 
     this.updateAngelAI(delta);
     this.updateSaintAI(delta);
     this.updateMournerAI(delta);
+    this.updateVentAudio();
   }
 
   updateAngelAI(delta) {

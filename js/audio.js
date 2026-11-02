@@ -1120,6 +1120,25 @@ class SoundEngine {
     }
   }
 
+  setVentGlitchVolume(customVol = 0.85, rampTime = 0.2) {
+    const sfx = (this.sfxVolume !== undefined ? this.sfxVolume : 0.90);
+    const master = (this.masterVolume !== undefined ? this.masterVolume : 0.85);
+    const vol = Math.max(0.01, Math.min(1.0, customVol * sfx * master));
+
+    if (this.activeVentGlitchSource && this.ctx && this.activeVentGlitchSource.gain) {
+      try {
+        const now = this.ctx.currentTime;
+        this.activeVentGlitchSource.gain.gain.cancelScheduledValues(now);
+        this.activeVentGlitchSource.gain.gain.setValueAtTime(this.activeVentGlitchSource.gain.gain.value, now);
+        this.activeVentGlitchSource.gain.gain.linearRampToValueAtTime(vol, now + rampTime);
+      } catch (e) {}
+    } else if (this.ventGlitchAudioEl) {
+      try {
+        this.ventGlitchAudioEl.volume = vol;
+      } catch (e) {}
+    }
+  }
+
   stopVentGlitchSound(fadeDuration = 0.25) {
     if (this.activeVentGlitchSource && this.ctx) {
       try {
