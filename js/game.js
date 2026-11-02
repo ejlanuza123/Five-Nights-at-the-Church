@@ -825,6 +825,9 @@ class GameEngine {
       const overlay = document.getElementById('cctv-overlay');
       if (overlay) overlay.classList.add('cam-glitching');
       window.Sound.playCameraErrorStatic(duration, 0.45);
+      if (camId === 4) {
+        window.Sound.startVentGlitchSound();
+      }
       this.updateCCTVFeed();
     }
   }
@@ -859,6 +862,9 @@ class GameEngine {
     this.cctvLossOfSignal = false;
     const overlay = document.getElementById('cctv-overlay');
     if (overlay) overlay.classList.remove('cam-glitching');
+    if (camId === 4) {
+      window.Sound.stopVentGlitchSound(0.25);
+    }
     if (!this.isCCTVOpen || this.activeCameraId !== camId) return;
     const errorScreen = document.getElementById('cctv-error-screen');
     const anomalyBurst = document.getElementById('cctv-anomaly-burst');
@@ -2264,6 +2270,7 @@ class GameEngine {
     window.Sound.stopAmbientOrgan();
     window.Sound.stopHeartbeat();
     window.Sound.stopDistantWeeping(0.35);
+    window.Sound.stopVentGlitchSound(0.15);
     window.Sound.startMenuDrone();
     window.Sound.startLobbyMusic();
 
@@ -2679,6 +2686,7 @@ class GameEngine {
       this.switchCamera(this.activeCameraId, true);
     } else {
       window.Sound.playCameraFlip(false);
+      window.Sound.stopVentGlitchSound(0.2);
       document.body.classList.remove('cctv-open');
     }
   }
@@ -2858,11 +2866,18 @@ class GameEngine {
       overlay.classList.toggle('cam-glitching', isError);
     }
     if (isError) {
-      // Camera is in motion error state! Play harsh glitch static!
       window.Sound.playCameraErrorStatic(this.cameraErrorTimers[camId], 0.4);
-    } else if (!isInitialOpen) {
+      if (camId === 4) {
+        window.Sound.startVentGlitchSound();
+      } else {
+        window.Sound.stopVentGlitchSound(0.2);
+      }
+    } else {
+      window.Sound.stopVentGlitchSound(0.2);
+      if (!isInitialOpen) {
       // Standard camera switch scanline static (pure, authentic 200ms channel switch)
       this.triggerStatic(0.20);
+    }
     }
 
     this.updateCCTVFeed();
@@ -2966,6 +2981,7 @@ class GameEngine {
     this.muteCassette();
     this.vibrate([150, 100, 250]);
     window.Sound.playPowerShutdown();
+    window.Sound.stopVentGlitchSound(0.1); // Power loss cuts vent cam glitch
 
     if (this.isLeftDoorClosed) this.toggleLeftDoor();
     if (this.isLeftDoorLightOn) this.toggleLeftDoorLight();
@@ -3052,6 +3068,7 @@ class GameEngine {
     this.isRunning = false;
     this.muteCassette();
     window.Sound.stopDistantWeeping(0.4);
+    window.Sound.stopVentGlitchSound(0.3);
     window.Sound.stopBGM(true);
     window.Sound.playVictoryFanfare();
 
@@ -3523,6 +3540,7 @@ class GameEngine {
     this.clearMournerVentRetreatTimer();
     this.muteCassette();
     window.Sound.stopDistantWeeping(0.2);
+    window.Sound.stopVentGlitchSound(0.1);
 
     // Immediately shut down CCTV monitor overlay and spotlight if active
     if (this.isCCTVOpen) {

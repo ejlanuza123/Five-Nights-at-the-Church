@@ -34,6 +34,9 @@ class SoundEngine {
     this.weepingAudioBuffers = {};
     this.activeWeepingSource = null;
     this.activeWeepingAudioEl = null;
+    this.ventGlitchAudioBuffer = null;
+    this.activeVentGlitchSource = null;
+    this.ventGlitchAudioEl = null;
     this.initAudioElements();
   }
 
@@ -43,6 +46,11 @@ class SoundEngine {
 
   initAudioElements() {
     try {
+      if (!this.ventGlitchAudioEl) {
+        this.ventGlitchAudioEl = new Audio('assets/audio/vent_cam_glitch.mp3');
+        this.ventGlitchAudioEl.preload = 'auto';
+        this.ventGlitchAudioEl.loop = true;
+      }
       if (!this.lobbyAudio) {
         this.lobbyAudio = document.getElementById('bgm-lobby');
         if (!this.lobbyAudio) {
@@ -117,6 +125,7 @@ class SoundEngine {
 
     this.preloadJumpscareAudio();
     this.preloadWeepingAudio();
+    this.preloadVentGlitchAudio();
     this.audioLoaded = true;
     if (onProgress) onProgress(1.0, 'Cathedral & In-Game Soundtracks Ready');
     return true;
@@ -318,6 +327,7 @@ class SoundEngine {
       this._initNoiseBuffers();
       this.preloadJumpscareAudio();
       this.preloadWeepingAudio();
+      this.preloadVentGlitchAudio();
       if (this.ctx.state === 'suspended') {
         this.ctx.resume();
       }
@@ -1034,6 +1044,119 @@ class SoundEngine {
     gain.connect(this.masterGain);
     osc.start(now);
     osc.stop(now + 0.06);
+  }
+
+  
+  // Preload & decode authentic vent camera glitch audio
+  preloadVentGlitchAudio() {
+    if (this.ventGlitchAudioBuffer) return;
+    fetch('assets/audio/vent_cam_glitch.mp3')
+      .then(r => r.arrayBuffer())
+      .then(ab => {
+        if (!this.ctx) {
+          try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+          } catch (e) {}
+        }
+        if (this.ctx) {
+          this.ctx.decodeAudioData(ab, (decoded) => {
+            this.ventGlitchAudioBuffer = decoded;
+          }, (e) => console.warn('Decode error for vent glitch audio', e));
+        }
+      })
+      .catch(e => console.warn('Fetch error for vent glitch audio', e));
+  }
+
+  // --- VENT CAM GLITCH AUDIO (PLAYED WHILE CAM 04 IS GLITCHING) ---
+  startVentGlitchSound(customVol = 0.85) {
+    if (this.isMuted) return;
+    if (!this.ctx) this.init();
+    this.resume();
+
+    // Prevent duplicate overlapping instances if already playing
+    if (this.activeVentGlitchSource || (this.activeVentGlitchAudioEl && !this.activeVentGlitchAudioEl.paused)) {
+      return;
+    }
+
+    const sfx = (this.sfxVolume !== undefined ? this.sfxVolume : 0.90);
+    const master = (this.masterVolume !== undefined ? this.masterVolume : 0.85);
+    const vol = Math.max(0.01, Math.min(1.0, customVol * sfx * master));
+
+    if (this.ventGlitchAudioBuffer && this.ctx && this.masterGain) {
+      const now = this.ctx.currentTime;
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.ventGlitchAudioBuffer;
+      src.loop = true;
+
+      // Panned to the right side (0.65) where the HVAC duct is situated
+      const panner = this.createPanner(0.65);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(vol, now + 0.12);
+
+      src.connect(gain);
+      if (panner) {
+        gain.connect(panner);
+        panner.connect(this.masterGain);
+      } else {
+        gain.connect(this.masterGain);
+      }
+
+      src.start(now);
+      this.activeVentGlitchSource = { src, gain, panner };
+    } else {
+      // HTML5 Audio fallback
+      try {
+        if (!this.ventGlitchAudioEl) {
+          this.ventGlitchAudioEl = new Audio('assets/audio/vent_cam_glitch.mp3');
+          this.ventGlitchAudioEl.loop = true;
+        }
+        this.ventGlitchAudioEl.volume = vol;
+        this.ventGlitchAudioEl.currentTime = 0;
+        this.ventGlitchAudioEl.play().catch(() => {});
+      } catch (e) {}
+    }
+  }
+
+  stopVentGlitchSound(fadeDuration = 0.25) {
+    if (this.activeVentGlitchSource && this.ctx) {
+      try {
+        const now = this.ctx.currentTime;
+        const v = this.activeVentGlitchSource;
+        if (v.gain) {
+          v.gain.gain.setValueAtTime(v.gain.gain.value, now);
+          v.gain.gain.linearRampToValueAtTime(0.001, now + fadeDuration);
+        }
+        setTimeout(() => {
+          try { v.src?.stop(); } catch (e) {}
+        }, fadeDuration * 1000 + 40);
+      } catch (e) {}
+      this.activeVentGlitchSource = null;
+    }
+    if (this.ventGlitchAudioEl && !this.ventGlitchAudioEl.paused) {
+      try {
+        const el = this.ventGlitchAudioEl;
+        const startVol = el.volume;
+        const startTime = performance.now();
+        const fadeMs = fadeDuration * 1000;
+        const step = () => {
+          const elapsed = performance.now() - startTime;
+          if (elapsed < fadeMs && !el.paused) {
+            el.volume = Math.max(0, startVol * (1 - elapsed / fadeMs));
+            requestAnimationFrame(step);
+          } else {
+            el.pause();
+            el.currentTime = 0;
+          }
+        };
+        requestAnimationFrame(step);
+      } catch (e) {
+        this.ventGlitchAudioEl.pause();
+        this.ventGlitchAudioEl.currentTime = 0;
+      }
+    }
   }
 
   // --- AUTHENTIC FNAF CAMERA MOTION DISRUPTION & ERROR STATIC ---
