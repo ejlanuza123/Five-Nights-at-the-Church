@@ -736,6 +736,7 @@ class GameEngine {
   startAngelDoorRetreatTimer() {
     this.clearAngelDoorRetreatTimer();
     this.aiConfig.weepingAngel.attackTimer = 0;
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.weepingAngel.level >= 14)) ? 2500 : 3200;
     this._angelDoorRetreatTimer = setTimeout(() => {
       this._angelDoorRetreatTimer = null;
       if (this.isLeftDoorClosed && this.aiConfig.weepingAngel.stage === 3) {
@@ -744,7 +745,7 @@ class GameEngine {
         window.Sound.playLeftFootstep(0.65);
         this.banishAngel();
       }
-    }, 3200);
+    }, retreatMs);
   }
 
   clearAngelDoorRetreatTimer() {
@@ -757,6 +758,7 @@ class GameEngine {
   startSaintDoorRetreatTimer() {
     this.clearSaintDoorRetreatTimer();
     this.aiConfig.haloedSaint.attackTimer = 0;
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.haloedSaint.level >= 14)) ? 2500 : 3200;
     this._saintDoorRetreatTimer = setTimeout(() => {
       this._saintDoorRetreatTimer = null;
       if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 3) {
@@ -765,7 +767,7 @@ class GameEngine {
         window.Sound.playLeftFootstep(0.65);
         this.banishSaint();
       }
-    }, 3200);
+    }, retreatMs);
   }
 
   clearSaintDoorRetreatTimer() {
@@ -3102,7 +3104,7 @@ class GameEngine {
             // Night 6: 1.5 seconds!
             // Night 4-5: 2.5 seconds
             // Earlier: 3.6 seconds
-            const enterOfficeThreshold = isNight6OrHard ? 1.5 : (this.currentNight >= 4 ? 2.5 : 3.6);
+            const enterOfficeThreshold = isNight6OrHard ? 2.5 : (this.currentNight >= 4 ? 2.5 : 3.6);
             if (ai.attackTimer >= enterOfficeThreshold) {
               ai.stage = 4;
               this.setAngelStage(4);
@@ -3223,7 +3225,7 @@ class GameEngine {
             // Night 6: 1.5 seconds!
             // Night 4-5: 2.6 seconds
             // Earlier: 3.8 seconds
-            const enterOfficeThreshold = isNight6OrHard ? 1.5 : (this.currentNight >= 4 ? 2.6 : 3.8);
+            const enterOfficeThreshold = isNight6OrHard ? 2.5 : (this.currentNight >= 4 ? 2.6 : 3.8);
             if (ai.attackTimer >= enterOfficeThreshold) {
               ai.stage = 4;
               this.setSaintStage(4);
@@ -3345,7 +3347,7 @@ class GameEngine {
             // Night 6: 1.5 seconds!
             // Night 4-5: 2.6 seconds
             // Earlier: 3.8 seconds
-            const exitVentThreshold = isNight6OrHard ? 1.5 : (this.currentNight >= 4 ? 2.6 : 3.8);
+            const exitVentThreshold = isNight6OrHard ? 2.5 : (this.currentNight >= 4 ? 2.6 : 3.8);
             if (ai.attackTimer >= exitVentThreshold) {
               ai.stage = 4;
               this.setMournerStage(4);
@@ -3488,7 +3490,8 @@ class GameEngine {
     // Pause background music & halt ambient organ/heartbeat
     window.Sound.pauseBGM();
     window.Sound.stopHeartbeat();
-    window.Sound.playJumpscare();
+    if (window.Sound.playEntityJumpscare) window.Sound.playEntityJumpscare(entityName);
+    else window.Sound.playJumpscare(entityName);
     this.vibrate([200, 80, 400, 100, 600]);
 
     // Red horror strobe flash
@@ -3557,9 +3560,11 @@ class GameEngine {
       // Reveal active video element immediately
       activeVideo.classList.remove('hidden');
 
-      // Keep muted: Autoplay policies NEVER reject muted video playback.
-      // Audio is synthesized in real-time with zero latency by window.Sound.playJumpscare()
-      activeVideo.muted = true;
+      // Unmute video element and scale volume to match player sound settings
+      const sfxVol = (window.Sound && window.Sound.sfxVolume !== undefined) ? window.Sound.sfxVolume : 0.9;
+      const masterVol = (window.Sound && window.Sound.masterVolume !== undefined) ? window.Sound.masterVolume : 0.85;
+      activeVideo.volume = Math.max(0, Math.min(1, sfxVol * masterVol));
+      activeVideo.muted = false;
       activeVideo.playsInline = true;
 
       // Reveal container and video element
@@ -3581,7 +3586,11 @@ class GameEngine {
       const playPromise = activeVideo.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
-          console.warn('Video play interrupted, fallback to muted or timer:', err);
+          // If browser autoplay policy rejects unmuted video, re-mute video element
+          // so video frames play smoothly while WebAudio plays the real scream buffer!
+          console.warn('Unmuted video playback blocked by browser policy; muting video element while WebAudio plays scream:', err);
+          activeVideo.muted = true;
+          activeVideo.play().catch(() => {});
           onVideoStarted();
         });
       }

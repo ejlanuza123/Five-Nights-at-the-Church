@@ -30,6 +30,7 @@ class SoundEngine {
     this.lobbyBaseVolume = 0.70;
     this.gameBaseVolume = 0.75;
     this.audioLoaded = false;
+    this.jumpscareAudioBuffers = {};
     this.initAudioElements();
   }
 
@@ -111,6 +112,7 @@ class SoundEngine {
       }
     }
 
+    this.preloadJumpscareAudio();
     this.audioLoaded = true;
     if (onProgress) onProgress(1.0, 'Cathedral & In-Game Soundtracks Ready');
     return true;
@@ -1197,8 +1199,79 @@ class SoundEngine {
     }, 2000);
   }
 
-  // --- JUMPSCARE STINGER ---
-  playJumpscare() {
+  // Preload & decode authentic video jumpscare screams into WebAudio memory buffers
+  preloadJumpscareAudio() {
+    if (!this.jumpscareAudioBuffers) this.jumpscareAudioBuffers = {};
+    const jumpscareFiles = {
+      weepingAngel: 'assets/audio/jumpscare_angel.mp3',
+      haloedSaint: 'assets/audio/jumpscare_michael.mp3',
+      veiledMourner: 'assets/audio/jumpscare_mary.mp3'
+    };
+    Object.entries(jumpscareFiles).forEach(([key, url]) => {
+      fetch(url)
+        .then(r => r.arrayBuffer())
+        .then(ab => {
+          if (!this.ctx) {
+            try {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              this.ctx = new AudioCtx();
+            } catch (e) {}
+          }
+          if (this.ctx) {
+            this.ctx.decodeAudioData(ab, (decoded) => {
+              this.jumpscareAudioBuffers[key] = decoded;
+            }, (e) => console.warn('Decode error for ' + key, e));
+          }
+        })
+        .catch(e => console.warn('Fetch error for ' + key, e));
+    });
+  }
+
+  // Authentic entity jumpscare scream playback (WebAudio pre-buffered for guaranteed 0ms playback)
+  playEntityJumpscare(entityName = 'haloedSaint') {
+    if (!this.ctx) {
+      this.init();
+    }
+    this.resume();
+    this.stopHeartbeat();
+    const now = this.ctx ? this.ctx.currentTime : 0;
+    const vol = (this.sfxVolume !== undefined ? this.sfxVolume : 0.9) * (this.masterVolume !== undefined ? this.masterVolume : 0.85);
+
+    // 1. Play the authentic high-definition entity scream from pre-decoded buffer
+    const buf = this.jumpscareAudioBuffers ? this.jumpscareAudioBuffers[entityName] : null;
+    if (buf && this.ctx && this.masterGain) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(vol * 1.6, now); // Full cinematic horror scream level!
+      src.connect(gain);
+      gain.connect(this.masterGain);
+      src.start(now);
+    } else {
+      // Direct Audio element fallback if buffer not yet decoded
+      const audioFiles = {
+        weepingAngel: 'assets/audio/jumpscare_angel.mp3',
+        haloedSaint: 'assets/audio/jumpscare_michael.mp3',
+        veiledMourner: 'assets/audio/jumpscare_mary.mp3'
+      };
+      const soundUrl = audioFiles[entityName] || audioFiles.haloedSaint;
+      try {
+        const fallbackAudio = new Audio(soundUrl);
+        fallbackAudio.volume = Math.max(0, Math.min(1, vol));
+        fallbackAudio.play().catch(() => {});
+      } catch (e) {}
+    }
+
+    // 2. Combine with the visceral sub-bass impact and harmonic feedback screech
+    this.playJumpscare();
+  }
+
+  // --- JUMPSCARE STINGER (SUB-BASS & DISSONANT SCREAMER CHORD) ---
+  playJumpscare(entityName = null) {
+    if (entityName && this.jumpscareAudioBuffers && (entityName in this.jumpscareAudioBuffers)) {
+      this.playEntityJumpscare(entityName);
+      return;
+    }
     if (!this.ctx) return;
     this.stopHeartbeat();
     const now = this.ctx.currentTime;
