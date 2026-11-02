@@ -776,6 +776,7 @@ body::-webkit-scrollbar,
 }
 
 /* Real-time Animated Static Canvas (Analog TV Snow) */
+/* Real-time Animated Static Canvas (Analog TV Snow - FNAF Style) */
 .cctv-static-canvas {
   position: absolute;
   inset: 0;
@@ -783,7 +784,7 @@ body::-webkit-scrollbar,
   height: 100%;
   z-index: 3;
   pointer-events: none;
-  opacity: 0.14;
+  opacity: 0.28;
   mix-blend-mode: screen;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -2185,8 +2186,8 @@ body::-webkit-scrollbar,
 
 /* Main Menu Glitch State: momentary static flutter without shaking the screen or title */
 #fnaf-main-menu.glitching .menu-static-canvas {
-  opacity: 0.72 !important;
-  filter: contrast(1.8) brightness(1.3) !important;
+  opacity: 0.82 !important;
+  filter: contrast(2.2) brightness(1.35) !important;
   mix-blend-mode: screen !important;
   transition: opacity 0.04s ease;
 }
@@ -2195,15 +2196,19 @@ body::-webkit-scrollbar,
   opacity: 0.85 !important;
 }
 
-/* Title text stays 100% steady in place - NO shaking or movement */
+/* Title text stays 100% steady in place - NO shaking, NO glitching, NO chromatic aberration */
 .fnaf-game-title,
-#fnaf-main-menu.glitching .fnaf-game-title {
+.fnaf-game-title *,
+#fnaf-main-menu.glitching .fnaf-game-title,
+#fnaf-main-menu.glitching .fnaf-game-title * {
   transform: none !important;
   animation: none !important;
+  filter: none !important;
 }
 
 #fnaf-main-menu.glitching .fnaf-game-title .church-accent {
-  text-shadow: 0 0 25px rgba(239, 68, 68, 1), -3px 0 rgba(220, 38, 38, 0.9), 3px 0 rgba(6, 182, 212, 0.9) !important;
+  color: #dc2626 !important;
+  text-shadow: 0 0 25px rgba(220, 38, 38, 0.6), 2px 2px 0 #000 !important;
 }
 
 .menu-statue-layer.anomaly {
@@ -2224,15 +2229,19 @@ body::-webkit-scrollbar,
 }
 
 /* Menu Animated Canvas Static Layer */
+/* Menu Animated Canvas Static Layer - Continuous subtle low signal noise */
 .menu-static-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   z-index: 2;
-  opacity: 0.16;
+  opacity: 0.22;
   mix-blend-mode: screen;
   pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: opacity 0.06s ease;
 }
 
 /* Menu CRT Scanlines */

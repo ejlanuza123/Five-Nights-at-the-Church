@@ -401,13 +401,13 @@ class GameEngine {
       palette[i] = 0xFF000000 | (i << 16) | (i << 8) | i;
     }
 
-        // Precomputed subtle CRT sensor grain frames for normal mode (eliminates 150k+ Math.random calls per frame)
+        // Precomputed CRT analog noise grain frames for normal mode (authentic FNAF surveillance monitor noise)
     const normalGrainFrames = [];
-    for (let f = 0; f < 4; f++) {
+    for (let f = 0; f < 8; f++) {
       const gBuf = new Uint32Array(totalPixels);
       for (let i = 0; i < totalPixels; i++) {
         const v = (Math.random() * 255) | 0;
-        const a = (Math.random() * 30 + 8) | 0;
+        const a = (Math.random() * 95 + 35) | 0; // Noticeable analog CRT grain (0.14 - 0.51 alpha)
         gBuf[i] = (a << 24) | (v << 16) | (v << 8) | v;
       }
       normalGrainFrames.push(gBuf);
@@ -482,7 +482,7 @@ class GameEngine {
             canvas.classList.remove('loss-of-signal');
           }
 
-          data32.set(normalGrainFrames[normalGrainIdx % 4]);
+          data32.set(normalGrainFrames[normalGrainIdx % 8]);
           normalGrainIdx++;
         }
 
@@ -1797,7 +1797,7 @@ class GameEngine {
           data[i] = v;
           data[i + 1] = v;
           data[i + 2] = v;
-          data[i + 3] = (Math.random() * 150 + 35) | 0;
+          data[i + 3] = (Math.random() * 160 + 40) | 0;
         }
         ctx.putImageData(imgData, 0, 0);
       }
