@@ -395,7 +395,7 @@ class SoundEngine {
     this.updateBGMVolume();
   }
 
-  // --- FNAF CLASSIC TITLE MENU EERIE DRONE ---
+  // --- TITLE MENU EERIE DRONE ---
   startMenuDrone() {
     if (!this.ctx) return;
     this.stopMenuDrone();
@@ -478,7 +478,7 @@ class SoundEngine {
     }
   }
 
-  // Snappy classic FNAF UI cursor blip
+  // Snappy classic UI cursor blip
   playMenuBlip() {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
@@ -1178,7 +1178,7 @@ class SoundEngine {
     }
   }
 
-  // --- AUTHENTIC FNAF CAMERA MOTION DISRUPTION & ERROR STATIC ---
+  // --- AUTHENTIC CAMERA MOTION DISRUPTION & ERROR STATIC ---
   playCameraErrorStatic(duration = 3.2, volume = 0.45) {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;

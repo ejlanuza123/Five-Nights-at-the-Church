@@ -20,7 +20,7 @@ body.is-mobile .label-mobile {
   display: inline !important;
 }
 
-/* Compact, authentic FNAF-style Power & Battery Box on Mobile */
+/* Compact Power & Battery Box on Mobile */
 body.is-mobile .hud-power-box,
 body.is-mobile #hud-overlay .hud-power-box {
   min-width: unset !important;
@@ -776,7 +776,7 @@ body::-webkit-scrollbar,
 }
 
 /* Real-time Animated Static Canvas (Analog TV Snow) */
-/* Real-time Animated Static Canvas (Analog TV Snow - FNAF Style) */
+/* Real-time Animated Static Canvas (Analog TV Snow) */
 .cctv-static-canvas {
   position: absolute;
   inset: 0;
@@ -2147,7 +2147,7 @@ body::-webkit-scrollbar,
   border: none;
 }
 
-/* ================= CLASSIC FNAF STYLE MAIN MENU ================= */
+/* ================= CLASSIC MAIN MENU ================= */
 #fnaf-main-menu {
   position: absolute;
   inset: 0;
@@ -2274,7 +2274,7 @@ body::-webkit-scrollbar,
   display: none !important;
 }
 
-/* FNAF Freddy Twitch Animation triggered randomly via JS */
+/* Statue Twitch Animation triggered randomly via JS */
 .menu-statue-layer.twitch-1 {
   transform: translate(-14px, 4px) scale(1.02) skewX(-2deg);
   filter: contrast(2.4) brightness(0.9) hue-rotate(180deg) invert(0.2);
@@ -2346,7 +2346,7 @@ body::-webkit-scrollbar,
   height: 0 !important;
 }
 
-/* Classic FNAF Title */
+/* Classic Game Title */
 .fnaf-title-block {
   margin-bottom: 8px;
 }
@@ -2380,7 +2380,7 @@ body::-webkit-scrollbar,
   margin-top: 6px;
 }
 
-/* Vertical FNAF Menu Option Buttons */
+/* Vertical Menu Option Buttons */
 .fnaf-menu-options {
   display: flex;
   flex-direction: column;
@@ -2649,7 +2649,7 @@ body::-webkit-scrollbar,
   margin-top: 6px;
 }
 
-/* ================= ICONIC FNAF 12:00 AM NIGHT TRANSITION SCREEN ================= */
+/* ================= 12:00 AM NIGHT TRANSITION SCREEN ================= */
 #night-transition-screen {
   position: absolute;
   inset: 0;
@@ -4326,7 +4326,7 @@ kbd.key-badge {
     letter-spacing: 1px;
   }
 
-  /* FNAF Main Lobby Menu */
+  /* Main Lobby Menu */
   .fnaf-menu-container {
     width: 100%;
     max-width: 100vw;
@@ -4625,7 +4625,7 @@ kbd.key-badge {
 }
 
 /* ==========================================================================
-   TITLE MENU UNLOCKABLE STARS (FNAF REWARDS)
+   TITLE MENU UNLOCKABLE STARS (VIGIL REWARDS)
    ========================================================================== */
 .menu-stars-row {
   display: flex;
@@ -5582,7 +5582,7 @@ kbd.key-badge {
     display: none !important;
   }
 
-  /* ================= 6. LOBBY / MAIN TITLE MENU MOBILE OPTIMIZATION (AUTHENTIC FNAF MOBILE APP) ================= */
+  /* ================= 6. LOBBY / MAIN TITLE MENU MOBILE OPTIMIZATION ================= */
   /* Full atmospheric, lighter church sanctuary background in lobby */
   .menu-church-bg {
     background-position: center 36% !important;
@@ -5594,7 +5594,7 @@ kbd.key-badge {
     background: linear-gradient(90deg, rgba(3, 5, 9, 0.85) 0%, rgba(3, 5, 9, 0.45) 45%, rgba(0, 0, 0, 0.15) 100%) !important;
   }
 
-  /* FNAF Mobile App Style Single-Column Left Container */
+  /* Mobile App Single-Column Left Container */
   .fnaf-menu-container {
     position: relative !important;
     z-index: 10 !important;
@@ -5618,7 +5618,7 @@ kbd.key-badge {
     align-items: flex-start !important;
   }
 
-  /* Classic FNAF Title: Compact vertical stacked words */
+  /* Classic Game Title: Compact vertical stacked words */
   .fnaf-game-title {
     display: flex !important;
     flex-direction: column !important;
@@ -5665,7 +5665,7 @@ kbd.key-badge {
     text-shadow: 0 0 8px rgba(251, 191, 36, 0.8) !important;
   }
 
-  /* Authentic FNAF Mobile Vertical Button Stack (Single Column, Left-Aligned) */
+  /* Mobile Vertical Button Stack (Single Column, Left-Aligned) */
   .fnaf-menu-options {
     display: flex !important;
     flex-direction: column !important;
@@ -5675,7 +5675,7 @@ kbd.key-badge {
     overflow: visible !important;
   }
 
-  /* Sleek, Minimalist FNAF Mobile Text Items (NO bulky grey card boxes!) */
+  /* Sleek, Minimalist Mobile Text Items (NO bulky grey card boxes!) */
   .fnaf-menu-item {
     position: relative !important;
     background: transparent !important;

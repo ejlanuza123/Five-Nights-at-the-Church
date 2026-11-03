@@ -18,7 +18,7 @@ class GameEngine {
     this.currentNight = 1;
     this.hour = 0; // 0 = 12 AM, 1 = 1 AM, ..., 6 = 6 AM
     this.nightTimer = 0;
-    this.fnafStandardHour = 86; // Authentic FNAF 1 PC hour duration (86.0s = 516s / 8m 36s shift)
+    this.standardHour = 86; // Standard survival hour duration (86.0s = 516s / 8m 36s shift)
     this.hourDuration = 86;     // Standard 86s per hour on Normal speed
     this.timeSpeed = 1;         // Shift speed multiplier
     this._lastFrameTime = 0;
@@ -146,6 +146,7 @@ class GameEngine {
 
     if (!preloader) {
       this.preloadCCTVFeeds();
+      this.startLobbyTwitchLoop();
       return;
     }
 
@@ -178,6 +179,9 @@ class GameEngine {
             window.Sound.startMenuDrone();
           }
 
+          // Start lobby twitch loop freshly ONLY when lobby actually becomes visible to player
+          this.startLobbyTwitchLoop();
+
           setTimeout(() => {
             warningScreen.style.display = 'none';
             warningScreen.classList.add('hidden');
@@ -202,6 +206,7 @@ class GameEngine {
           this._menuAudioStarted = true;
           window.Sound.startMenuDrone();
         }
+        this.startLobbyTwitchLoop();
       }
     };
 
@@ -401,7 +406,7 @@ class GameEngine {
       palette[i] = 0xFF000000 | (i << 16) | (i << 8) | i;
     }
 
-        // Precomputed CRT analog noise grain frames for normal mode (authentic FNAF surveillance monitor noise)
+        // Precomputed CRT analog noise grain frames for normal mode (authentic analog surveillance monitor noise)
     const normalGrainFrames = [];
     for (let f = 0; f < 8; f++) {
       const gBuf = new Uint32Array(totalPixels);
@@ -1240,7 +1245,7 @@ class GameEngine {
         this.prevMouseX = e.clientX;
         this.prevMouseY = e.clientY;
       } else {
-        // Natural FNAF-style screen cursor tracking: moving cursor left/right turns view directly
+        // Natural screen cursor tracking: moving cursor left/right turns view directly
         const normX = (e.clientX / window.innerWidth - 0.5) * 2; // -1 (left) to +1 (right)
         const normY = (e.clientY / window.innerHeight - 0.5) * 2;
         this.targetYaw = -normX * (Math.PI * 0.50); // Full 90° pan across door, center window, and vent!
@@ -1490,10 +1495,14 @@ class GameEngine {
     }
   }
 
-  // --- CLASSIC FNAF MAIN MENU SYSTEM ---
+  // --- CLASSIC MAIN MENU SYSTEM ---
   setupFnafMenu() {
     this.setupMenuStaticCanvas();
-    this.setupMenuStatueTwitch();
+    // Ensure clean normal state on boot without starting twitch prematurely
+    const churchBg = document.getElementById('menu-church-bg');
+    const menuEl = document.getElementById('fnaf-main-menu');
+    if (churchBg) churchBg.classList.remove('anomaly');
+    if (menuEl) menuEl.classList.remove('glitching');
 
     // Start menu ambient drone and background music upon interaction with page
     const tryStartMenuSound = () => {
@@ -1807,27 +1816,39 @@ class GameEngine {
   }
 
   setupMenuStatueTwitch() {
+    this.startLobbyTwitchLoop();
+  }
+
+  startLobbyTwitchLoop() {
     const churchBgEl = document.getElementById('menu-church-bg') || document.querySelector('.menu-church-bg');
     const menuEl = document.getElementById('fnaf-main-menu');
     if (!churchBgEl && !menuEl) return;
 
-    // Preload anomaly image for zero-lag twitch transition
-    const anomalyImg = new Image();
-    anomalyImg.src = 'assets/cctv/church_cam_anomaly.png';
-
+    // 1. Clear any active timers and strictly force clean normal image on entry
     if (this._menuTwitchTimeout) {
       clearTimeout(this._menuTwitchTimeout);
       this._menuTwitchTimeout = null;
+    }
+    if (this._menuFollowUpTimeout) {
+      clearTimeout(this._menuFollowUpTimeout);
+      this._menuFollowUpTimeout = null;
     }
     if (this._menuWeepTimeout) {
       clearTimeout(this._menuWeepTimeout);
       this._menuWeepTimeout = null;
     }
 
-    const triggerTwitch = () => {
-      if (this.isRunning) return;
+    if (churchBgEl) churchBgEl.classList.remove('anomaly');
+    if (menuEl) menuEl.classList.remove('glitching');
 
-      // Authentic momentary FNAF statue twitch (face shifts to staring at player)
+    // 2. Preload anomaly image for zero-lag instant glitch swap
+    const anomalyImg = new Image();
+    anomalyImg.src = 'assets/cctv/church_cam_anomaly.png';
+
+    const triggerTwitch = () => {
+      if (this.isRunning || this.isNightTransitioning) return;
+
+      // Momentary statue twitch: swap to staring anomaly image and surge analog static noise
       if (menuEl) menuEl.classList.add('glitching');
       if (churchBgEl) churchBgEl.classList.add('anomaly');
       window.Sound.playCameraStatic(0.18, 0.35);
@@ -1837,45 +1858,45 @@ class GameEngine {
         window.Sound.playDistantWeeping('short', 0.65, 0.35);
       }
 
-      // 160-240ms duration: clearly perceptible to human eye and reliably painted by mobile GPU
-      const duration = 160 + Math.random() * 80;
+      // 160-220ms duration: sudden quick flash then immediate snap back to normal
+      const duration = 160 + Math.random() * 60;
       setTimeout(() => {
         if (churchBgEl) churchBgEl.classList.remove('anomaly');
         if (menuEl) menuEl.classList.remove('glitching');
       }, duration);
 
-      // 35% chance of rapid follow-up shudder (authentic FNAF title screen double-glitch)
-      if (Math.random() < 0.35) {
-        setTimeout(() => {
-          if (this.isRunning) return;
+      // 30% chance of rapid follow-up shudder
+      if (Math.random() < 0.30) {
+        this._menuFollowUpTimeout = setTimeout(() => {
+          if (this.isRunning || this.isNightTransitioning) return;
           if (menuEl) menuEl.classList.add('glitching');
           if (churchBgEl) churchBgEl.classList.add('anomaly');
           window.Sound.playCameraStatic(0.10, 0.28);
           setTimeout(() => {
             if (churchBgEl) churchBgEl.classList.remove('anomaly');
             if (menuEl) menuEl.classList.remove('glitching');
-          }, 90);
-        }, duration + 80);
+          }, 85);
+        }, duration + 75);
       }
 
-      // Authentic FNAF title screen twitches (every 3.5 to 6.5 seconds)
-      const nextDelay = 3500 + Math.random() * 3000;
+      // Schedule next twitch: every 4.0 to 7.5 seconds of calm normal image before next twitch
+      const nextDelay = 4000 + Math.random() * 3500;
       this._menuTwitchTimeout = setTimeout(triggerTwitch, nextDelay);
     };
 
-    // First twitch fires 2.5s after entering lobby
-    this._menuTwitchTimeout = setTimeout(triggerTwitch, 2500);
+    // The FIRST twitch fires ONLY AFTER the player has spent 4.5 to 6.0 seconds viewing the calm normal sanctuary
+    this._menuTwitchTimeout = setTimeout(triggerTwitch, 4500 + Math.random() * 1500);
 
-    // Ambient distant weeping loop in the main menu lobby (very faint, echoing from the right nave)
+    // Ambient distant weeping loop in the main menu lobby (very faint, echoing from right nave)
     const triggerMenuAmbientWeep = () => {
-      if (this.isRunning) return;
+      if (this.isRunning || this.isNightTransitioning) return;
       const fnafMenu = document.getElementById('fnaf-main-menu');
       if (fnafMenu && !fnafMenu.classList.contains('hidden')) {
         window.Sound.playDistantWeeping('random', 0.65, 0.32);
       }
-      setTimeout(triggerMenuAmbientWeep, 35000 + Math.random() * 45000);
+      this._menuWeepTimeout = setTimeout(triggerMenuAmbientWeep, 35000 + Math.random() * 40000);
     };
-    setTimeout(triggerMenuAmbientWeep, 18000);
+    this._menuWeepTimeout = setTimeout(triggerMenuAmbientWeep, 16000);
   }
 
   startNightWithTransition(night = 1) {
@@ -1883,6 +1904,14 @@ class GameEngine {
     if (this._menuTwitchTimeout) {
       clearTimeout(this._menuTwitchTimeout);
       this._menuTwitchTimeout = null;
+    }
+    if (this._menuFollowUpTimeout) {
+      clearTimeout(this._menuFollowUpTimeout);
+      this._menuFollowUpTimeout = null;
+    }
+    if (this._menuWeepTimeout) {
+      clearTimeout(this._menuWeepTimeout);
+      this._menuWeepTimeout = null;
     }
     document.getElementById('fnaf-main-menu')?.classList.remove('glitching');
     document.getElementById('menu-church-bg')?.classList.remove('anomaly');
@@ -2135,7 +2164,7 @@ class GameEngine {
         speedCards.forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         if (spd === 1) {
-          this.hourDuration = 86; // Authentic FNAF 1 PC (86s / hr = 516s / ~8m 36s shift)
+          this.hourDuration = 86; // Standard survival shift (86s / hr = 516s / ~8m 36s shift)
           this.timeSpeed = 1;
         } else if (spd === 2) {
           this.hourDuration = 60; // Modern Fast (60s / hr = 360s / 6m shift)
@@ -3025,7 +3054,7 @@ class GameEngine {
     if (this.isWindowSpotOn) usageBars++;
     usageBars = Math.min(7, Math.max(1, usageBars));
 
-    // Authentic FNAF 1 Power Drain Curve (% per in-game second)
+    // Authentic Power Drain Curve (% per in-game second)
     // 1 bar (idle base): ~0.1042%/s (37.5% over 360s shift, leaves 62.5% if untouched)
     // 2 bars (1 device): ~0.2083%/s (75% consumed if untouched)
     // 3 bars (2 devices): ~0.3150%/s
@@ -3150,7 +3179,7 @@ class GameEngine {
     window.Sound.stopBGM(true);
     window.Sound.playVictoryFanfare();
 
-    // Reward Shift Victory Stars (FNAF Badges)
+    // Reward Shift Victory Stars (Vigil Badges)
     if (!this.isCustomNight) {
       if (this.currentNight >= 5) {
         this.stars.night5 = true;
