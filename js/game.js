@@ -792,15 +792,19 @@ class GameEngine {
   startMournerVentRetreatTimer() {
     this.clearMournerVentRetreatTimer();
     this.aiConfig.veiledMourner.attackTimer = 0;
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 2500 : 3200;
+    // Immediate shutter impact clatter when closed in front of her
+    window.Sound.playVentClatter(0.8);
+    this.vibrate(40);
     this._mournerVentRetreatTimer = setTimeout(() => {
       this._mournerVentRetreatTimer = null;
-      if (this.isVentClosed && this.aiConfig.veiledMourner.stage === 3) {
+      if (this.isVentClosed && (this.aiConfig.veiledMourner.stage === 3 || this.aiConfig.veiledMourner.stage === 2)) {
         this.vibrate([60, 50, 90]);
+        window.Sound.playVentClatter(0.95);
         window.Sound.playStoneGrind(0.7);
-        window.Sound.playVentSound(false);
         this.banishMourner();
       }
-    }, 3000);
+    }, retreatMs);
   }
 
   clearMournerVentRetreatTimer() {
@@ -1152,20 +1156,61 @@ class GameEngine {
     this.clearMournerVentRetreatTimer();
     const ai = this.aiConfig.veiledMourner;
     const prevLoc = ai.location;
-    ai.stage = -1; // Banished to alternate camera (CAM_03 Chapel or CAM_01 Sanctuary Altar)
-    const banishTarget = (Math.random() < 0.5) ? 'CAM_03' : 'CAM_01';
+
+    // Relocate to another camera:
+    // CAM_02: Memorial Columbarium Crypt (her home pedestal - 40%)
+    // CAM_03: Reconciliation Chapel Confessional (30%)
+    // CAM_05: Cloister Hallway outside observation window (20%)
+    // CAM_01: Sanctuary Altar (10%)
+    const rand = Math.random();
+    let banishTarget = 'CAM_02';
+    let targetStage = 0;
+    let targetCamNum = 2;
+
+    if (rand < 0.40) {
+      banishTarget = 'CAM_02';
+      targetStage = 0;
+      targetCamNum = 2;
+    } else if (rand < 0.70) {
+      banishTarget = 'CAM_03';
+      targetStage = -1;
+      targetCamNum = 3;
+    } else if (rand < 0.90) {
+      banishTarget = 'CAM_05';
+      targetStage = -1;
+      targetCamNum = 5;
+    } else {
+      banishTarget = 'CAM_01';
+      targetStage = -1;
+      targetCamNum = 1;
+    }
+
+    ai.stage = targetStage;
     ai.location = banishTarget;
     ai.awakened = false;
     ai.attackTimer = 0;
     ai.timer = 0;
-    this._lastMournerStage = -1;
+    ai._ventWarningPlayed = false;
+    this._lastMournerStage = targetStage;
     this.handleEntityMovement(prevLoc, banishTarget, 'veiledMourner');
+
+    // Clear vent duct cam error so vent crawling audio immediately ceases
+    if (this.cameraErrorTimers) {
+      this.cameraErrorTimers[4] = 0;
+    }
+    // Destination camera gets static motion glitch as she appears there
+    this.triggerCameraMotionError(targetCamNum, 2.0);
 
     const mourner = this.world?.statues?.veiledMourner;
     if (mourner) {
-      mourner.visible = false;
+      mourner.visible = (targetStage === 0);
+      if (targetStage === 0) {
+        mourner.position.set(38, 0.45, -32);
+        mourner.rotation.set(0, -Math.PI / 3, 0);
+      }
     }
 
+    this.updateVentAudio();
     this.updateWindowHallwayView();
     if (this.isCCTVOpen) {
       this.updateCCTVFeed();
@@ -2576,6 +2621,18 @@ class GameEngine {
     this.vibrate(35);
     window.Sound.playDoorSound(this.isLeftDoorClosed);
 
+    if (this.isLeftDoorClosed) {
+      if (this.aiConfig.weepingAngel.stage === 3) {
+        this.startAngelDoorRetreatTimer();
+      }
+      if (this.aiConfig.haloedSaint.stage === 3) {
+        this.startSaintDoorRetreatTimer();
+      }
+    } else {
+      this.clearAngelDoorRetreatTimer();
+      this.clearSaintDoorRetreatTimer();
+    }
+
     // Update Maglock LED color: Red = Armed/Locked, Green = Unarmed/Open
     if (this.world.nodes.magLedMat) {
       this.world.nodes.magLedMat.color.setHex(this.isLeftDoorClosed ? 0xef4444 : 0x22c55e);
@@ -2610,6 +2667,14 @@ class GameEngine {
     this.isVentClosed = !this.isVentClosed;
     this.vibrate(35);
     window.Sound.playVentSound(this.isVentClosed);
+
+    if (this.isVentClosed) {
+      if (this.aiConfig.veiledMourner.stage === 3) {
+        this.startMournerVentRetreatTimer();
+      }
+    } else {
+      this.clearMournerVentRetreatTimer();
+    }
 
     const btn = document.getElementById('btn-vent-toggle');
     if (btn) {
@@ -3569,12 +3634,16 @@ class GameEngine {
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
         if (ai.stage === -1) {
-          // Banishment recovery: advances from CAM_03 Chapel or CAM_01 Altar
-          if (ai.location === 'CAM_01' && Math.random() < 0.5) {
+          // Banishment recovery from CAM_05 Hallway, CAM_03 Chapel, or CAM_01 Altar
+          if (ai.location === 'CAM_05') {
+            if (this.isWindowSpotOn) return; // Blocked by observation window spotlight!
+            this.setMournerStage(1);
+            window.Sound.playStoneGrind(0.6);
+            window.Sound.playVentClatter(0.75);
+          } else if (ai.location === 'CAM_01' && Math.random() < 0.5) {
             // Rare alternative flank: crosses through CAM_05 Hallway outside observation window
             if (this.isWindowSpotOn) return;
             ai.location = 'CAM_05';
-            ai.stage = 1;
             this.updateWindowHallwayView();
             if (this.isCCTVOpen) this.updateCCTVFeed();
             window.Sound.playStoneGrind(0.6);
@@ -3849,36 +3918,6 @@ class GameEngine {
       if (Math.abs(this.world.nodes.doorPivot.rotation.y - targetDoorRot) < 0.015) {
         this.world.nodes.doorPivot.rotation.y = targetDoorRot;
       }
-
-      const isDoorFullyClosed = this.isLeftDoorClosed && (Math.abs(this.world.nodes.doorPivot.rotation.y) < 0.04);
-      if (isDoorFullyClosed) {
-        // Disappear/banish entity when door is fully closed
-        if (this.aiConfig.weepingAngel.stage === 3) {
-          if (!this._angelBanishedOnClose) {
-            const timeAtDoor = Date.now() - (this._angelStage3ArrivalTime || 0);
-            if (timeAtDoor > 250) {
-              this._angelBanishedOnClose = true;
-              window.Sound.playStoneGrind(0.85);
-              window.Sound.playLeftFootstep(0.65);
-              this.banishAngel();
-            }
-          }
-        }
-        if (this.aiConfig.haloedSaint.stage === 3) {
-          if (!this._saintBanishedOnClose) {
-            const timeAtDoor = Date.now() - (this._saintStage3ArrivalTime || 0);
-            if (timeAtDoor > 250) {
-              this._saintBanishedOnClose = true;
-              window.Sound.playStoneGrind(0.85);
-              window.Sound.playLeftFootstep(0.65);
-              this.banishSaint();
-            }
-          }
-        }
-      } else {
-        this._angelBanishedOnClose = false;
-        this._saintBanishedOnClose = false;
-      }
     }
 
     // Heavy Industrial Vent Shutter Damper slide animation (fast motorized drop seal)
@@ -3888,23 +3927,6 @@ class GameEngine {
       this.world.nodes.ventShutter.position.y += (targetVentY - this.world.nodes.ventShutter.position.y) * ventSpeed;
       if (Math.abs(this.world.nodes.ventShutter.position.y - targetVentY) < 0.02) {
         this.world.nodes.ventShutter.position.y = targetVentY;
-      }
-
-      const isVentFullyClosed = this.isVentClosed && (this.world.nodes.ventShutter.position.y < 0.62);
-      if (isVentFullyClosed) {
-        if (this.aiConfig.veiledMourner.stage === 3) {
-          if (!this._mournerBanishedOnClose) {
-            const timeAtVent = Date.now() - (this._mournerStage3ArrivalTime || 0);
-            if (timeAtVent > 250) {
-              this._mournerBanishedOnClose = true;
-              window.Sound.playStoneGrind(0.7);
-              window.Sound.playVentSound(false);
-              this.banishMourner();
-            }
-          }
-        }
-      } else {
-        this._mournerBanishedOnClose = false;
       }
     }
 
