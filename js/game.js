@@ -792,7 +792,7 @@ class GameEngine {
   startMournerVentRetreatTimer() {
     this.clearMournerVentRetreatTimer();
     this.aiConfig.veiledMourner.attackTimer = 0;
-    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 1000 : 1400;
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 1500 : 2000;
     // Immediate shutter impact clatter when closed in front of her
     window.Sound.playVentClatter(0.8);
     this.vibrate(40);
