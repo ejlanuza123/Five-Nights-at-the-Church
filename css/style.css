@@ -1315,7 +1315,7 @@ body::-webkit-scrollbar,
 #cam-btn-2 { top: 48%; left: 78%; }
 #cam-btn-3 { top: 48%; left: 22%; }
 #cam-btn-4 { top: 78%; left: 72%; }
-#cam-btn-5 { top: 74%; left: 50%; }
+#cam-btn-5 { top: 78%; left: 24%; }
 
 .cctv-flip-down {
   position: absolute;

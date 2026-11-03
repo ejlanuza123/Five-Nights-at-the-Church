@@ -74,7 +74,7 @@ class GameEngine {
       2: { name: 'CAM 02 - MEMORIAL COLUMBARIUM', pos: new THREE.Vector3(35, 2.9, -25), lookAt: new THREE.Vector3(35, 1.2, -32), room: 'columbarium' },
       3: { name: 'CAM 03 - RECONCILIATION CHAPEL', pos: new THREE.Vector3(-35, 2.9, -24), lookAt: new THREE.Vector3(-35, 1.3, -32), room: 'confessional' },
       4: { name: 'CAM 04 - HVAC RETURN AIR DUCT', pos: new THREE.Vector3(6.0, 0.75, 0.2), lookAt: new THREE.Vector3(3.2, 0.65, 0), room: 'hvac' },
-      5: { name: 'CAM 05 - NARTHEX & CORRIDOR', pos: new THREE.Vector3(0, 2.8, -8.0), lookAt: new THREE.Vector3(0, 1.8, -3.2), room: 'narthex' }
+      5: { name: 'CAM 05 - WEST DOORWAY CORRIDOR', pos: new THREE.Vector3(-15.0, 2.8, -5.0), lookAt: new THREE.Vector3(-6.0, 1.5, -1.0), room: 'west_corridor' }
     };
 
     // Jumpscare Animation
@@ -961,7 +961,12 @@ class GameEngine {
     if (stage === 0) this.aiConfig.weepingAngel.awakened = false;
 
     // Strict Unique Location mapping (Angel is only ever in ONE place)
-    const locMap = { 0: 'CAM_01', 1: 'CAM_05', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
+    // Stage 0: CAM_01 (Sanctuary Altar)
+    // Stage 1: WINDOW (Observation window glass in front of player desk)
+    // Stage 2: CAM_05 (West corridor outside left door - NOT on window glass)
+    // Stage 3: LEFT_DOOR (Doorway threshold)
+    // Stage 4: OFFICE (Inside office attack)
+    const locMap = { 0: 'CAM_01', 1: 'WINDOW', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
     const newLoc = locMap[stage] || 'CAM_01';
     this.aiConfig.weepingAngel.location = newLoc;
 
@@ -1009,7 +1014,12 @@ class GameEngine {
     if (stage === 0) this.aiConfig.haloedSaint.awakened = false;
 
     // Strict Unique Location mapping (Saint is only ever in ONE place)
-    const locMap = { 0: 'CAM_03', 1: 'CAM_05', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
+    // Stage 0: CAM_03 (Reconciliation Chapel)
+    // Stage 1: WINDOW (Observation window glass in front of player desk)
+    // Stage 2: CAM_05 (West corridor outside left door - NOT on window glass)
+    // Stage 3: LEFT_DOOR (Doorway threshold)
+    // Stage 4: OFFICE (Inside office attack)
+    const locMap = { 0: 'CAM_03', 1: 'WINDOW', 2: 'CAM_05', 3: 'LEFT_DOOR', 4: 'OFFICE' };
     const newLoc = locMap[stage] || 'CAM_03';
     this.aiConfig.haloedSaint.location = newLoc;
 
@@ -1227,17 +1237,13 @@ class GameEngine {
     const mournerLoc = this.aiConfig.veiledMourner.location;
 
     let targetTex = this.windowTextures.empty;
-    // Multi-stage Cloister Hallway Distance Progression:
-    // Priority: Stage 2 (Directly outside window in bright spotlight) > Stage 1 (Distant corridor silhouette)
-    if (angelLoc === 'CAM_05' && angelStage === 2) {
+    // Strict Window Glass Isolation: ONLY entities specifically at the front window glass ('WINDOW') appear here!
+    // When an entity is at CAM_05 (outside the left door), it must NOT appear on the window glass.
+    if (angelLoc === 'WINDOW') {
       targetTex = this.windowTextures.angel_close;
-    } else if (saintLoc === 'CAM_05' && saintStage === 2) {
+    } else if (saintLoc === 'WINDOW') {
       targetTex = this.windowTextures.saint_close;
-    } else if (angelLoc === 'CAM_05' && angelStage === 1) {
-      targetTex = this.windowTextures.angel_far;
-    } else if (saintLoc === 'CAM_05' && saintStage === 1) {
-      targetTex = this.windowTextures.saint_far;
-    } else if (mournerLoc === 'CAM_05') {
+    } else if (mournerLoc === 'WINDOW') {
       targetTex = this.windowTextures.mary;
     }
 
@@ -2741,13 +2747,13 @@ class GameEngine {
 
     this.updateWindowHallwayView();
 
-    // When spotlight illuminates hallway corridor outside window:
+    // When spotlight illuminates front hallway outside observation window glass:
     if (this.isWindowSpotOn) {
-      const angelInHallway = this.aiConfig.weepingAngel.location === 'CAM_05';
-      const saintInHallway = this.aiConfig.haloedSaint.location === 'CAM_05';
-      const mournerInHallway = this.aiConfig.veiledMourner.location === 'CAM_05';
+      const angelAtWindow = this.aiConfig.weepingAngel.location === 'WINDOW';
+      const saintAtWindow = this.aiConfig.haloedSaint.location === 'WINDOW';
+      const mournerAtWindow = this.aiConfig.veiledMourner.location === 'WINDOW';
 
-      if (angelInHallway || saintInHallway || mournerInHallway) {
+      if (angelAtWindow || saintAtWindow || mournerAtWindow) {
         // Clear any previous pending timers
         if (this._windowSpotPreFlickerTimer) {
           clearTimeout(this._windowSpotPreFlickerTimer);
@@ -2776,9 +2782,9 @@ class GameEngine {
           this._windowSpotRetreatTimer = setTimeout(() => {
             this._windowSpotRetreatTimer = null;
             if (this.isWindowSpotOn && !this.gameOver && !this.victory) {
-              if (this.aiConfig.weepingAngel.location === 'CAM_05') this.banishAngel();
-              if (this.aiConfig.haloedSaint.location === 'CAM_05') this.banishSaint();
-              if (this.aiConfig.veiledMourner.location === 'CAM_05') this.banishMourner();
+              if (this.aiConfig.weepingAngel.location === 'WINDOW') this.banishAngel();
+              if (this.aiConfig.haloedSaint.location === 'WINDOW') this.banishSaint();
+              if (this.aiConfig.veiledMourner.location === 'WINDOW') this.banishMourner();
 
               this.isWindowSpotFlickering = false;
               this.windowSpotIntensity = 1.0;
@@ -2930,7 +2936,8 @@ class GameEngine {
     }
 
     if (camId === 5) {
-      // CAM 05: Cloister Hallway outside observation window
+      // CAM 05: West Doorway Corridor outside the left door
+      // (ONLY displays entities located at CAM_05 outside the door, NOT entities at the window glass!)
       if (saintLoc === 'CAM_05') {
         return 'assets/cctv/church_cam_05_saint_hallway.png';
       }
@@ -3385,8 +3392,8 @@ class GameEngine {
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
         if (ai.stage === -1) {
-          // Banishment recovery: advances from CAM_02 Crypt back to CAM_05 Hallway
-          if (this.isWindowSpotOn) return; // Cannot appear at window hallway while lights are turned on
+          // Banishment recovery: advances from CAM_02 Crypt back to Window Glass
+          if (this.isWindowSpotOn) return; // Cannot appear at window while spotlight is on
           this.setAngelStage(1);
           window.Sound.playStoneGrind(0.7);
         } else if (ai.stage === 0) {
@@ -3405,7 +3412,7 @@ class GameEngine {
           }
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
-          if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
+          if (this.isWindowSpotOn && nextStage === 1) {
             return;
           }
           if (nextStage === 3 && (this.aiConfig.haloedSaint.stage === 3 || this.aiConfig.haloedSaint.stage === 4)) {
@@ -3511,7 +3518,7 @@ class GameEngine {
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
         if (ai.stage === -1) {
-          // Banishment recovery: advances from CAM_01 Nave back to CAM_05 Hallway
+          // Banishment recovery: advances from CAM_01 Nave back to Window Glass
           if (this.isWindowSpotOn) return;
           this.setSaintStage(1);
           window.Sound.playStoneGrind(0.8);
@@ -3529,7 +3536,7 @@ class GameEngine {
           }
         } else if (ai.stage < 3) {
           const nextStage = ai.stage + 1;
-          if (this.isWindowSpotOn && (nextStage === 1 || nextStage === 2)) {
+          if (this.isWindowSpotOn && nextStage === 1) {
             return;
           }
           if (nextStage === 3 && (this.aiConfig.weepingAngel.stage === 3 || this.aiConfig.weepingAngel.stage === 4)) {
@@ -3538,10 +3545,10 @@ class GameEngine {
           }
           this.setSaintStage(nextStage);
           window.Sound.playStoneGrind(0.8);
-          if (nextStage === 2) {
+          if (nextStage === 1) {
             window.Sound.playWindowWhisper(0.85); // Chilling Latin prayer chant outside center window!
-          } else if (nextStage === 3) {
-            window.Sound.playLeftFootstep(0.92); // Heavy grinding footsteps at left door!
+          } else if (nextStage >= 2) {
+            window.Sound.playLeftFootstep(0.92); // Heavy grinding footsteps approaching left door!
           }
         }
       }
@@ -3634,16 +3641,15 @@ class GameEngine {
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
         if (ai.stage === -1) {
-          // Banishment recovery from CAM_05 Hallway, CAM_03 Chapel, or CAM_01 Altar
+          // Banishment recovery from CAM_05 (Outside Door), CAM_03 Chapel, or CAM_01 Altar
           if (ai.location === 'CAM_05') {
-            if (this.isWindowSpotOn) return; // Blocked by observation window spotlight!
             this.setMournerStage(1);
             window.Sound.playStoneGrind(0.6);
             window.Sound.playVentClatter(0.75);
-          } else if (ai.location === 'CAM_01' && Math.random() < 0.5) {
-            // Rare alternative flank: crosses through CAM_05 Hallway outside observation window
+          } else if (ai.location === 'CAM_01' && Math.random() < 0.4) {
+            // Rare alternative flank: appears in front of the window glass!
             if (this.isWindowSpotOn) return;
-            ai.location = 'CAM_05';
+            ai.location = 'WINDOW';
             this.updateWindowHallwayView();
             if (this.isCCTVOpen) this.updateCCTVFeed();
             window.Sound.playStoneGrind(0.6);
@@ -3652,8 +3658,13 @@ class GameEngine {
             window.Sound.playStoneGrind(0.6);
             window.Sound.playVentClatter(0.75);
           }
+        } else if (ai.location === 'WINDOW') {
+          // Advances from window glass into CAM_04 HVAC return duct
+          this.setMournerStage(1);
+          window.Sound.playStoneGrind(0.6);
+          window.Sound.playVentClatter(0.75);
         } else if (ai.location === 'CAM_05') {
-          // Advances from CAM_05 hallway into CAM_04 HVAC return duct
+          // Advances from CAM_05 (outside door) into CAM_04 HVAC return duct
           this.setMournerStage(1);
           window.Sound.playStoneGrind(0.6);
           window.Sound.playVentClatter(0.75);
