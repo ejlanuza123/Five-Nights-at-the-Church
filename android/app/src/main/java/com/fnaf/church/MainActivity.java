@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -27,6 +28,7 @@ public class MainActivity extends BridgeActivity {
             getWindow().setAttributes(lp);
         }
 
+        configureWebViewSettings();
         applyImmersiveSticky();
 
         // Enforce immersive sticky mode whenever decor view or window gains focus or insets change
@@ -34,6 +36,16 @@ public class MainActivity extends BridgeActivity {
         decorView.setOnSystemUiVisibilityChangeListener(visibility -> {
             if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
                 applyImmersiveSticky();
+            }
+        });
+    }
+
+    private void configureWebViewSettings() {
+        runOnUiThread(() -> {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                WebSettings settings = getBridge().getWebView().getSettings();
+                // Allow HTML5 video/audio autoplay without requiring user gesture (removes play button placeholder)
+                settings.setMediaPlaybackRequiresUserGesture(false);
             }
         });
     }
@@ -49,12 +61,28 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().onResume();
+            getBridge().getWebView().resumeTimers();
+        }
+        configureWebViewSettings();
         applyImmersiveSticky();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Immediately pause WebView processing, timers, and background audio when minimized
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().onPause();
+            getBridge().getWebView().pauseTimers();
+        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
+        configureWebViewSettings();
         applyImmersiveSticky();
     }
 

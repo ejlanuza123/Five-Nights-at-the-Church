@@ -1870,13 +1870,52 @@ body::-webkit-scrollbar,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-  margin-top: 10px;
-  animation: readyPulse 1.6s infinite alternate;
+
+/* ================= SURVIVAL HORROR PRELOADER TIP BOX ================= */
+.preloader-tip-box {
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-left: 3px solid #38bdf8;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
 }
 
-@keyframes readyPulse {
-  0% { transform: scale(1); box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
-  100% { transform: scale(1.04); box-shadow: 0 0 45px rgba(56, 189, 248, 0.95), 0 0 15px rgba(250, 204, 21, 0.5); }
+.preloader-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preloader-tip-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #030712;
+  background: #38bdf8;
+  padding: 1.5px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.preloader-tip-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.8px;
+  line-height: 1.45;
+  color: #94a3b8;
+  transition: opacity 0.3s ease;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
 }
 
 .preloader-launch-btn:hover {
@@ -2099,6 +2138,21 @@ body::-webkit-scrollbar,
   background: #000000;
 }
 
+/* Prevent native Android Chromium & WebKit play button overlays on all videos */
+video::-webkit-media-controls,
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 .studio-intro-video {
   max-width: 100%;
   max-height: 100%;
@@ -2106,6 +2160,8 @@ body::-webkit-scrollbar,
   height: 100vh;
   object-fit: contain;
   background: #000000;
+  outline: none !important;
+  border: none !important;
 }
 
 .studio-splash-hint {
@@ -5526,6 +5582,23 @@ kbd.key-badge {
   .preloader-status-text {
     font-size: 8px !important;
     letter-spacing: 0.8px !important;
+  }
+
+  .preloader-tip-box {
+    margin-top: 5px !important;
+    padding: 5px 8px !important;
+    gap: 3px !important;
+  }
+
+  .preloader-tip-tag {
+    font-size: 7.5px !important;
+    padding: 1px 4px !important;
+  }
+
+  .preloader-tip-text {
+    font-size: 8px !important;
+    line-height: 1.3 !important;
+    min-height: 22px !important;
   }
 
   /* ================= 5. SENSORY & CONTENT WARNING SCREEN MOBILE OPTIMIZATION ================= */

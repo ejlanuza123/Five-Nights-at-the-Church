@@ -157,10 +157,45 @@ class GameEngine {
     let preloaderAutoTimer = null;
     let warningAutoTimer = null;
     let splashAutoTimer = null;
+    let tipCycleInterval = null;
 
     const splashScreen = document.getElementById('studio-splash-screen');
     const introVideo = document.getElementById('studio-intro-video');
     const warningScreen = document.getElementById('warning-screen');
+    const tipTextEl = document.getElementById('preloader-tip-text');
+
+    // Survival Tips Library for Preloader
+    const SURVIVAL_TIPS = [
+      "Keep your eyes on the cameras. Anomalous entities advance when unmonitored.",
+      "The Maglock Door consumes heavy power. Only seal it when an entity approaches the doorway.",
+      "Close the ventilation hatch immediately when you hear whispers or metallic tapping in the ducts.",
+      "Conserve power! Running the door and vent simultaneously drains the backup battery rapidly.",
+      "The Sanctuary Weeping Statue resets when monitored directly on CAM 01.",
+      "Listen closely: audio cues often alert you to an entity's presence before cameras catch them.",
+      "CAM 05 monitors the exterior hallway outside the door, while the window oversees the narthex.",
+      "Check the observation window regularly. Dark figures linger before making their move.",
+      "If a camera feed is obscured by analog glitch noise, an anomaly is shifting positions."
+    ];
+
+    let tipIndex = Math.floor(Math.random() * SURVIVAL_TIPS.length);
+    if (tipTextEl) {
+      tipTextEl.textContent = SURVIVAL_TIPS[tipIndex];
+    }
+
+    tipCycleInterval = setInterval(() => {
+      if (preloaderDismissed) {
+        if (tipCycleInterval) clearInterval(tipCycleInterval);
+        return;
+      }
+      if (tipTextEl) {
+        tipTextEl.style.opacity = '0';
+        setTimeout(() => {
+          tipIndex = (tipIndex + 1) % SURVIVAL_TIPS.length;
+          tipTextEl.textContent = SURVIVAL_TIPS[tipIndex];
+          tipTextEl.style.opacity = '1';
+        }, 300);
+      }
+    }, 2800);
 
     const enterLobby = () => {
       window.Sound.init();
@@ -217,6 +252,10 @@ class GameEngine {
       if (preloaderDismissed) return;
       preloaderDismissed = true;
       if (preloaderAutoTimer) clearTimeout(preloaderAutoTimer);
+      if (tipCycleInterval) {
+        clearInterval(tipCycleInterval);
+        tipCycleInterval = null;
+      }
 
       preloader.classList.add('fade-out');
       setTimeout(() => {
@@ -261,13 +300,22 @@ class GameEngine {
       splashScreen.classList.remove('hidden');
       if (introVideo) {
         introVideo.currentTime = 0;
-        const playPromise = introVideo.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {
-            introVideo.muted = true;
-            introVideo.play().catch(() => {});
-          });
-        }
+        introVideo.playsInline = true;
+
+        // On mobile WebView with setMediaPlaybackRequiresUserGesture(false), unmuted audio plays directly
+        const tryPlayVideo = () => {
+          introVideo.muted = false;
+          const playPromise = introVideo.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {
+              // If browser policy restricted unmuted audio, start muted immediately without delay
+              introVideo.muted = true;
+              introVideo.play().catch(() => {});
+            });
+          }
+        };
+
+        tryPlayVideo();
         introVideo.addEventListener('ended', dismissStudioSplash);
       }
       splashScreen.addEventListener('click', dismissStudioSplash);

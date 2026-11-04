@@ -38,6 +38,7 @@ class SoundEngine {
     this.activeVentGlitchSource = null;
     this.ventGlitchAudioEl = null;
     this.initAudioElements();
+    this.initVisibilityHandler();
   }
 
   get bgmAudio() {
@@ -88,6 +89,91 @@ class SoundEngine {
     } catch (e) {
       console.warn('Could not initialize audio elements:', e);
     }
+  }
+
+  initVisibilityHandler() {
+    this._wasAudioSuspended = false;
+    this._wasLobbyPlaying = false;
+    this._wasGamePlaying = false;
+    this._wasVentPlaying = false;
+    this._wasWeepingPlaying = false;
+
+    const onAppHidden = () => {
+      // 1. Web Audio Context suspend
+      if (this.ctx && this.ctx.state === 'running') {
+        this.ctx.suspend().catch(() => {});
+        this._wasAudioSuspended = true;
+      }
+
+      // 2. HTML5 Audio Elements pause
+      if (this.lobbyAudio && !this.lobbyAudio.paused) {
+        this._wasLobbyPlaying = true;
+        this.lobbyAudio.pause();
+      }
+      if (this.gameAudio && !this.gameAudio.paused) {
+        this._wasGamePlaying = true;
+        this.gameAudio.pause();
+      }
+      if (this.ventGlitchAudioEl && !this.ventGlitchAudioEl.paused) {
+        this._wasVentPlaying = true;
+        this.ventGlitchAudioEl.pause();
+      }
+      if (this.activeWeepingAudioEl && !this.activeWeepingAudioEl.paused) {
+        this._wasWeepingPlaying = true;
+        this.activeWeepingAudioEl.pause();
+      }
+
+      // 3. Pause Speech Synthesis if speaking
+      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        try {
+          window.speechSynthesis.pause();
+        } catch (e) {}
+      }
+    };
+
+    const onAppVisible = () => {
+      // 1. Resume Web Audio Context
+      if (this.ctx && this.ctx.state === 'suspended' && this._wasAudioSuspended) {
+        this.ctx.resume().catch(() => {});
+        this._wasAudioSuspended = false;
+      }
+
+      // 2. Resume HTML5 Audio Elements
+      if (this._wasLobbyPlaying && this.activeTrack === 'lobby') {
+        this._wasLobbyPlaying = false;
+        this.lobbyAudio?.play().catch(() => {});
+      }
+      if (this._wasGamePlaying && this.activeTrack === 'game') {
+        this._wasGamePlaying = false;
+        this.gameAudio?.play().catch(() => {});
+      }
+      if (this._wasVentPlaying) {
+        this._wasVentPlaying = false;
+        this.ventGlitchAudioEl?.play().catch(() => {});
+      }
+      if (this._wasWeepingPlaying) {
+        this._wasWeepingPlaying = false;
+        this.activeWeepingAudioEl?.play().catch(() => {});
+      }
+
+      // 3. Resume Speech Synthesis if paused
+      if ('speechSynthesis' in window && window.speechSynthesis.paused) {
+        try {
+          window.speechSynthesis.resume();
+        } catch (e) {}
+      }
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        onAppHidden();
+      } else {
+        onAppVisible();
+      }
+    });
+
+    window.addEventListener('pagehide', onAppHidden);
+    window.addEventListener('pageshow', onAppVisible);
   }
 
   initBGM() {
