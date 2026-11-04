@@ -311,80 +311,51 @@
       <source src="assets/audio/Dark Ambient - Horror.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- RL3 Studio Opening Splash Screen (Shown First on Launch) -->
+    <!-- RL3 Studio Opening Video Intro (Shown First on Launch) -->
     <div id="studio-splash-screen">
       <div class="studio-splash-scanlines"></div>
       <div class="studio-splash-vignette"></div>
-      <div class="studio-splash-content">
-        <div class="studio-splash-glow"></div>
-        <div class="studio-splash-logo-wrap">
-          <img src="assets/logo/rl3_studio_logo.png" alt="RL3 Studio" class="studio-splash-logo">
-        </div>
-        <div class="studio-splash-sub">RL3 STUDIO</div>
-        <div class="studio-splash-hint">[CLICK, TAP OR PRESS ANY KEY TO SKIP]</div>
+      <div class="studio-splash-video-container">
+        <video id="studio-intro-video" class="studio-intro-video" playsinline preload="auto" src="assets/logo/rl3_studio_intro.mp4"></video>
       </div>
+      <div class="studio-splash-hint">[CLICK, TAP OR PRESS ANY KEY TO SKIP]</div>
     </div>
 
-    <!-- Fullscreen 100% Resource & Audio Preloader (Guarantees Zero In-Game Buffering) -->
+    <!-- Clean Minimalist Preloader (No Clutter, No Logo) -->
     <div id="game-preloader">
       <div class="preloader-scanlines"></div>
       <div class="preloader-vignette"></div>
-      <div class="preloader-container">
-        <div class="preloader-logo-wrap">
-          <img src="assets/logo/rl3_studio_logo.png" alt="RL3 Studio" class="preloader-studio-logo">
-        </div>
-        <div class="preloader-parish">RL3 STUDIO PRESENTS</div>
-        <h1 class="preloader-title">FACILITY SURVEILLANCE PROTOCOL</h1>
-        <div class="preloader-doc-tag">AUTHENTICATING LOCAL STORAGE &amp; PRELOADING MEDIA (100% NO BUFFERING)</div>
-
-        <div class="preloader-progress-box">
-          <div class="preloader-bar-outer">
-            <div class="preloader-bar-inner" id="preloader-bar-inner"></div>
-          </div>
-          <div class="preloader-status-row">
-            <span class="preloader-status-text" id="preloader-status-text">INITIALIZING ASSET REPOSITORIES...</span>
-            <span class="preloader-percent-badge" id="preloader-percent-badge">0%</span>
-          </div>
+      <div class="preloader-container preloader-minimal">
+        <div class="preloader-minimal-header">
+          <span class="preloader-loading-label">LOADING...</span>
+          <span class="preloader-percent-badge" id="preloader-percent-badge">0%</span>
         </div>
 
-        <button class="preloader-launch-btn hidden" id="preloader-launch-btn" title="All assets loaded 100%. Click to enter.">
-          <span class="launch-icon">▶</span>
-          <span class="launch-text">ENTER SECURITY TERMINAL</span>
-          <kbd class="launch-kbd">[CLICK OR PRESS ANY KEY]</kbd>
-        </button>
-
-        <div class="preloader-security-note">
-          <span>● AUDIO BUFFER: IN-MEMORY RAM STREAMING ACTIVE</span>
-          <span>● SYSTEM INTEGRITY: 100% SECURE</span>
+        <div class="preloader-bar-outer">
+          <div class="preloader-bar-inner" id="preloader-bar-inner"></div>
         </div>
+
+        <div class="preloader-status-text" id="preloader-status-text">INITIALIZING ASSET REPOSITORIES...</div>
       </div>
     </div>
 
-    <!-- Classic Sensory & Content Warning Screen (Simple & Auto-Dismiss) -->
+    <!-- Classic Indie Horror Content Warning Screen (No Background Card) -->
     <div id="warning-screen" class="hidden">
       <div class="warning-scanlines"></div>
       <div class="warning-vignette"></div>
-      <div class="warning-container warning-simple">
-        <div class="warning-icon-box">
-          <span class="warning-symbol">⚠️</span>
-        </div>
-        <h1 class="warning-heading">WARNING</h1>
-        <div class="warning-divider"></div>
-        <p class="warning-text-primary">
-          This game contains <strong>flashing lights</strong>, <strong>loud sudden noises</strong>, and <strong>intense jumpscares</strong>.
+      <div class="warning-content-raw">
+        <h1 class="warning-raw-heading">W A R N I N G !</h1>
+        <p class="warning-raw-body">
+          This game contains flashing<br>
+          lights, loud noises, lots of<br>
+          jumpscares, blood and<br>
+          disturbing material
         </p>
-        <p class="warning-text-sub">
-          Player discretion is advised for photosensitive or auditory conditions.
-        </p>
-        <div class="warning-auto-bar-wrap">
-          <div class="warning-auto-bar" id="warning-auto-bar"></div>
+        <div class="warning-raw-prompt" id="btn-warning-continue">
+          <span class="prompt-text">Press "Enter" to continue</span>
+          <span class="prompt-mobile-hint">(or tap anywhere)</span>
         </div>
-        <div class="warning-skip-hint">
-          <button id="btn-warning-continue" class="warning-skip-btn">
-            <span class="skip-btn-text">AUTO-ADVANCING...</span>
-            <kbd class="skip-btn-kbd">[CLICK, TAP OR PRESS ANY KEY TO SKIP]</kbd>
-          </button>
-        </div>
+        <div class="warning-raw-footer">YOU HAVE BEEN WARNED!</div>
       </div>
     </div>
 

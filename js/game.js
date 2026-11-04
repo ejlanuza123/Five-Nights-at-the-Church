@@ -159,6 +159,7 @@ class GameEngine {
     let splashAutoTimer = null;
 
     const splashScreen = document.getElementById('studio-splash-screen');
+    const introVideo = document.getElementById('studio-intro-video');
     const warningScreen = document.getElementById('warning-screen');
 
     const enterLobby = () => {
@@ -193,10 +194,12 @@ class GameEngine {
           }, 450);
         };
 
-        const onWarningKey = () => dismissWarning();
+        const onWarningKey = (e) => {
+          dismissWarning();
+        };
 
-        // Auto-dismiss warning after 2.8 seconds
-        warningAutoTimer = setTimeout(dismissWarning, 2800);
+        // Auto-dismiss warning after 3.8 seconds if player does not interact
+        warningAutoTimer = setTimeout(dismissWarning, 3800);
 
         document.getElementById('btn-warning-continue')?.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -229,6 +232,10 @@ class GameEngine {
       if (splashAutoTimer) clearTimeout(splashAutoTimer);
       window.removeEventListener('keydown', onSplashKey);
 
+      if (introVideo) {
+        try { introVideo.pause(); } catch (e) {}
+      }
+
       if (splashScreen) {
         splashScreen.removeEventListener('click', dismissStudioSplash);
         splashScreen.removeEventListener('touchstart', dismissStudioSplash);
@@ -249,13 +256,24 @@ class GameEngine {
 
     const onSplashKey = () => dismissStudioSplash();
 
-    // 1. Logo First: Show Studio Splash on open (a few seconds, skippable by touch/click/keys)
+    // 1. Logo First: Play RL3 Studio Video Intro (skippable anytime by touch/click/keys)
     if (splashScreen) {
       splashScreen.classList.remove('hidden');
+      if (introVideo) {
+        introVideo.currentTime = 0;
+        const playPromise = introVideo.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            introVideo.muted = true;
+            introVideo.play().catch(() => {});
+          });
+        }
+        introVideo.addEventListener('ended', dismissStudioSplash);
+      }
       splashScreen.addEventListener('click', dismissStudioSplash);
       splashScreen.addEventListener('touchstart', dismissStudioSplash, { passive: true });
       window.addEventListener('keydown', onSplashKey);
-      splashAutoTimer = setTimeout(dismissStudioSplash, 2400);
+      splashAutoTimer = setTimeout(dismissStudioSplash, 10500);
     } else {
       splashDismissed = true;
     }
