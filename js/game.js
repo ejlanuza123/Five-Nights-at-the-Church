@@ -151,10 +151,63 @@ class GameEngine {
     }
 
     let isDismissed = false;
+    let preloaderAutoTimer = null;
+
+    const enterLobby = () => {
+      window.Sound.init();
+      window.Sound.resume();
+      window.Sound.startLobbyMusic();
+      if (!this.isRunning && !this._menuAudioStarted) {
+        this._menuAudioStarted = true;
+        window.Sound.startMenuDrone();
+      }
+      this.startLobbyTwitchLoop();
+    };
+
+    const showStudioSplash = () => {
+      const splashScreen = document.getElementById('studio-splash-screen');
+      if (!splashScreen) {
+        enterLobby();
+        return;
+      }
+
+      splashScreen.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        splashScreen.classList.add('splash-active');
+      });
+
+      let splashDismissed = false;
+      let splashAutoTimer = null;
+
+      const dismissSplash = () => {
+        if (splashDismissed) return;
+        splashDismissed = true;
+        if (splashAutoTimer) clearTimeout(splashAutoTimer);
+        window.removeEventListener('keydown', onSplashKey);
+        splashScreen.removeEventListener('click', dismissSplash);
+
+        splashScreen.classList.add('fade-out');
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+          splashScreen.classList.add('hidden');
+          enterLobby();
+        }, 500);
+      };
+
+      const onSplashKey = () => dismissSplash();
+
+      // Auto-advance studio splash after 2.2 seconds
+      splashAutoTimer = setTimeout(dismissSplash, 2200);
+
+      splashScreen.addEventListener('click', dismissSplash);
+      window.addEventListener('keydown', onSplashKey);
+    };
 
     const showWarningAndEnter = () => {
       if (isDismissed) return;
       isDismissed = true;
+      if (preloaderAutoTimer) clearTimeout(preloaderAutoTimer);
+
       preloader.classList.add('fade-out');
       setTimeout(() => {
         preloader.style.display = 'none';
@@ -164,33 +217,29 @@ class GameEngine {
       if (warningScreen) {
         warningScreen.classList.remove('hidden');
         let warningDismissed = false;
+        let warningAutoTimer = null;
 
         const dismissWarning = () => {
           if (warningDismissed) return;
           warningDismissed = true;
+          if (warningAutoTimer) clearTimeout(warningAutoTimer);
           window.removeEventListener('keydown', onWarningKey);
+          warningScreen.removeEventListener('click', dismissWarning);
+
           warningScreen.classList.add('fade-out');
-
-          window.Sound.init();
-          window.Sound.resume();
-          window.Sound.startLobbyMusic();
-          if (!this.isRunning && !this._menuAudioStarted) {
-            this._menuAudioStarted = true;
-            window.Sound.startMenuDrone();
-          }
-
-          // Start lobby twitch loop freshly ONLY when lobby actually becomes visible to player
-          this.startLobbyTwitchLoop();
-
           setTimeout(() => {
             warningScreen.style.display = 'none';
             warningScreen.classList.add('hidden');
-          }, 600);
+            showStudioSplash();
+          }, 450);
         };
 
-        const onWarningKey = (e) => {
+        const onWarningKey = () => {
           dismissWarning();
         };
+
+        // Auto-dismiss warning after 2.8 seconds
+        warningAutoTimer = setTimeout(dismissWarning, 2800);
 
         document.getElementById('btn-warning-continue')?.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -199,14 +248,7 @@ class GameEngine {
         warningScreen.addEventListener('click', dismissWarning);
         window.addEventListener('keydown', onWarningKey);
       } else {
-        window.Sound.init();
-        window.Sound.resume();
-        window.Sound.startLobbyMusic();
-        if (!this.isRunning && !this._menuAudioStarted) {
-          this._menuAudioStarted = true;
-          window.Sound.startMenuDrone();
-        }
-        this.startLobbyTwitchLoop();
+        showStudioSplash();
       }
     };
 
@@ -251,6 +293,12 @@ class GameEngine {
         if (statusText) statusText.textContent = 'ALL SACRED ARCHIVES 100% SYNCHRONIZED — READY';
         if (btnLaunch) {
           btnLaunch.classList.remove('hidden');
+        }
+        // Auto-advance directly to warning sign when 100%
+        if (!preloaderAutoTimer && !isDismissed) {
+          preloaderAutoTimer = setTimeout(() => {
+            showWarningAndEnter();
+          }, 350);
         }
       }
     };
@@ -342,7 +390,8 @@ class GameEngine {
       'assets/office/window_hallway_mary.jpg',
       'assets/office/door_peeking_angel.jpg',
       'assets/office/door_peeking_saint.jpg',
-      'assets/office/vent_peeking_mourner.jpg'
+      'assets/office/vent_peeking_mourner.jpg',
+      'assets/logo/rl3_studio_logo.png'
     ];
     this._preloadedImages = {};
     let loadedCount = 0;

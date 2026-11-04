@@ -316,8 +316,10 @@
       <div class="preloader-scanlines"></div>
       <div class="preloader-vignette"></div>
       <div class="preloader-container">
-        <div class="preloader-cross">☩</div>
-        <div class="preloader-parish">ST. JUDE CATHOLIC PARISH ARCHIVES</div>
+        <div class="preloader-logo-wrap">
+          <img src="assets/logo/rl3_studio_logo.png" alt="RL3 Studio" class="preloader-studio-logo">
+        </div>
+        <div class="preloader-parish">RL3 STUDIO PRESENTS</div>
         <h1 class="preloader-title">FACILITY SURVEILLANCE PROTOCOL</h1>
         <div class="preloader-doc-tag">AUTHENTICATING LOCAL STORAGE &amp; PRELOADING MEDIA (100% NO BUFFERING)</div>
 
@@ -344,11 +346,11 @@
       </div>
     </div>
 
-    <!-- Classic Sensory & Content Warning Screen -->
+    <!-- Classic Sensory & Content Warning Screen (Simple & Auto-Dismiss) -->
     <div id="warning-screen" class="hidden">
       <div class="warning-scanlines"></div>
       <div class="warning-vignette"></div>
-      <div class="warning-container">
+      <div class="warning-container warning-simple">
         <div class="warning-icon-box">
           <span class="warning-symbol">⚠️</span>
         </div>
@@ -357,13 +359,32 @@
         <p class="warning-text-primary">
           This game contains <strong>flashing lights</strong>, <strong>loud sudden noises</strong>, and <strong>intense jumpscares</strong>.
         </p>
-        <p class="warning-text-secondary">
-          Player discretion is advised for individuals sensitive to sudden sensory shocks, strobe effects, or photosensitive seizures.
+        <p class="warning-text-sub">
+          Player discretion is advised for photosensitive or auditory conditions.
         </p>
-        <button id="btn-warning-continue" class="warning-continue-btn" title="Acknowledge and enter cathedral archives">
-          <span class="warning-btn-text">CONTINUE TO PARISH ARCHIVES</span>
-          <kbd class="warning-btn-kbd">[CLICK OR PRESS ANY KEY]</kbd>
-        </button>
+        <div class="warning-auto-bar-wrap">
+          <div class="warning-auto-bar" id="warning-auto-bar"></div>
+        </div>
+        <div class="warning-skip-hint">
+          <button id="btn-warning-continue" class="warning-skip-btn">
+            <span class="skip-btn-text">AUTO-ADVANCING...</span>
+            <kbd class="skip-btn-kbd">[CLICK OR PRESS ANY KEY TO SKIP]</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RL3 Studio Opening Splash Screen -->
+    <div id="studio-splash-screen" class="hidden">
+      <div class="studio-splash-scanlines"></div>
+      <div class="studio-splash-vignette"></div>
+      <div class="studio-splash-content">
+        <div class="studio-splash-glow"></div>
+        <div class="studio-splash-logo-wrap">
+          <img src="assets/logo/rl3_studio_logo.png" alt="RL3 Studio" class="studio-splash-logo">
+        </div>
+        <div class="studio-splash-sub">RL3 STUDIO</div>
+        <div class="studio-splash-hint">[CLICK OR PRESS ANY KEY TO SKIP]</div>
       </div>
     </div>
 
@@ -381,6 +402,10 @@
       <!-- Retro Typography & Vertical Menu Stack -->
       <div class="fnaf-menu-container">
         <div class="fnaf-title-block">
+          <div class="fnaf-dev-by">
+            <span class="dev-by-tag">DEVELOPED BY</span>
+            <span class="dev-by-brand">RL3 STUDIO</span>
+          </div>
           <h1 class="fnaf-game-title">
             <span class="title-word">FIVE</span>
             <span class="title-word">NIGHTS</span>
@@ -447,7 +472,7 @@
         </div>
 
         <div class="fnaf-menu-footer">
-          <div>© 2026 ST. JUDE CATHOLIC PARISH • PROTOTYPE BUILD v1.0.0</div>
+          <div>© 2026 RL3 STUDIO • ALL RIGHTS RESERVED</div>
           <div>WARNING: FLASHING LIGHTS &amp; JUMPSCARES • AUDIO RECOMMENDED</div>
         </div>
       </div>
