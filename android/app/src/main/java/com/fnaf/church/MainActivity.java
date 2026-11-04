@@ -43,6 +43,8 @@ public class MainActivity extends BridgeActivity {
     private void configureWebViewSettings() {
         runOnUiThread(() -> {
             if (getBridge() != null && getBridge().getWebView() != null) {
+                // Keep native WebView background pure pitch black
+                getBridge().getWebView().setBackgroundColor(0xFF000000);
                 WebSettings settings = getBridge().getWebView().getSettings();
                 // Allow HTML5 video/audio autoplay without requiring user gesture (removes play button placeholder)
                 settings.setMediaPlaybackRequiresUserGesture(false);

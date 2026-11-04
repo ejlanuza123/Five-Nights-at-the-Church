@@ -198,6 +198,11 @@ class GameEngine {
     }, 2800);
 
     const enterLobby = () => {
+      const menuEl = document.getElementById('fnaf-main-menu');
+      if (menuEl) {
+        menuEl.classList.remove('hidden');
+        menuEl.style.display = 'block';
+      }
       window.Sound.init();
       window.Sound.resume();
       window.Sound.startLobbyMusic();
@@ -212,6 +217,9 @@ class GameEngine {
       if (warningDismissed) return;
       if (warningScreen) {
         warningScreen.classList.remove('hidden');
+        warningScreen.classList.remove('fade-out');
+        warningScreen.style.display = 'flex';
+        warningScreen.style.opacity = '1';
 
         const dismissWarning = () => {
           if (warningDismissed) return;
@@ -257,12 +265,20 @@ class GameEngine {
         tipCycleInterval = null;
       }
 
+      // Immediately unhide Warning Screen behind preloader so the lobby is never exposed
+      if (warningScreen) {
+        warningScreen.classList.remove('hidden');
+        warningScreen.classList.remove('fade-out');
+        warningScreen.style.display = 'flex';
+        warningScreen.style.opacity = '1';
+      }
+
       preloader.classList.add('fade-out');
       setTimeout(() => {
         preloader.style.display = 'none';
         preloader.classList.add('hidden');
         showWarningScreen();
-      }, 450);
+      }, 400);
     };
 
     const dismissStudioSplash = () => {
@@ -301,6 +317,13 @@ class GameEngine {
       if (introVideo) {
         introVideo.currentTime = 0;
         introVideo.playsInline = true;
+
+        // Ensure video stays invisible until actual decoded frames are playing
+        const onVideoFrameReady = () => {
+          introVideo.classList.add('is-playing');
+        };
+        introVideo.addEventListener('playing', onVideoFrameReady, { once: true });
+        introVideo.addEventListener('timeupdate', onVideoFrameReady, { once: true });
 
         // On mobile WebView with setMediaPlaybackRequiresUserGesture(false), unmuted audio plays directly
         const tryPlayVideo = () => {
@@ -1829,7 +1852,11 @@ class GameEngine {
     const churchBg = document.getElementById('menu-church-bg');
     const menuEl = document.getElementById('fnaf-main-menu');
     if (churchBg) churchBg.classList.remove('anomaly');
-    if (menuEl) menuEl.classList.remove('glitching');
+    if (menuEl) {
+      menuEl.classList.remove('glitching');
+      menuEl.classList.add('hidden');
+      menuEl.style.display = 'none';
+    }
 
     // Start menu ambient drone and background music upon interaction with page
     const tryStartMenuSound = () => {

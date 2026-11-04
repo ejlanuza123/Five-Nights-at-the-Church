@@ -316,9 +316,8 @@
       <div class="studio-splash-scanlines"></div>
       <div class="studio-splash-vignette"></div>
       <div class="studio-splash-video-container">
-        <video id="studio-intro-video" class="studio-intro-video" autoplay muted playsinline webkit-playsinline preload="auto" src="assets/logo/rl3_studio_intro.mp4"></video>
+        <video id="studio-intro-video" class="studio-intro-video" poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" autoplay muted playsinline webkit-playsinline preload="auto" src="assets/logo/rl3_studio_intro.mp4"></video>
       </div>
-      <div class="studio-splash-hint">[CLICK, TAP OR PRESS ANY KEY TO SKIP]</div>
     </div>
 
     <!-- Clean Minimalist Preloader (No Clutter, No Logo) -->
@@ -367,8 +366,8 @@
       </div>
     </div>
 
-    <!-- Classic Main Title Menu -->
-    <div id="fnaf-main-menu">
+    <!-- Classic Main Title Menu (Hidden until Warning Screen Completes) -->
+    <div id="fnaf-main-menu" class="hidden" style="display: none;">
       <!-- Atmospheric Full Church Sanctuary Background Scene -->
       <div id="menu-church-bg" class="menu-church-bg"></div>
       <!-- Animated CRT TV Static Noise Canvas -->

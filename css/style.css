@@ -1763,7 +1763,7 @@ body::-webkit-scrollbar,
 #game-preloader {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 99998;
   background: #020408;
   display: flex;
   align-items: center;
@@ -1963,7 +1963,7 @@ body::-webkit-scrollbar,
 #warning-screen {
   position: fixed;
   inset: 0;
-  z-index: 99998;
+  z-index: 99997;
   background: #000000;
   display: flex;
   align-items: center;
@@ -2010,7 +2010,7 @@ body::-webkit-scrollbar,
 #warning-screen {
   position: fixed;
   inset: 0;
-  z-index: 99998;
+  z-index: 99997;
   background: #000000;
   display: flex;
   align-items: center;
@@ -2162,20 +2162,12 @@ video::-webkit-media-controls-overlay-play-button {
   background: #000000;
   outline: none !important;
   border: none !important;
+  opacity: 0;
+  transition: opacity 0.25s ease-in;
 }
 
-.studio-splash-hint {
-  position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-mono, monospace);
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.5);
-  z-index: 20;
-  pointer-events: none;
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
+.studio-intro-video.is-playing {
+  opacity: 1 !important;
 }
 
 /* ================= LOBBY DEVELOPER CREDITS ================= */
@@ -5642,18 +5634,6 @@ kbd.key-badge {
   .warning-raw-footer {
     font-size: 14px !important;
     letter-spacing: 3.5px !important;
-  }
-
-  /* RL3 Studio Mobile Splash */
-  .studio-splash-hint {
-    bottom: 12px !important;
-    font-size: 8.5px !important;
-    letter-spacing: 1px !important;
-  }
-
-  .studio-splash-hint {
-    font-size: 7.5px !important;
-    margin-top: 10px !important;
   }
 
   /* Lobby Developer Badge on Mobile */
