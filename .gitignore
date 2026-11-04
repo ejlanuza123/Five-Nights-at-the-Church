@@ -6,6 +6,7 @@ www/
 dist/
 
 # Android Native Build Artifacts & Gradle Cache
+*.apk
 android/.gradle/
 android/build/
 android/app/build/
