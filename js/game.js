@@ -150,8 +150,16 @@ class GameEngine {
       return;
     }
 
-    let isDismissed = false;
+    let splashDismissed = false;
+    let preloaderDismissed = false;
+    let warningDismissed = false;
+    let isAssets100 = false;
     let preloaderAutoTimer = null;
+    let warningAutoTimer = null;
+    let splashAutoTimer = null;
+
+    const splashScreen = document.getElementById('studio-splash-screen');
+    const warningScreen = document.getElementById('warning-screen');
 
     const enterLobby = () => {
       window.Sound.init();
@@ -164,60 +172,10 @@ class GameEngine {
       this.startLobbyTwitchLoop();
     };
 
-    const showStudioSplash = () => {
-      const splashScreen = document.getElementById('studio-splash-screen');
-      if (!splashScreen) {
-        enterLobby();
-        return;
-      }
-
-      splashScreen.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        splashScreen.classList.add('splash-active');
-      });
-
-      let splashDismissed = false;
-      let splashAutoTimer = null;
-
-      const dismissSplash = () => {
-        if (splashDismissed) return;
-        splashDismissed = true;
-        if (splashAutoTimer) clearTimeout(splashAutoTimer);
-        window.removeEventListener('keydown', onSplashKey);
-        splashScreen.removeEventListener('click', dismissSplash);
-
-        splashScreen.classList.add('fade-out');
-        setTimeout(() => {
-          splashScreen.style.display = 'none';
-          splashScreen.classList.add('hidden');
-          enterLobby();
-        }, 500);
-      };
-
-      const onSplashKey = () => dismissSplash();
-
-      // Auto-advance studio splash after 2.2 seconds
-      splashAutoTimer = setTimeout(dismissSplash, 2200);
-
-      splashScreen.addEventListener('click', dismissSplash);
-      window.addEventListener('keydown', onSplashKey);
-    };
-
-    const showWarningAndEnter = () => {
-      if (isDismissed) return;
-      isDismissed = true;
-      if (preloaderAutoTimer) clearTimeout(preloaderAutoTimer);
-
-      preloader.classList.add('fade-out');
-      setTimeout(() => {
-        preloader.style.display = 'none';
-      }, 500);
-
-      const warningScreen = document.getElementById('warning-screen');
+    const showWarningScreen = () => {
+      if (warningDismissed) return;
       if (warningScreen) {
         warningScreen.classList.remove('hidden');
-        let warningDismissed = false;
-        let warningAutoTimer = null;
 
         const dismissWarning = () => {
           if (warningDismissed) return;
@@ -225,18 +183,17 @@ class GameEngine {
           if (warningAutoTimer) clearTimeout(warningAutoTimer);
           window.removeEventListener('keydown', onWarningKey);
           warningScreen.removeEventListener('click', dismissWarning);
+          warningScreen.removeEventListener('touchstart', dismissWarning);
 
           warningScreen.classList.add('fade-out');
           setTimeout(() => {
             warningScreen.style.display = 'none';
             warningScreen.classList.add('hidden');
-            showStudioSplash();
+            enterLobby();
           }, 450);
         };
 
-        const onWarningKey = () => {
-          dismissWarning();
-        };
+        const onWarningKey = () => dismissWarning();
 
         // Auto-dismiss warning after 2.8 seconds
         warningAutoTimer = setTimeout(dismissWarning, 2800);
@@ -246,20 +203,71 @@ class GameEngine {
           dismissWarning();
         });
         warningScreen.addEventListener('click', dismissWarning);
+        warningScreen.addEventListener('touchstart', dismissWarning, { passive: true });
         window.addEventListener('keydown', onWarningKey);
       } else {
-        showStudioSplash();
+        enterLobby();
       }
     };
 
+    const advancePreloaderToWarning = () => {
+      if (preloaderDismissed) return;
+      preloaderDismissed = true;
+      if (preloaderAutoTimer) clearTimeout(preloaderAutoTimer);
+
+      preloader.classList.add('fade-out');
+      setTimeout(() => {
+        preloader.style.display = 'none';
+        preloader.classList.add('hidden');
+        showWarningScreen();
+      }, 450);
+    };
+
+    const dismissStudioSplash = () => {
+      if (splashDismissed) return;
+      splashDismissed = true;
+      if (splashAutoTimer) clearTimeout(splashAutoTimer);
+      window.removeEventListener('keydown', onSplashKey);
+
+      if (splashScreen) {
+        splashScreen.removeEventListener('click', dismissStudioSplash);
+        splashScreen.removeEventListener('touchstart', dismissStudioSplash);
+        splashScreen.classList.add('fade-out');
+        setTimeout(() => {
+          splashScreen.style.display = 'none';
+          splashScreen.classList.add('hidden');
+        }, 400);
+      }
+
+      // If assets already reached 100% while splash was visible, advance smoothly to warning
+      if (isAssets100 && !preloaderDismissed && !preloaderAutoTimer) {
+        preloaderAutoTimer = setTimeout(() => {
+          advancePreloaderToWarning();
+        }, 350);
+      }
+    };
+
+    const onSplashKey = () => dismissStudioSplash();
+
+    // 1. Logo First: Show Studio Splash on open (a few seconds, skippable by touch/click/keys)
+    if (splashScreen) {
+      splashScreen.classList.remove('hidden');
+      splashScreen.addEventListener('click', dismissStudioSplash);
+      splashScreen.addEventListener('touchstart', dismissStudioSplash, { passive: true });
+      window.addEventListener('keydown', onSplashKey);
+      splashAutoTimer = setTimeout(dismissStudioSplash, 2400);
+    } else {
+      splashDismissed = true;
+    }
+
     btnLaunch?.addEventListener('click', (e) => {
       e.stopPropagation();
-      showWarningAndEnter();
+      advancePreloaderToWarning();
     });
 
     const onUserKeyOrClick = (e) => {
-      if (btnLaunch && !btnLaunch.classList.contains('hidden') && !isDismissed) {
-        showWarningAndEnter();
+      if (splashDismissed && btnLaunch && !btnLaunch.classList.contains('hidden') && !preloaderDismissed) {
+        advancePreloaderToWarning();
       }
     };
     window.addEventListener('keydown', onUserKeyOrClick);
@@ -288,16 +296,17 @@ class GameEngine {
           }
         }
       } else {
+        isAssets100 = true;
         if (barInner) barInner.style.width = '100%';
         if (percentBadge) percentBadge.textContent = '100%';
         if (statusText) statusText.textContent = 'ALL SACRED ARCHIVES 100% SYNCHRONIZED — READY';
         if (btnLaunch) {
           btnLaunch.classList.remove('hidden');
         }
-        // Auto-advance directly to warning sign when 100%
-        if (!preloaderAutoTimer && !isDismissed) {
+        // Auto-advance directly to warning sign when 100% (after studio splash has finished/skipped)
+        if (splashDismissed && !preloaderDismissed && !preloaderAutoTimer) {
           preloaderAutoTimer = setTimeout(() => {
-            showWarningAndEnter();
+            advancePreloaderToWarning();
           }, 350);
         }
       }
