@@ -474,14 +474,17 @@ class GameEngine {
       'assets/cctv/church_cam_01_empty.png',
       'assets/cctv/church_cam_01_mary_altar.png',
       'assets/cctv/church_cam_01_saint_nave.png',
+      'assets/cctv/church_cam_01_angel_normal_saint.png',
       'assets/cctv/church_cam_02_columbarium.png',
       'assets/cctv/church_cam_02_columbarium_anomaly.png',
       'assets/cctv/church_cam_02_empty.png',
       'assets/cctv/church_cam_02_angel_crypt.png',
+      'assets/cctv/church_cam_02_mourner_normal_angel.png',
       'assets/cctv/church_cam_03_confessional.png',
       'assets/cctv/church_cam_03_confessional_anomaly.png',
       'assets/cctv/church_cam_03_empty.png',
       'assets/cctv/church_cam_03_mary_chapel.png',
+      'assets/cctv/church_cam_03_saint_normal_mourner.png',
       'assets/cctv/church_cam_04_vent.png',
       'assets/cctv/church_cam_04_vent_crawl.png',
       'assets/cctv/church_cam_04_vent_anomaly.png',
@@ -489,6 +492,7 @@ class GameEngine {
       'assets/cctv/church_cam_05_narthex_anomaly.png',
       'assets/cctv/church_cam_05_saint_hallway.png',
       'assets/cctv/church_cam_05_mary_hallway.png',
+      'assets/cctv/church_cam_05_saint_angel.png',
       'assets/entities/angel_cutout.png',
       'assets/entities/saint_cutout.png',
       'assets/entities/mary_cutout.png',
@@ -871,6 +875,7 @@ class GameEngine {
     this.cameraErrorTimers = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     this.clearAngelDoorRetreatTimer();
     this.clearSaintDoorRetreatTimer();
+    this.clearMournerDoorRetreatTimer();
     this.clearMournerVentRetreatTimer();
     this._angelStage3ArrivalTime = 0;
     this._saintStage3ArrivalTime = 0;
@@ -908,10 +913,28 @@ class GameEngine {
   startAngelDoorRetreatTimer() {
     this.clearAngelDoorRetreatTimer();
     this.aiConfig.weepingAngel.attackTimer = 0;
-    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.weepingAngel.level >= 14)) ? 2500 : 3200;
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.weepingAngel.level >= 14)) ? 1500 : 2000;
+    // Immediate heavy door impact sound when closed in front of her
+    window.Sound.playStoneGrind(0.65);
+    this.vibrate(35);
+
+    // If Angel was right at the door opening (stage 3 / LEFT_DOOR), closing door pushes her outside into CAM 05 corridor (she APPEARS on CAM 05!)
+    if (this.aiConfig.weepingAngel.stage === 3 || this.aiConfig.weepingAngel.location === 'LEFT_DOOR') {
+      const prevLoc = this.aiConfig.weepingAngel.location;
+      this.aiConfig.weepingAngel.location = 'CAM_05';
+      this.aiConfig.weepingAngel.stage = 2;
+      this._lastAngelStage = 2;
+      this.handleEntityMovement(prevLoc, 'CAM_05', 'weepingAngel');
+      const angel = this.world?.statues?.weepingAngel;
+      if (angel) angel.visible = false;
+      if (this.isCCTVOpen) this.updateCCTVFeed();
+    }
+
     this._angelDoorRetreatTimer = setTimeout(() => {
       this._angelDoorRetreatTimer = null;
-      if (this.isLeftDoorClosed && this.aiConfig.weepingAngel.stage === 3) {
+      const angel = this.aiConfig.weepingAngel;
+      const atDoor = (angel.stage >= 2 && angel.stage <= 3) || angel.location === 'LEFT_DOOR' || angel.location === 'CAM_05';
+      if (this.isLeftDoorClosed && atDoor) {
         this.vibrate([80, 60, 120]);
         window.Sound.playStoneGrind(0.85);
         window.Sound.playLeftFootstep(0.65);
@@ -930,10 +953,28 @@ class GameEngine {
   startSaintDoorRetreatTimer() {
     this.clearSaintDoorRetreatTimer();
     this.aiConfig.haloedSaint.attackTimer = 0;
-    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.haloedSaint.level >= 14)) ? 2500 : 3200;
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.haloedSaint.level >= 14)) ? 1500 : 2000;
+    // Immediate heavy door impact sound when closed in front of him
+    window.Sound.playStoneGrind(0.65);
+    this.vibrate(35);
+
+    // If Saint was right at the door opening (stage 3 / LEFT_DOOR), closing door pushes him outside into CAM 05 corridor (he APPEARS on CAM 05!)
+    if (this.aiConfig.haloedSaint.stage === 3 || this.aiConfig.haloedSaint.location === 'LEFT_DOOR') {
+      const prevLoc = this.aiConfig.haloedSaint.location;
+      this.aiConfig.haloedSaint.location = 'CAM_05';
+      this.aiConfig.haloedSaint.stage = 2;
+      this._lastSaintStage = 2;
+      this.handleEntityMovement(prevLoc, 'CAM_05', 'haloedSaint');
+      const saint = this.world?.statues?.haloedSaint;
+      if (saint) saint.visible = false;
+      if (this.isCCTVOpen) this.updateCCTVFeed();
+    }
+
     this._saintDoorRetreatTimer = setTimeout(() => {
       this._saintDoorRetreatTimer = null;
-      if (this.isLeftDoorClosed && this.aiConfig.haloedSaint.stage === 3) {
+      const saint = this.aiConfig.haloedSaint;
+      const atDoor = (saint.stage >= 2 && saint.stage <= 3) || saint.location === 'LEFT_DOOR' || saint.location === 'CAM_05';
+      if (this.isLeftDoorClosed && atDoor) {
         this.vibrate([100, 70, 140]);
         window.Sound.playStoneGrind(0.85);
         window.Sound.playLeftFootstep(0.65);
@@ -946,6 +987,24 @@ class GameEngine {
     if (this._saintDoorRetreatTimer) {
       clearTimeout(this._saintDoorRetreatTimer);
       this._saintDoorRetreatTimer = null;
+    }
+  }
+
+  startMournerDoorRetreatTimer() {
+    this.clearMournerDoorRetreatTimer();
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 1500 : 2000;
+    this._mournerDoorRetreatTimer = setTimeout(() => {
+      this._mournerDoorRetreatTimer = null;
+      if (this.isLeftDoorClosed && this.aiConfig.veiledMourner.location === 'CAM_05') {
+        this.banishMourner();
+      }
+    }, retreatMs);
+  }
+
+  clearMournerDoorRetreatTimer() {
+    if (this._mournerDoorRetreatTimer) {
+      clearTimeout(this._mournerDoorRetreatTimer);
+      this._mournerDoorRetreatTimer = null;
     }
   }
 
@@ -1314,22 +1373,23 @@ class GameEngine {
         targetCamNum = 1;
       }
     } else {
-      // Banished from Left Door:
+      // Banished from Left Door / CAM 05:
+      // MUST LEAVE CAM 05! Never relocate back into CAM 05!
       if (isWindowFree && rand < 0.45) {
         // Slips around corner to appear directly in front of observation window glass!
         banishTarget = 'WINDOW';
         targetStage = 1;
         targetCamNum = 0;
-      } else if (rand < 0.82) {
-        // Pushed back into CAM 05 corridor outside door
-        banishTarget = 'CAM_05';
-        targetStage = 2;
-        targetCamNum = 5;
-      } else {
-        // Pushed back into CAM 01 Nave corridor
+      } else if (rand < 0.75) {
+        // Pushed back into CAM 01 Nave aisle
         banishTarget = 'CAM_01';
         targetStage = -1;
         targetCamNum = 1;
+      } else {
+        // Pushed back into CAM 02 Crypt
+        banishTarget = 'CAM_02';
+        targetStage = -1;
+        targetCamNum = 2;
       }
     }
 
@@ -1342,7 +1402,11 @@ class GameEngine {
     this._lastAngelStage = targetStage;
     this.handleEntityMovement(prevLoc, banishTarget, 'weepingAngel');
 
-    if (targetCamNum > 0) {
+    // Trigger static glitch on CAM 05 so camera shows she vacated the doorway corridor
+    if (this.cameraErrorTimers) {
+      this.cameraErrorTimers[5] = 1.8;
+    }
+    if (targetCamNum > 0 && targetCamNum !== 5) {
       this.triggerCameraMotionError(targetCamNum, 1.8);
     }
 
@@ -1396,22 +1460,23 @@ class GameEngine {
         targetCamNum = 3;
       }
     } else {
-      // Banished from Left Door:
+      // Banished from Left Door / CAM 05:
+      // MUST LEAVE CAM 05! Never relocate back into CAM 05!
       if (isWindowFree && rand < 0.45) {
         // Slips around corner to appear directly in front of observation window glass!
         banishTarget = 'WINDOW';
         targetStage = 1;
         targetCamNum = 0;
-      } else if (rand < 0.82) {
-        // Pushed back into CAM 05 corridor outside door
-        banishTarget = 'CAM_05';
-        targetStage = 2;
-        targetCamNum = 5;
-      } else {
-        // Pushed back into CAM 03 confessional corridor
+      } else if (rand < 0.75) {
+        // Pushed back into CAM 03 Confessional Chapel
         banishTarget = 'CAM_03';
         targetStage = -1;
         targetCamNum = 3;
+      } else {
+        // Pushed back into CAM 01 Sanctuary Nave
+        banishTarget = 'CAM_01';
+        targetStage = -1;
+        targetCamNum = 1;
       }
     }
 
@@ -1424,7 +1489,11 @@ class GameEngine {
     this._lastSaintStage = targetStage;
     this.handleEntityMovement(prevLoc, banishTarget, 'haloedSaint');
 
-    if (targetCamNum > 0) {
+    // Trigger static glitch on CAM 05 so camera shows he vacated the doorway corridor
+    if (this.cameraErrorTimers) {
+      this.cameraErrorTimers[5] = 1.8;
+    }
+    if (targetCamNum > 0 && targetCamNum !== 5) {
       this.triggerCameraMotionError(targetCamNum, 1.8);
     }
 
@@ -2950,19 +3019,25 @@ class GameEngine {
     window.Sound.playDoorSound(this.isLeftDoorClosed);
 
     if (this.isLeftDoorClosed) {
-      if (this.aiConfig.weepingAngel.stage === 3) {
-        this.startAngelDoorRetreatTimer();
-      }
-      if (this.aiConfig.haloedSaint.stage === 3) {
-        this.startSaintDoorRetreatTimer();
-      }
+      const angel = this.aiConfig.weepingAngel;
+      const saint = this.aiConfig.haloedSaint;
+      const mourner = this.aiConfig.veiledMourner;
+
+      const isAngelAtDoor = (angel.stage >= 2 && angel.stage <= 3) || angel.location === 'LEFT_DOOR' || angel.location === 'CAM_05';
+      const isSaintAtDoor = (saint.stage >= 2 && saint.stage <= 3) || saint.location === 'LEFT_DOOR' || saint.location === 'CAM_05';
+      const isMournerAtDoor = mourner.location === 'CAM_05';
+
+      if (isAngelAtDoor) this.startAngelDoorRetreatTimer();
+      if (isSaintAtDoor) this.startSaintDoorRetreatTimer();
+      if (isMournerAtDoor) this.startMournerDoorRetreatTimer();
     } else {
       this.clearAngelDoorRetreatTimer();
       this.clearSaintDoorRetreatTimer();
+      this.clearMournerDoorRetreatTimer();
     }
 
     // Update Maglock LED color: Red = Armed/Locked, Green = Unarmed/Open
-    if (this.world.nodes.magLedMat) {
+    if (this.world?.nodes?.magLedMat) {
       this.world.nodes.magLedMat.color.setHex(this.isLeftDoorClosed ? 0xef4444 : 0x22c55e);
     }
 
@@ -3203,47 +3278,71 @@ class GameEngine {
     const saintLoc = this.aiConfig.haloedSaint.location;
     const mournerLoc = this.aiConfig.veiledMourner.location;
 
+    const isAngelDormant = angelLoc === 'CAM_01' && this.aiConfig.weepingAngel.stage === 0 && !this.aiConfig.weepingAngel.awakened;
+    const isSaintDormant = saintLoc === 'CAM_03' && this.aiConfig.haloedSaint.stage === 0 && !this.aiConfig.haloedSaint.awakened;
+    const isMournerDormant = mournerLoc === 'CAM_02' && this.aiConfig.veiledMourner.stage === 0 && !this.aiConfig.veiledMourner.awakened;
+
     if (camId === 1) {
-      // CAM 01: Sanctuary Altar & Nave (Angel home, or Saint/Mourner roaming/banished)
+      // CAM 01: Sanctuary Altar & Nave
+      // Case 1: Angel in normal place/pose on pedestal, BUT Saint came into the nave!
+      if (isAngelDormant && saintLoc === 'CAM_01') {
+        return 'assets/cctv/church_cam_01_angel_normal_saint.png';
+      }
+      // Case 2: Saint roaming alone in Sanctuary Nave
       if (saintLoc === 'CAM_01') {
         return 'assets/cctv/church_cam_01_saint_nave.png';
       }
+      // Case 3: Mourner roaming in Sanctuary Altar
       if (mournerLoc === 'CAM_01') {
         return 'assets/cctv/church_cam_01_mary_altar.png';
       }
+      // Case 4: Angel at CAM 01
       if (angelLoc === 'CAM_01') {
         if (this.aiConfig.weepingAngel.awakened || this.aiConfig.weepingAngel.stage === -1) {
-          return 'assets/cctv/church_cam_anomaly.png'; // Angel agitated on altar / roaming nave
+          // Updated Scene: Pedestal is empty, Angel is in center aisle between pews
+          return 'assets/cctv/church_cam_anomaly.png';
         }
-        return 'assets/cctv/church_cam_normal.png'; // Angel dormant on altar (original pose)
+        return 'assets/cctv/church_cam_normal.png'; // Angel dormant on altar pedestal (original pose)
       }
       return 'assets/cctv/church_cam_01_empty.png';
     }
 
     if (camId === 2) {
-      // CAM 02: Memorial Columbarium Crypt (Mourner home, or Angel banished)
+      // CAM 02: Memorial Columbarium Crypt
+      // Case 1: Mourner in normal place/pose on pedestal, BUT Angel came into the crypt!
+      if (isMournerDormant && angelLoc === 'CAM_02') {
+        return 'assets/cctv/church_cam_02_mourner_normal_angel.png';
+      }
+      // Case 2: Angel roaming in crypt
       if (angelLoc === 'CAM_02') {
         return 'assets/cctv/church_cam_02_angel_crypt.png';
       }
+      // Case 3: Mourner at CAM 02
       if (mournerLoc === 'CAM_02') {
         if (this.aiConfig.veiledMourner.awakened || this.aiConfig.veiledMourner.stage === -1) {
           return 'assets/cctv/church_cam_02_columbarium_anomaly.png'; // Mourner standing upright in crypt tombs
         }
-        return 'assets/cctv/church_cam_02_columbarium.png'; // Mourner seated dormant on crypt pedestal (original pose)
+        return 'assets/cctv/church_cam_02_columbarium.png'; // Mourner seated dormant on crypt pedestal
       }
       return 'assets/cctv/church_cam_02_empty.png';
     }
 
     if (camId === 3) {
-      // CAM 03: Reconciliation Chapel Confessional (Saint home, or Mourner banished)
+      // CAM 03: Reconciliation Chapel Confessional
+      // Case 1: Saint in normal place/pose in alcove, BUT Mourner came into the chapel!
+      if (isSaintDormant && mournerLoc === 'CAM_03') {
+        return 'assets/cctv/church_cam_03_saint_normal_mourner.png';
+      }
+      // Case 2: Mourner roaming in chapel
       if (mournerLoc === 'CAM_03') {
         return 'assets/cctv/church_cam_03_mary_chapel.png';
       }
+      // Case 3: Saint at CAM 03
       if (saintLoc === 'CAM_03') {
         if (this.aiConfig.haloedSaint.awakened || this.aiConfig.haloedSaint.stage === -1) {
-          return 'assets/cctv/church_cam_03_confessional_anomaly.png'; // Saint screaming close up at camera
+          return 'assets/cctv/church_cam_03_confessional_anomaly.png'; // Saint screaming close up
         }
-        return 'assets/cctv/church_cam_03_confessional.png'; // Saint standing still in alcove (original pose)
+        return 'assets/cctv/church_cam_03_confessional.png'; // Saint standing dormant in alcove
       }
       return 'assets/cctv/church_cam_03_empty.png';
     }
@@ -3261,14 +3360,24 @@ class GameEngine {
 
     if (camId === 5) {
       // CAM 05: West Doorway Corridor outside the left door
-      // (ONLY displays entities located at CAM_05 outside the door, NOT entities at the window glass!)
-      if (saintLoc === 'CAM_05') {
+      const isAngelInHall = angelLoc === 'CAM_05' || angelLoc === 'LEFT_DOOR';
+      const isSaintInHall = saintLoc === 'CAM_05' || saintLoc === 'LEFT_DOOR';
+      const isMournerInHall = mournerLoc === 'CAM_05';
+
+      // Case 1: BOTH Saint AND Angel are in the same cam (CAM 05)!
+      if (isSaintInHall && isAngelInHall) {
+        return 'assets/cctv/church_cam_05_saint_angel.png';
+      }
+      // Case 2: Saint in hallway outside door
+      if (isSaintInHall) {
         return 'assets/cctv/church_cam_05_saint_hallway.png';
       }
-      if (angelLoc === 'CAM_05') {
+      // Case 3: Angel in hallway outside door
+      if (isAngelInHall) {
         return 'assets/cctv/church_cam_05_narthex_anomaly.png';
       }
-      if (mournerLoc === 'CAM_05') {
+      // Case 4: Mourner in hallway outside door
+      if (isMournerInHall) {
         return 'assets/cctv/church_cam_05_mary_hallway.png';
       }
       return 'assets/cctv/church_cam_05_narthex.png';
@@ -3634,6 +3743,16 @@ class GameEngine {
     }
 
     const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && ai.level >= 14));
+    const isAngelAtDoor = (ai.stage >= 2 && ai.stage <= 3) || ai.location === 'LEFT_DOOR' || ai.location === 'CAM_05';
+
+    // If left door is closed while Angel is in CAM 05 or at the door:
+    if (this.isLeftDoorClosed && isAngelAtDoor) {
+      ai.attackTimer = 0;
+      if (!this._angelDoorRetreatTimer) {
+        this.startAngelDoorRetreatTimer();
+      }
+      return; // Closed door physically blocks advancement
+    }
 
     // Continuous attack checks when at the left door (stage 3) or inside the office (stage 4)
     if (ai.stage === 3 || ai.stage === 4) {
@@ -3669,9 +3788,6 @@ class GameEngine {
             this.vibrate([100, 50, 150]);
           } else {
             // Stage 3 -> 4 blink window (blinks closer to player inside the office!)
-            // Night 6: 1.5 seconds!
-            // Night 4-5: 2.5 seconds
-            // Earlier: 3.6 seconds
             const enterOfficeThreshold = isNight6OrHard ? 2.5 : (this.currentNight >= 4 ? 2.5 : 3.6);
             if (ai.attackTimer >= enterOfficeThreshold) {
               ai.stage = 4;
@@ -3686,7 +3802,6 @@ class GameEngine {
           }
         } else if (ai.stage === 4) {
           // She has BLINKED CLOSER right inside the office beside the desk!
-          // Night 6: attacks aggressively in 0.35s (or immediately if CCTV is open)!
           const attackThreshold = isNight6OrHard ? 0.35 : 0.8;
           if (ai.attackTimer >= attackThreshold || (isNight6OrHard && this.isCCTVOpen)) {
             this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
@@ -3716,7 +3831,19 @@ class GameEngine {
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
         if (ai.stage === -1) {
-          if (ai.location === 'CAM_05') {
+          if (ai.location === 'CAM_02') {
+            // From CAM 02 Crypt, advances to Window Glass or CAM 05
+            if (!this.isWindowSpotOn && this.aiConfig.haloedSaint.location !== 'WINDOW' && this.aiConfig.veiledMourner.location !== 'WINDOW') {
+              this.setAngelStage(1);
+            } else {
+              this.setAngelStage(2);
+            }
+            window.Sound.playStoneGrind(0.7);
+          } else if (ai.location === 'CAM_05') {
+            if (this.isLeftDoorClosed) {
+              if (!this._angelDoorRetreatTimer) this.startAngelDoorRetreatTimer();
+              return;
+            }
             if (this.aiConfig.haloedSaint.stage === 3 || this.aiConfig.haloedSaint.stage === 4) return;
             this.setAngelStage(3);
             window.Sound.playStoneGrind(0.7);
@@ -3739,19 +3866,43 @@ class GameEngine {
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
             ai.awakened = false;
-            if (this.isWindowSpotOn) return;
-            this.setAngelStage(1);
-            window.Sound.playStoneGrind(0.7);
-            window.Sound.playDistantWeeping('short', -0.35, 0.9);
+            // 35% chance to roam into CAM 02 Crypt (where Mourner is), producing the dual scene
+            if (Math.random() < 0.35 && this.aiConfig.veiledMourner.location === 'CAM_02') {
+              ai.stage = -1;
+              ai.location = 'CAM_02';
+              this._lastAngelStage = -1;
+              this.handleEntityMovement('CAM_01', 'CAM_02', 'weepingAngel');
+              this.triggerCameraMotionError(2, 1.8);
+              window.Sound.playStoneGrind(0.7);
+              window.Sound.playDistantWeeping('sob2', 0.25, 0.85);
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+            } else if (!this.isWindowSpotOn && this.aiConfig.haloedSaint.location !== 'WINDOW' && this.aiConfig.veiledMourner.location !== 'WINDOW') {
+              this.setAngelStage(1);
+              window.Sound.playStoneGrind(0.7);
+              window.Sound.playDistantWeeping('short', -0.35, 0.9);
+            } else {
+              this.setAngelStage(2);
+              window.Sound.playStoneGrind(0.7);
+              window.Sound.playDistantWeeping('short', -0.55, 0.9);
+            }
           }
         } else if (ai.stage < 3) {
+          if (this.isLeftDoorClosed && ai.stage === 2) {
+            if (!this._angelDoorRetreatTimer) this.startAngelDoorRetreatTimer();
+            return;
+          }
           const nextStage = ai.stage + 1;
           if (this.isWindowSpotOn && nextStage === 1) {
             return;
           }
-          if (nextStage === 3 && (this.aiConfig.haloedSaint.stage === 3 || this.aiConfig.haloedSaint.stage === 4)) {
-            // Only ONE entity can appear at the door/in the office at a time! Saint Michael is already there.
-            return;
+          if (nextStage === 3) {
+            if (this.isLeftDoorClosed) {
+              if (!this._angelDoorRetreatTimer) this.startAngelDoorRetreatTimer();
+              return;
+            }
+            if (this.aiConfig.haloedSaint.stage === 3 || this.aiConfig.haloedSaint.stage === 4) {
+              return;
+            }
           }
           this.setAngelStage(nextStage);
           window.Sound.playStoneGrind(0.7);
@@ -3771,6 +3922,16 @@ class GameEngine {
     if (ai.level <= 0) return;
 
     const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && ai.level >= 14));
+    const isSaintAtDoor = (ai.stage >= 2 && ai.stage <= 3) || ai.location === 'LEFT_DOOR' || ai.location === 'CAM_05';
+
+    // If left door is closed while Saint is at door or outside in hallway:
+    if (this.isLeftDoorClosed && isSaintAtDoor) {
+      ai.attackTimer = 0;
+      if (!this._saintDoorRetreatTimer) {
+        this.startSaintDoorRetreatTimer();
+      }
+      return; // Closed door physically blocks advancement
+    }
 
     // Continuous attack checks when at the left door (stage 3) or inside the office (stage 4)
     if (ai.stage === 3 || ai.stage === 4) {
@@ -3853,10 +4014,22 @@ class GameEngine {
       if (roll <= ai.level) {
         if (ai.stage === -1) {
           if (ai.location === 'CAM_05') {
+            if (this.isLeftDoorClosed) {
+              if (!this._saintDoorRetreatTimer) this.startSaintDoorRetreatTimer();
+              return;
+            }
             if (this.aiConfig.weepingAngel.stage === 3 || this.aiConfig.weepingAngel.stage === 4) return;
             this.setSaintStage(3);
             window.Sound.playStoneGrind(0.8);
             window.Sound.playLeftFootstep(0.92);
+          } else if (ai.location === 'CAM_01') {
+            // From CAM 01 Sanctuary Nave, advances to Window Glass or CAM 05
+            if (!this.isWindowSpotOn && this.aiConfig.weepingAngel.location !== 'WINDOW' && this.aiConfig.veiledMourner.location !== 'WINDOW') {
+              this.setSaintStage(1);
+            } else {
+              this.setSaintStage(2);
+            }
+            window.Sound.playStoneGrind(0.8);
           } else {
             // From CAM 03 Confessional, advances to Window Glass or CAM 05
             if (!this.isWindowSpotOn && this.aiConfig.weepingAngel.location !== 'WINDOW' && this.aiConfig.veiledMourner.location !== 'WINDOW') {
@@ -3874,18 +4047,41 @@ class GameEngine {
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
             ai.awakened = false;
-            if (this.isWindowSpotOn) return;
-            this.setSaintStage(1);
-            window.Sound.playStoneGrind(0.8);
+            // 35% chance to roam into CAM 01 Sanctuary Nave (where Angel is), producing the dual scene
+            if (Math.random() < 0.35 && this.aiConfig.weepingAngel.location === 'CAM_01') {
+              ai.stage = -1;
+              ai.location = 'CAM_01';
+              this._lastSaintStage = -1;
+              this.handleEntityMovement('CAM_03', 'CAM_01', 'haloedSaint');
+              this.triggerCameraMotionError(1, 1.8);
+              window.Sound.playStoneGrind(0.8);
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+            } else if (!this.isWindowSpotOn && this.aiConfig.weepingAngel.location !== 'WINDOW' && this.aiConfig.veiledMourner.location !== 'WINDOW') {
+              this.setSaintStage(1);
+              window.Sound.playStoneGrind(0.8);
+            } else {
+              this.setSaintStage(2);
+              window.Sound.playStoneGrind(0.8);
+            }
           }
         } else if (ai.stage < 3) {
+          if (this.isLeftDoorClosed && ai.stage === 2) {
+            if (!this._saintDoorRetreatTimer) this.startSaintDoorRetreatTimer();
+            return;
+          }
           const nextStage = ai.stage + 1;
           if (this.isWindowSpotOn && nextStage === 1) {
             return;
           }
-          if (nextStage === 3 && (this.aiConfig.weepingAngel.stage === 3 || this.aiConfig.weepingAngel.stage === 4)) {
-            // Only ONE entity can appear at the door/in the office at a time! Weeping Angel is already there.
-            return;
+          if (nextStage === 3) {
+            if (this.isLeftDoorClosed) {
+              if (!this._saintDoorRetreatTimer) this.startSaintDoorRetreatTimer();
+              return;
+            }
+            if (this.aiConfig.weepingAngel.stage === 3 || this.aiConfig.weepingAngel.stage === 4) {
+              // Only ONE entity can appear at the door/in the office at a time! Weeping Angel is already there.
+              return;
+            }
           }
           this.setSaintStage(nextStage);
           window.Sound.playStoneGrind(0.8);
@@ -4028,6 +4224,24 @@ class GameEngine {
               window.Sound.playStoneGrind(0.6);
               window.Sound.playVentClatter(0.75);
             }
+          } else if (ai.location === 'CAM_03') {
+            // From CAM 03 Reconciliation Chapel, advances to WINDOW or CAM 04 vent duct
+            if (Math.random() < 0.45 && !this.isWindowSpotOn &&
+                this.aiConfig.weepingAngel.location !== 'WINDOW' &&
+                this.aiConfig.haloedSaint.location !== 'WINDOW') {
+              ai.location = 'WINDOW';
+              this.updateWindowHallwayView();
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+              window.Sound.playStoneGrind(0.6);
+            } else if (!this.isVentClosed) {
+              this.setMournerStage(1);
+              window.Sound.playStoneGrind(0.6);
+              window.Sound.playVentClatter(0.75);
+            } else {
+              ai.location = 'CAM_05';
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+              window.Sound.playStoneGrind(0.6);
+            }
           } else {
             this.setMournerStage(1);
             window.Sound.playStoneGrind(0.6);
@@ -4054,15 +4268,22 @@ class GameEngine {
             window.Sound.playStoneGrind(0.5);
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
-            // Awakening: only enter vent if vent is open
-            if (!this.isVentClosed) {
-              ai.awakened = false;
+            ai.awakened = false;
+            // 35% chance to roam into CAM 03 Reconciliation Chapel (where Saint is), producing the dual scene
+            if (Math.random() < 0.35 && this.aiConfig.haloedSaint.location === 'CAM_03') {
+              ai.stage = -1;
+              ai.location = 'CAM_03';
+              this._lastMournerStage = -1;
+              this.handleEntityMovement('CAM_02', 'CAM_03', 'veiledMourner');
+              this.triggerCameraMotionError(3, 1.8);
+              window.Sound.playStoneGrind(0.7);
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+            } else if (!this.isVentClosed) {
               this.setMournerStage(1);
               window.Sound.playStoneGrind(0.6);
               window.Sound.playVentClatter(0.75);
             } else {
               // Vent is shut: flank to window or CAM 05 instead of entering sealed vent
-              ai.awakened = false;
               ai.stage = -1;
               ai.location = (!this.isWindowSpotOn &&
                 this.aiConfig.weepingAngel.location !== 'WINDOW' &&
@@ -4126,6 +4347,7 @@ class GameEngine {
     this._jumpscareVideoPlaying = false;
     this.clearAngelDoorRetreatTimer();
     this.clearSaintDoorRetreatTimer();
+    this.clearMournerDoorRetreatTimer();
     this.clearMournerVentRetreatTimer();
     this.muteCassette();
     window.Sound.stopDistantWeeping(0.2);
