@@ -2229,13 +2229,22 @@ video::-webkit-media-controls-overlay-play-button {
 }
 
 /* Clean, steady lobby background: zero position shake / zero displacement */
-.menu-church-bg.anomaly {
+.menu-church-bg.anomaly,
+.menu-church-bg.anomaly-phase3 {
   background-image: url('../assets/cctv/church_cam_anomaly.png') !important;
   filter: brightness(1.08) contrast(1.45) saturate(1.2) drop-shadow(0 0 35px rgba(220, 38, 38, 0.75)) !important;
   transform: none !important;
 }
 
-.menu-church-bg.anomaly::after {
+.menu-church-bg.anomaly-phase2 {
+  background-image: url('../assets/cctv/church_cam_01_angel_pedestal_awake.png') !important;
+  filter: brightness(1.08) contrast(1.45) saturate(1.2) drop-shadow(0 0 35px rgba(220, 38, 38, 0.75)) !important;
+  transform: none !important;
+}
+
+.menu-church-bg.anomaly::after,
+.menu-church-bg.anomaly-phase2::after,
+.menu-church-bg.anomaly-phase3::after {
   display: none !important;
 }
 

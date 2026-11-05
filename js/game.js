@@ -63,7 +63,7 @@ class GameEngine {
 
     // AI Entities & Levels (Strictly tracked unique locations)
     this.aiConfig = {
-      weepingAngel: { level: 0, stage: 0, location: 'CAM_01', timer: 0, attackTimer: 0, awakened: false },
+      weepingAngel: { level: 0, stage: 0, location: 'CAM_01', timer: 0, attackTimer: 0, awakened: false, aisle: false },
       haloedSaint: { level: 0, stage: 0, location: 'CAM_03', timer: 0, attackTimer: 0, awakened: false },
       veiledMourner: { level: 0, stage: 0, location: 'CAM_02', timer: 0, attackTimer: 0, awakened: false }
     };
@@ -470,6 +470,7 @@ class GameEngine {
     // 3. Preload CCTV Feeds & Textures
     const feeds = [
       'assets/cctv/church_cam_normal.png',
+      'assets/cctv/church_cam_01_angel_pedestal_awake.png',
       'assets/cctv/church_cam_anomaly.png',
       'assets/cctv/church_cam_01_empty.png',
       'assets/cctv/church_cam_01_mary_altar.png',
@@ -887,6 +888,7 @@ class GameEngine {
     this._lastSaintStage = undefined;
     this._lastMournerStage = undefined;
     this.aiConfig.weepingAngel.awakened = false;
+    this.aiConfig.weepingAngel.aisle = false;
     this.aiConfig.haloedSaint.awakened = false;
     this.aiConfig.veiledMourner.awakened = false;
     this.aiConfig.weepingAngel.attackTimer = 0;
@@ -1225,7 +1227,10 @@ class GameEngine {
     const prevLoc = this.aiConfig.weepingAngel.location;
     const prevStage = this.aiConfig.weepingAngel.stage;
     this.aiConfig.weepingAngel.stage = stage;
-    if (stage === 0) this.aiConfig.weepingAngel.awakened = false;
+    if (stage === 0) {
+      this.aiConfig.weepingAngel.awakened = false;
+      this.aiConfig.weepingAngel.aisle = false;
+    }
 
     // Strict Unique Location mapping (Angel is only ever in ONE place)
     // Stage 0: CAM_01 (Sanctuary Altar)
@@ -1407,7 +1412,7 @@ class GameEngine {
       // The role of the spotlight is to move entities FAR away from the office!
       // Weeping Angel is banished far back to Sanctuary Altar & Nave (CAM 01)!
       banishTarget = 'CAM_01';
-      targetStage = -1;
+      targetStage = 0;
       targetCamNum = 1;
     } else {
       // Banished from Left Door / CAM 05:
@@ -1427,6 +1432,7 @@ class GameEngine {
     ai.stage = targetStage;
     ai.location = banishTarget;
     ai.awakened = false;
+    ai.aisle = false;
     ai.attackTimer = 0;
     ai.timer = 0;
     ai.windowTimer = 0;
@@ -1444,7 +1450,13 @@ class GameEngine {
 
     const angel = this.world?.statues?.weepingAngel;
     if (angel) {
-      angel.visible = false;
+      if (targetStage === 0) {
+        angel.position.set(0, 0.88, -34);
+        angel.rotation.set(0, 0, 0);
+        angel.visible = true;
+      } else {
+        angel.visible = false;
+      }
     }
 
     if (banishTarget === 'WINDOW') {
@@ -1938,7 +1950,7 @@ class GameEngine {
     // Ensure clean normal state on boot without starting twitch prematurely
     const churchBg = document.getElementById('menu-church-bg');
     const menuEl = document.getElementById('fnaf-main-menu');
-    if (churchBg) churchBg.classList.remove('anomaly');
+    if (churchBg) churchBg.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
     if (menuEl) {
       menuEl.classList.remove('glitching');
       menuEl.classList.add('hidden');
@@ -2279,19 +2291,28 @@ class GameEngine {
       this._menuWeepTimeout = null;
     }
 
-    if (churchBgEl) churchBgEl.classList.remove('anomaly');
+    if (churchBgEl) churchBgEl.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
     if (menuEl) menuEl.classList.remove('glitching');
 
-    // 2. Preload anomaly image for zero-lag instant glitch swap
+    // 2. Preload anomaly images for zero-lag instant glitch swap (Phase 2 & Phase 3)
+    const phase2Img = new Image();
+    phase2Img.src = 'assets/cctv/church_cam_01_angel_pedestal_awake.png';
     const anomalyImg = new Image();
     anomalyImg.src = 'assets/cctv/church_cam_anomaly.png';
 
     const triggerTwitch = () => {
       if (this.isRunning || this.isNightTransitioning) return;
 
+      // Randomly select between Phase 2 (angel awake on pedestal) and Phase 3 (angel in aisle)
+      const usePhase2 = Math.random() < 0.50;
+      const glitchClass = usePhase2 ? 'anomaly-phase2' : 'anomaly-phase3';
+
       // Momentary statue twitch: swap to staring anomaly image and surge analog static noise
       if (menuEl) menuEl.classList.add('glitching');
-      if (churchBgEl) churchBgEl.classList.add('anomaly');
+      if (churchBgEl) {
+        churchBgEl.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
+        churchBgEl.classList.add(glitchClass);
+      }
       window.Sound.playCameraStatic(0.18, 0.35);
 
       // Subtle, rare distant crying from the statue on the right
@@ -2302,19 +2323,23 @@ class GameEngine {
       // 160-220ms duration: sudden quick flash then immediate snap back to normal
       const duration = 160 + Math.random() * 60;
       setTimeout(() => {
-        if (churchBgEl) churchBgEl.classList.remove('anomaly');
+        if (churchBgEl) churchBgEl.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
         if (menuEl) menuEl.classList.remove('glitching');
       }, duration);
 
-      // 30% chance of rapid follow-up shudder
+      // 30% chance of rapid follow-up shudder (alternates to the other anomaly phase!)
       if (Math.random() < 0.30) {
         this._menuFollowUpTimeout = setTimeout(() => {
           if (this.isRunning || this.isNightTransitioning) return;
+          const followUpClass = usePhase2 ? 'anomaly-phase3' : 'anomaly-phase2';
           if (menuEl) menuEl.classList.add('glitching');
-          if (churchBgEl) churchBgEl.classList.add('anomaly');
+          if (churchBgEl) {
+            churchBgEl.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
+            churchBgEl.classList.add(followUpClass);
+          }
           window.Sound.playCameraStatic(0.10, 0.28);
           setTimeout(() => {
-            if (churchBgEl) churchBgEl.classList.remove('anomaly');
+            if (churchBgEl) churchBgEl.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
             if (menuEl) menuEl.classList.remove('glitching');
           }, 85);
         }, duration + 75);
@@ -2355,7 +2380,7 @@ class GameEngine {
       this._menuWeepTimeout = null;
     }
     document.getElementById('fnaf-main-menu')?.classList.remove('glitching');
-    document.getElementById('menu-church-bg')?.classList.remove('anomaly');
+    document.getElementById('menu-church-bg')?.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
     if (!this.isCustomNight) {
       this.currentNight = night;
     }
@@ -2860,7 +2885,7 @@ class GameEngine {
       menu.classList.remove('glitching');
     }
     const churchBg = document.getElementById('menu-church-bg');
-    if (churchBg) churchBg.classList.remove('anomaly');
+    if (churchBg) churchBg.classList.remove('anomaly', 'anomaly-phase2', 'anomaly-phase3');
 
     this.setupMenuStatueTwitch();
 
@@ -3308,7 +3333,7 @@ class GameEngine {
     const saintLoc = this.aiConfig.haloedSaint.location;
     const mournerLoc = this.aiConfig.veiledMourner.location;
 
-    const isAngelDormant = angelLoc === 'CAM_01' && this.aiConfig.weepingAngel.stage === 0 && !this.aiConfig.weepingAngel.awakened;
+    const isAngelDormant = angelLoc === 'CAM_01' && this.aiConfig.weepingAngel.stage === 0 && !this.aiConfig.weepingAngel.awakened && !this.aiConfig.weepingAngel.aisle;
     const isSaintDormant = saintLoc === 'CAM_03' && this.aiConfig.haloedSaint.stage === 0 && !this.aiConfig.haloedSaint.awakened;
     const isMournerDormant = mournerLoc === 'CAM_02' && this.aiConfig.veiledMourner.stage === 0 && !this.aiConfig.veiledMourner.awakened;
 
@@ -3328,11 +3353,15 @@ class GameEngine {
       }
       // Case 4: Angel at CAM 01
       if (angelLoc === 'CAM_01') {
-        if (this.aiConfig.weepingAngel.awakened || this.aiConfig.weepingAngel.stage === -1) {
-          // Updated Scene: Pedestal is empty, Angel is in center aisle between pews
+        if (this.aiConfig.weepingAngel.aisle || this.aiConfig.weepingAngel.stage === -1) {
+          // 3rd Phase Movement: Pedestal is empty, Angel is standing in center aisle between pews
           return 'assets/cctv/church_cam_anomaly.png';
         }
-        return 'assets/cctv/church_cam_normal.png'; // Angel dormant on altar pedestal (original pose)
+        if (this.aiConfig.weepingAngel.awakened) {
+          // 2nd Phase Movement: Weeping Angel awakened on pedestal, hands down staring forward
+          return 'assets/cctv/church_cam_01_angel_pedestal_awake.png';
+        }
+        return 'assets/cctv/church_cam_normal.png'; // 1st Phase: Angel dormant on altar pedestal (original pose)
       }
       return 'assets/cctv/church_cam_01_empty.png';
     }
@@ -3948,13 +3977,24 @@ class GameEngine {
           }
         } else if (ai.stage === 0) {
           if (!ai.awakened) {
+            // Phase 1 -> Phase 2: Awakened on pedestal, hands down staring forward
             ai.awakened = true;
+            ai.aisle = false;
             this.triggerCameraMotionError(1, 1.8);
             window.Sound.playStoneGrind(0.5);
             window.Sound.playDistantWeeping('sob1', -0.15, 0.85); // Awakening sob from sanctuary altar
             if (this.isCCTVOpen) this.updateCCTVFeed();
+          } else if (!ai.aisle) {
+            // Phase 2 -> Phase 3: Steps off pedestal and stands at center aisle between pews
+            ai.aisle = true;
+            this.triggerCameraMotionError(1, 1.8);
+            window.Sound.playStoneGrind(0.7);
+            window.Sound.playDistantWeeping('sob2', 0.15, 0.90); // Stone shudder down sanctuary aisle
+            if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
+            // Phase 3 -> Leaves CAM 01
             ai.awakened = false;
+            ai.aisle = false;
             // 35% chance to roam into CAM 02 Crypt (where Mourner is), producing the dual scene
             if (Math.random() < 0.35 && this.aiConfig.veiledMourner.location === 'CAM_02') {
               ai.stage = -1;
