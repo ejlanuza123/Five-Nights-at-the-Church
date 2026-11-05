@@ -198,10 +198,11 @@ class GameEngine {
     }, 2800);
 
     const enterLobby = () => {
+      this._lobbyReadyTimestamp = Date.now();
       const menuEl = document.getElementById('fnaf-main-menu');
       if (menuEl) {
         menuEl.classList.remove('hidden');
-        menuEl.style.display = 'block';
+        menuEl.style.display = 'flex';
       }
       window.Sound.init();
       window.Sound.resume();
@@ -216,6 +217,9 @@ class GameEngine {
     const showWarningScreen = () => {
       if (warningDismissed) return;
       if (warningScreen) {
+        // Ensure the Lobby Menu is already positioned directly behind the Warning Screen
+        enterLobby();
+
         warningScreen.classList.remove('hidden');
         warningScreen.classList.remove('fade-out');
         warningScreen.style.display = 'flex';
@@ -229,16 +233,22 @@ class GameEngine {
           warningScreen.removeEventListener('click', dismissWarning);
           warningScreen.removeEventListener('touchstart', dismissWarning);
 
+          // Guarantee lobby is ready and audio active as warning fades out directly into it
+          enterLobby();
+
           warningScreen.classList.add('fade-out');
           setTimeout(() => {
             warningScreen.style.display = 'none';
             warningScreen.classList.add('hidden');
-            enterLobby();
           }, 450);
         };
 
         const onWarningKey = (e) => {
-          dismissWarning();
+          if (e.key === 'Enter' || e.code === 'Enter' || e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+            e.stopPropagation();
+            dismissWarning();
+          }
         };
 
         // Auto-dismiss warning after 3.8 seconds if player does not interact
@@ -265,7 +275,10 @@ class GameEngine {
         tipCycleInterval = null;
       }
 
-      // Immediately unhide Warning Screen behind preloader so the lobby is never exposed
+      // Immediately prepare Lobby directly behind Warning Screen
+      enterLobby();
+
+      // Immediately unhide Warning Screen directly over the lobby
       if (warningScreen) {
         warningScreen.classList.remove('hidden');
         warningScreen.classList.remove('fade-out');
@@ -1656,9 +1669,11 @@ class GameEngine {
         return;
       }
 
-      // Enter key starts shift from menu
+      // Enter key starts shift from menu (with grace period so dismissing warning doesn't start game)
       const fnafMenu = document.getElementById('fnaf-main-menu');
-      if (!this.isRunning && fnafMenu && !fnafMenu.classList.contains('hidden')) {
+      const warningEl = document.getElementById('warning-screen');
+      const isWarningVisible = warningEl && !warningEl.classList.contains('hidden') && warningEl.style.display !== 'none';
+      if (!this.isRunning && !isWarningVisible && fnafMenu && !fnafMenu.classList.contains('hidden') && (Date.now() - (this._lobbyReadyTimestamp || 0) > 600)) {
         if (e.code === 'Enter') {
           e.preventDefault();
           this.startNightWithTransition(this.currentNight);
@@ -2741,8 +2756,17 @@ class GameEngine {
         v.classList.add('hidden');
       }
     });
+    // Guarantee HUD overlay and office controls are completely hidden in the lobby
     const hud = document.getElementById('hud-overlay');
-    if (hud) hud.style.display = '';
+    if (hud) {
+      hud.classList.add('hidden');
+      hud.style.display = 'none';
+    }
+    const officeControls = document.querySelector('.office-overlay-controls');
+    if (officeControls) {
+      officeControls.classList.add('hidden');
+      officeControls.style.display = 'none';
+    }
 
     const menu = document.getElementById('fnaf-main-menu');
     if (menu) {
@@ -2803,8 +2827,17 @@ class GameEngine {
         v.classList.add('hidden');
       }
     });
+    // Show HUD overlay and office controls during active night shift
     const hud = document.getElementById('hud-overlay');
-    if (hud) hud.style.display = '';
+    if (hud) {
+      hud.classList.remove('hidden');
+      hud.style.display = '';
+    }
+    const officeControls = document.querySelector('.office-overlay-controls');
+    if (officeControls) {
+      officeControls.classList.remove('hidden');
+      officeControls.style.display = '';
+    }
 
     this.isRunning = true;
     this.gameOver = false;
@@ -4107,9 +4140,17 @@ class GameEngine {
       this.toggleWindowSpot();
     }
 
-    // Hide HUD overlay during jumpscare for raw cinematic terror
+    // Hide HUD overlay and office controls during jumpscare for raw cinematic terror
     const hud = document.getElementById('hud-overlay');
-    if (hud) hud.style.display = 'none';
+    if (hud) {
+      hud.classList.add('hidden');
+      hud.style.display = 'none';
+    }
+    const officeControls = document.querySelector('.office-overlay-controls');
+    if (officeControls) {
+      officeControls.classList.add('hidden');
+      officeControls.style.display = 'none';
+    }
 
     // Pause background music & halt ambient organ/heartbeat
     window.Sound.pauseBGM();
