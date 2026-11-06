@@ -488,6 +488,7 @@ class GameEngine {
       'assets/cctv/church_cam_03_mary_chapel.png',
       'assets/cctv/church_cam_03_saint_normal_mourner.png',
       'assets/cctv/church_cam_04_vent.png',
+      'assets/cctv/church_cam_04_vent_far.png',
       'assets/cctv/church_cam_04_vent_crawl.png',
       'assets/cctv/church_cam_04_vent_anomaly.png',
       'assets/cctv/church_cam_05_narthex.png',
@@ -3495,13 +3496,18 @@ class GameEngine {
 
     if (camId === 4) {
       // CAM 04: Return Air Duct (Mourner crawl progression)
+      // 1st Phase: Empty vent duct ('assets/cctv/church_cam_04_vent.png')
+      // 2nd Phase: Entity is further down the duct ('assets/cctv/church_cam_04_vent_far.png')
+      // 3rd Phase: Entity is closer up at duct camera opening ('assets/cctv/church_cam_04_vent_anomaly.png')
       if (mournerLoc === 'CAM_04') {
         if (this.aiConfig.veiledMourner.stage === 1) {
-          return 'assets/cctv/church_cam_04_vent_crawl.png'; // Mourner crawling mid-distance in duct
+          return 'assets/cctv/church_cam_04_vent_far.png'; // 2nd Phase: Entity further down duct
         }
-        return 'assets/cctv/church_cam_04_vent_anomaly.png'; // Mourner close up at duct camera opening
+        if (this.aiConfig.veiledMourner.stage === 2) {
+          return 'assets/cctv/church_cam_04_vent_anomaly.png'; // 3rd Phase: Entity closer up at opening
+        }
       }
-      return 'assets/cctv/church_cam_04_vent.png'; // Duct clear
+      return 'assets/cctv/church_cam_04_vent.png'; // 1st Phase: Empty vent duct
     }
 
     if (camId === 5) {
