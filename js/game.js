@@ -476,6 +476,7 @@ class GameEngine {
       'assets/cctv/church_cam_01_mary_altar.png',
       'assets/cctv/church_cam_01_saint_nave.png',
       'assets/cctv/church_cam_01_angel_normal_saint.png',
+      'assets/cctv/church_cam_01_angel_normal_mourner.png',
       'assets/cctv/church_cam_02_columbarium.png',
       'assets/cctv/church_cam_02_columbarium_anomaly.png',
       'assets/cctv/church_cam_02_empty.png',
@@ -3347,7 +3348,11 @@ class GameEngine {
       if (saintLoc === 'CAM_01') {
         return 'assets/cctv/church_cam_01_saint_nave.png';
       }
-      // Case 3: Mourner roaming in Sanctuary Altar
+      // Case 3: Angel in normal place/pose on pedestal, BUT Mourner came into the aisle!
+      if (isAngelDormant && mournerLoc === 'CAM_01') {
+        return 'assets/cctv/church_cam_01_angel_normal_mourner.png';
+      }
+      // Case 4: Mourner roaming in Sanctuary Altar (pedestal empty / angel moved)
       if (mournerLoc === 'CAM_01') {
         return 'assets/cctv/church_cam_01_mary_altar.png';
       }
@@ -4430,6 +4435,24 @@ class GameEngine {
               if (this.isCCTVOpen) this.updateCCTVFeed();
               window.Sound.playStoneGrind(0.6);
             }
+          } else if (ai.location === 'CAM_01') {
+            // From CAM 01 Sanctuary Nave, advances to WINDOW or roams back to CAM 02 / CAM 03
+            if (!this.isWindowSpotOn &&
+                this.aiConfig.weepingAngel.location !== 'WINDOW' &&
+                this.aiConfig.haloedSaint.location !== 'WINDOW') {
+              ai.location = 'WINDOW';
+              this.updateWindowHallwayView();
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+              window.Sound.playStoneGrind(0.6);
+            } else {
+              const roamCam = (Math.random() < 0.50) ? 'CAM_02' : 'CAM_03';
+              ai.location = roamCam;
+              if (roamCam === 'CAM_02') {
+                this.setMournerStage(0);
+              }
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+              window.Sound.playStoneGrind(0.6);
+            }
           } else {
             this.setMournerStage(1);
             window.Sound.playStoneGrind(0.6);
@@ -4457,8 +4480,16 @@ class GameEngine {
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
             ai.awakened = false;
-            // 35% chance to roam into CAM 03 Reconciliation Chapel (where Saint is), producing the dual scene
-            if (Math.random() < 0.35 && this.aiConfig.haloedSaint.location === 'CAM_03') {
+            // 30% chance to roam into CAM 01 Sanctuary Altar & Nave (where Angel is), producing the dual scene
+            if (Math.random() < 0.30 && this.aiConfig.weepingAngel.location === 'CAM_01') {
+              ai.stage = -1;
+              ai.location = 'CAM_01';
+              this._lastMournerStage = -1;
+              this.handleEntityMovement('CAM_02', 'CAM_01', 'veiledMourner');
+              this.triggerCameraMotionError(1, 1.8);
+              window.Sound.playStoneGrind(0.7);
+              if (this.isCCTVOpen) this.updateCCTVFeed();
+            } else if (Math.random() < 0.35 && this.aiConfig.haloedSaint.location === 'CAM_03') {
               ai.stage = -1;
               ai.location = 'CAM_03';
               this._lastMournerStage = -1;
