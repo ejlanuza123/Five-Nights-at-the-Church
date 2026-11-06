@@ -1060,7 +1060,7 @@ class GameEngine {
   startMournerVentRetreatTimer() {
     this.clearMournerVentRetreatTimer();
     this.aiConfig.veiledMourner.attackTimer = 0;
-    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 1500 : 2000;
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 900 : 1300;
     // Immediate shutter impact clatter when closed in front of her
     window.Sound.playVentClatter(0.8);
     this.vibrate(40);
@@ -1072,7 +1072,7 @@ class GameEngine {
         this.vibrate([60, 50, 90]);
         window.Sound.playVentClatter(0.95);
         window.Sound.playStoneGrind(0.7);
-        this.banishMourner();
+        this.pushBackMournerInVent();
       }
     }, retreatMs);
   }
@@ -1081,6 +1081,76 @@ class GameEngine {
     if (this._mournerVentRetreatTimer) {
       clearTimeout(this._mournerVentRetreatTimer);
       this._mournerVentRetreatTimer = null;
+    }
+  }
+
+  pushBackMournerInVent() {
+    const ai = this.aiConfig.veiledMourner;
+    const prevStage = ai.stage;
+    const prevLoc = ai.location;
+
+    if (prevStage === 3 || prevLoc === 'RIGHT_VENT') {
+      // PUSHED BACK from office vent opening into duct (Stage 2 - crawling near):
+      // The entity retreats back into the camera view on CAM 04!
+      this.setMournerStage(2);
+      ai.attackTimer = 0;
+      ai._ventWarningPlayed = false;
+
+      // In office: she is no longer at the vent opening!
+      const mourner = this.world?.statues?.veiledMourner;
+      if (mourner) mourner.visible = false;
+
+      this.triggerCameraMotionError(4, 1.2);
+      window.Sound.playVentClatter(0.85);
+      window.Sound.playStoneGrind(0.65);
+
+      this.updateVentAudio();
+      if (this.isCCTVOpen) {
+        this.updateCCTVFeed();
+      }
+
+      // If vent shutter remains closed, continue pushing her back further down the duct!
+      if (this.isVentClosed) {
+        this.startMournerVentRetreatTimer();
+      }
+    } else if (prevStage === 2) {
+      // PUSHED BACK further down the duct (Stage 1 - crawling far):
+      this.setMournerStage(1);
+      ai.attackTimer = 0;
+      ai._ventWarningPlayed = false;
+
+      const mourner = this.world?.statues?.veiledMourner;
+      if (mourner) mourner.visible = false;
+
+      this.triggerCameraMotionError(4, 1.2);
+      window.Sound.playVentClatter(0.75);
+
+      this.updateVentAudio();
+      if (this.isCCTVOpen) {
+        this.updateCCTVFeed();
+      }
+
+      // If vent shutter remains closed, push her completely out of the duct!
+      if (this.isVentClosed) {
+        this.startMournerVentRetreatTimer();
+      }
+    } else if (prevStage === 1 || prevLoc === 'CAM_04') {
+      // PUSHED BACK completely out of duct back to CAM 02 Crypt (Home base):
+      this.setMournerStage(0);
+      ai.awakened = false;
+      ai.attackTimer = 0;
+      ai.timer = 0;
+      ai._ventWarningPlayed = false;
+
+      this.triggerCameraMotionError(4, 1.8);
+      this.triggerCameraMotionError(2, 1.8);
+      window.Sound.playVentClatter(0.7);
+      window.Sound.playStoneGrind(0.8);
+
+      this.updateVentAudio();
+      if (this.isCCTVOpen) {
+        this.updateCCTVFeed();
+      }
     }
   }
 
@@ -1364,20 +1434,20 @@ class GameEngine {
         mourner.rotation.set(0, -Math.PI / 3, 0);
         mourner.visible = true;
         break;
-      case 1: // CAM 04 - Entering modern HVAC Air Duct
+      case 1: // CAM 04 - Entering modern HVAC Air Duct (crawling far in duct - NOT visible from office)
         mourner.position.set(5.8, 0.02, 0.45);
         mourner.rotation.set(0, -Math.PI / 2, 0); // Head and crawling arms face forward towards office (-X)
-        mourner.visible = true;
+        mourner.visible = false; // Hidden from office vent light - only visible on CAM 04 CCTV!
         break;
-      case 2: // CAM 04 - Crawling deep inside HVAC Air Duct
+      case 2: // CAM 04 - Crawling deep inside HVAC Air Duct (crawling near in duct - NOT visible from office)
         mourner.position.set(4.6, 0.02, 0.45);
         mourner.rotation.set(0, -Math.PI / 2, 0); // Head and crawling arms face forward towards office (-X)
-        mourner.visible = true;
+        mourner.visible = false; // Hidden from office vent light - only visible on CAM 04 CCTV!
         break;
       case 3: // Peeking directly out of Office HVAC Vent Opening into the office!
         mourner.position.set(4.15, 0.02, 0.45);
         mourner.rotation.set(0, -Math.PI * 0.54, 0); // Head and face looking directly out of vent toward player desk
-        mourner.visible = true;
+        mourner.visible = !this.isVentClosed; // Visible when flashing vent light in office (if shutter not sealed)!
         this._mournerStage3ArrivalTime = Date.now();
         break;
       case 4: // Inside Office - Attack position
@@ -3127,14 +3197,26 @@ class GameEngine {
     this.vibrate(35);
     window.Sound.playVentSound(this.isVentClosed);
 
+    const mourner = this.aiConfig.veiledMourner;
+    const isMournerInVent = (mourner.stage >= 1 && mourner.stage <= 3) || mourner.location === 'CAM_04' || mourner.location === 'RIGHT_VENT';
+    const mournerStatue = this.world?.statues?.veiledMourner;
+
     if (this.isVentClosed) {
-      const mourner = this.aiConfig.veiledMourner;
-      const isMournerInVent = (mourner.stage >= 1 && mourner.stage <= 3) || mourner.location === 'CAM_04' || mourner.location === 'RIGHT_VENT';
+      if (mournerStatue && (mourner.stage === 3 || mourner.location === 'RIGHT_VENT')) {
+        mournerStatue.visible = false;
+      }
       if (isMournerInVent) {
         this.startMournerVentRetreatTimer();
       }
     } else {
+      if (mournerStatue && (mourner.stage === 3 || mourner.location === 'RIGHT_VENT')) {
+        mournerStatue.visible = true;
+      }
       this.clearMournerVentRetreatTimer();
+    }
+
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed();
     }
 
     const btn = document.getElementById('btn-vent-toggle');
@@ -3470,6 +3552,13 @@ class GameEngine {
       const isAngelAtDoor = (this.aiConfig.weepingAngel.stage === 3 || this.aiConfig.weepingAngel.location === 'LEFT_DOOR');
       const isSaintAtDoor = (this.aiConfig.haloedSaint.stage === 3 || this.aiConfig.haloedSaint.location === 'LEFT_DOOR');
       if (isAngelAtDoor || isSaintAtDoor) {
+        return true;
+      }
+    }
+    // CAM 04 specifically glitches when Mourner is at the open right vent opening!
+    if (camId === 4 && !this.isVentClosed) {
+      const isMournerAtVent = (this.aiConfig.veiledMourner.stage === 3 || this.aiConfig.veiledMourner.location === 'RIGHT_VENT');
+      if (isMournerAtVent) {
         return true;
       }
     }
