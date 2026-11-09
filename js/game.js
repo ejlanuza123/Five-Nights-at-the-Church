@@ -1887,6 +1887,10 @@ class GameEngine {
 
       // Escape key handles modals, CCTV, and in-game pause menu with sound controls
       if (e.key === 'Escape') {
+        if (window.Extras && window.Extras.isOpen) {
+          window.Extras.close();
+          return;
+        }
         const customModal = document.getElementById('custom-night-modal');
         if (customModal && !customModal.classList.contains('hidden')) {
           this.toggleCustomNightModal(false);
@@ -3633,6 +3637,40 @@ class GameEngine {
         this.world.nodes.crtTvScreenMat.needsUpdate = true;
       }
     }
+
+    // Extras Modifier: Real-Time Radar Map Tracker
+    this.updateCCTVRadar();
+  }
+
+  updateCCTVRadar() {
+    const isRadarOn = window.Extras && window.Extras.isCheatActive('radarMap');
+    const angelLoc = this.aiConfig.weepingAngel.location;
+    const saintLoc = this.aiConfig.haloedSaint.location;
+    const mournerLoc = this.aiConfig.veiledMourner.location;
+
+    for (let c = 1; c <= 5; c++) {
+      const btn = document.getElementById(`cam-btn-${c}`);
+      if (!btn) continue;
+      let beacon = btn.querySelector('.radar-beacon');
+      if (!isRadarOn) {
+        if (beacon) beacon.remove();
+        continue;
+      }
+      if (!beacon) {
+        beacon = document.createElement('span');
+        beacon.className = 'radar-beacon';
+        btn.appendChild(beacon);
+      }
+
+      const cTag = `CAM_0${c}`;
+      const entities = [];
+      if (angelLoc === cTag) entities.push('👼');
+      if (saintLoc === cTag) entities.push('⚔️');
+      if (mournerLoc === cTag) entities.push('🕷️');
+
+      beacon.textContent = entities.join('');
+      beacon.style.display = entities.length > 0 ? 'inline-flex' : 'none';
+    }
   }
 
   switchCamera(camId, isInitialOpen = false) {
@@ -3724,6 +3762,14 @@ class GameEngine {
   updatePower(delta) {
     if (this.isBlackout || this.gameOver || this.victory) return;
 
+    // Extras Modifier: Infinite Backup Generator Power
+    if (window.Extras && window.Extras.isCheatActive('infiniteBattery')) {
+      this.power = 100.0;
+      const powerEl = document.getElementById('hud-power-val');
+      if (powerEl) powerEl.textContent = '100% [INF]';
+      return;
+    }
+
     let usageBars = 1; // Base server & building systems (1 bar)
     if (this.isLeftDoorClosed) usageBars++;
     if (this.isLeftDoorLightOn) usageBars++;
@@ -3793,8 +3839,11 @@ class GameEngine {
   updateTime(delta) {
     if (!this.isRunning || this.gameOver || this.victory) return;
 
+    // Extras Modifier: Fast Nights (2x Clock Overclock)
+    const speedMult = (window.Extras && window.Extras.isCheatActive('fastNights')) ? 2.0 : 1.0;
+
     // delta passed from renderLoop is already scaled by timeSpeed
-    this.nightTimer += delta;
+    this.nightTimer += delta * speedMult;
 
     // Total in-game hours from 0.0 to 6.0
     const totalHoursFloat = Math.min(6.0, this.nightTimer / this.hourDuration);

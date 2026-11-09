@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261020_v53">
+  <link rel="stylesheet" href="css/style.css?v=20261109_v54">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
@@ -437,6 +437,12 @@
             <span class="fnaf-arrow">&gt;&gt;</span>
             <span class="fnaf-text">OPTIONS</span>
             <span class="fnaf-settings-badge"><span class="badge-dot-blue"></span>HOW TO PLAY &amp; SETTINGS</span>
+          </button>
+
+          <button class="fnaf-menu-item" id="btn-menu-extras" title="Inspect 3D Models, Jumpscares, CCTV Archive &amp; Cheats">
+            <span class="fnaf-arrow">&gt;&gt;</span>
+            <span class="fnaf-text">EXTRAS</span>
+            <span class="fnaf-badge-gold">MODELS &amp; JUMPSCARES</span>
           </button>
 
           <button class="fnaf-menu-item" id="btn-menu-fullscreen">
@@ -1077,6 +1083,341 @@
       </div>
     </div>
 
+    <!-- Modal: FNAF Classic Extras Menu (3D Models, Jumpscares, CCTV Archive, Sound Test, Cheats) -->
+    <div class="screen-modal hidden" id="extras-modal">
+      <div class="extras-box">
+        <!-- Extras CRT Header -->
+        <div class="extras-header">
+          <div class="extras-header-left">
+            <span class="extras-seal-icon">⛪</span>
+            <div>
+              <div class="extras-title-row">
+                <h2 class="extras-main-title">ARCHIVAL EXTRAS</h2>
+                <span class="extras-clearance-badge">PARISH SECURITY LEVEL 5 CLEARANCE</span>
+              </div>
+              <div class="extras-sub-title">ST. JUDE CATHOLIC PARISH • 3D STATUE REGISTRY &amp; SURVEILLANCE LOGS</div>
+            </div>
+          </div>
+          <button class="options-close-x" id="btn-extras-x" title="Close Extras [ESC]">&times;</button>
+        </div>
+
+        <!-- Navigation Tabs Bar -->
+        <div class="extras-nav-bar">
+          <button class="extras-nav-tab active" data-tab="models">
+            <span class="tab-icon">🏛️</span>
+            <span class="tab-label">3D MODELS</span>
+          </button>
+          <button class="extras-nav-tab" data-tab="jumpscares">
+            <span class="tab-icon">💀</span>
+            <span class="tab-label">JUMPSCARES</span>
+          </button>
+          <button class="extras-nav-tab" data-tab="cctv">
+            <span class="tab-icon">📹</span>
+            <span class="tab-label">CCTV ARCHIVE</span>
+          </button>
+          <button class="extras-nav-tab" data-tab="audio">
+            <span class="tab-icon">📼</span>
+            <span class="tab-label">SOUND TEST</span>
+          </button>
+          <button class="extras-nav-tab" data-tab="cheats">
+            <span class="tab-icon">⚡</span>
+            <span class="tab-label">CHEATS &amp; RADAR</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: 3D MODELS VIEWER -->
+        <div class="extras-tab-view" id="extras-view-models">
+          <div class="extras-models-layout">
+            <!-- Left Viewport: 3D Interactive WebGL Canvas -->
+            <div class="extras-canvas-col">
+              <div class="extras-canvas-wrap" id="extras-canvas-wrap">
+                <canvas id="extras-model-canvas"></canvas>
+                <div class="extras-canvas-scanlines"></div>
+                <div class="extras-canvas-vignette"></div>
+
+                <!-- CRT On-Screen Display Overlay -->
+                <div class="extras-canvas-osd">
+                  <span class="osd-live-tag"><span class="rec-dot"></span>3D DIOCESAN SCAN</span>
+                  <span class="osd-cam-tag">PLINTH: 360° ORBIT</span>
+                </div>
+
+                <!-- Interactive Viewer Controls (Rotate & Zoom) -->
+                <div class="model-viewer-toolbar">
+                  <div class="viewer-btn-group">
+                    <button class="viewer-btn" id="btn-model-rot-left" title="Turn Left">◀ TURN LEFT</button>
+                    <button class="viewer-btn" id="btn-model-rot-right" title="Turn Right">TURN RIGHT ▶</button>
+                    <button class="viewer-btn active" id="btn-model-auto-rot" title="Toggle Auto-Rotate">↺ AUTO-ROTATE</button>
+                  </div>
+                  <div class="viewer-btn-group">
+                    <button class="viewer-btn" id="btn-model-zoom-in" title="Zoom In">+</button>
+                    <button class="viewer-btn" id="btn-model-zoom-out" title="Zoom Out">-</button>
+                    <button class="viewer-btn" id="btn-model-reset" title="Reset View">RESET</button>
+                  </div>
+                </div>
+
+                <!-- Touch gesture hint -->
+                <div class="model-touch-hint">DRAG TO TURN SIDEWARDS • PINCH / SCROLL TO ZOOM</div>
+
+                <!-- 3D Loader Badge -->
+                <div class="model-viewer-loader hidden" id="model-viewer-loader">
+                  <span class="loader-spinner"></span>
+                  <span>LOADING 3D GEOMETRY...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Entity Selector & Dossier -->
+            <div class="extras-details-col">
+              <!-- Entity Selection Chips -->
+              <div class="model-entity-selector">
+                <button class="model-entity-chip active" data-index="0">
+                  <span class="chip-avatar angel-avatar"></span>
+                  <span class="chip-name">WEEPING ANGEL</span>
+                </button>
+                <button class="model-entity-chip" data-index="1">
+                  <span class="chip-avatar saint-avatar"></span>
+                  <span class="chip-name">HALOED SAINT</span>
+                </button>
+                <button class="model-entity-chip" data-index="2">
+                  <span class="chip-avatar mourner-avatar"></span>
+                  <span class="chip-name">VEILED MOURNER</span>
+                </button>
+              </div>
+
+              <!-- Entity Dossier Card -->
+              <div class="model-dossier-card">
+                <div class="dossier-header">
+                  <h3 class="dossier-entity-name" id="model-entity-name">WEEPING ANGEL</h3>
+                  <div class="dossier-latin-name" id="model-entity-latin">Mater Dolorosa ("Our Lady of Sorrows")</div>
+                </div>
+
+                <div class="dossier-stats-grid">
+                  <div class="dossier-stat-box">
+                    <span class="stat-box-label">THREAT LEVEL</span>
+                    <span class="stat-box-val stat-val-red" id="model-entity-threat">CRITICAL • RELENTLESS [4 / 5]</span>
+                  </div>
+                  <div class="dossier-stat-box">
+                    <span class="stat-box-label">PATROL CORRIDOR</span>
+                    <span class="stat-box-val" id="model-entity-route">CAM 01 → CAM 05 → Left Church Door / Window</span>
+                  </div>
+                </div>
+
+                <div class="dossier-section">
+                  <div class="dossier-sec-title">ARCHIVAL RECORD &amp; LORE</div>
+                  <p class="dossier-body-text" id="model-entity-bio">Loading dossier...</p>
+                </div>
+
+                <div class="dossier-section">
+                  <div class="dossier-sec-title">SURVIVAL MECHANICS &amp; DEFENSE</div>
+                  <p class="dossier-body-text" id="model-entity-tactics">Loading tactics...</p>
+                </div>
+
+                <button class="btn-preview-jumpscare" id="btn-model-preview-jumpscare">
+                  <span class="jumpscare-btn-icon">💀</span>
+                  <span>PREVIEW JUMPSCARE CINEMA</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: JUMPSCARES CINEMA -->
+        <div class="extras-tab-view hidden" id="extras-view-jumpscares">
+          <div class="jumpscares-grid">
+            <!-- Jumpscare 1: Weeping Angel -->
+            <div class="jumpscare-card" data-entity="weepingAngel">
+              <div class="jumpscare-card-thumb-wrap">
+                <img src="assets/office/door_peeking_angel.jpg" alt="Weeping Angel" class="jumpscare-card-thumb" />
+                <div class="jumpscare-card-scanlines"></div>
+                <span class="jumpscare-badge">ATTACK SEQUENCE 01</span>
+              </div>
+              <div class="jumpscare-card-details">
+                <div class="jumpscare-card-title">OUR LADY OF SORROWS</div>
+                <div class="jumpscare-card-sub">Left Arched Door Breach • Sudden Hallway Lunge</div>
+                <button class="primary-btn btn-play-jumpscare">
+                  <span>▶ PLAY JUMPSCARE</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Jumpscare 2: Haloed Saint -->
+            <div class="jumpscare-card" data-entity="haloedSaint">
+              <div class="jumpscare-card-thumb-wrap">
+                <img src="assets/office/door_peeking_saint.jpg" alt="Haloed Saint" class="jumpscare-card-thumb" />
+                <div class="jumpscare-card-scanlines"></div>
+                <span class="jumpscare-badge">ATTACK SEQUENCE 02</span>
+              </div>
+              <div class="jumpscare-card-details">
+                <div class="jumpscare-card-title">SANCTUS MICHAEL</div>
+                <div class="jumpscare-card-sub">Left Door Infiltration • Broadsword Ambush</div>
+                <button class="primary-btn btn-play-jumpscare">
+                  <span>▶ PLAY JUMPSCARE</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Jumpscare 3: Veiled Mourner -->
+            <div class="jumpscare-card" data-entity="veiledMourner">
+              <div class="jumpscare-card-thumb-wrap">
+                <img src="assets/office/vent_peeking_mourner.jpg" alt="Veiled Mourner" class="jumpscare-card-thumb" />
+                <div class="jumpscare-card-scanlines"></div>
+                <span class="jumpscare-badge">ATTACK SEQUENCE 03</span>
+              </div>
+              <div class="jumpscare-card-details">
+                <div class="jumpscare-card-title">THE MEMORIAL PENITENT</div>
+                <div class="jumpscare-card-sub">HVAC Air Duct Breach • Sudden Vent Crawl Attack</div>
+                <button class="primary-btn btn-play-jumpscare">
+                  <span>▶ PLAY JUMPSCARE</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: CCTV SURVEILLANCE ARCHIVE -->
+        <div class="extras-tab-view hidden" id="extras-view-cctv">
+          <div class="cctv-gallery-container">
+            <div class="cctv-gallery-intro">
+              <span>SECURITY FOOTAGE ARCHIVES • CLICK ANY STILL TO INSPECT HIGH-RESOLUTION SURVEILLANCE RECORD</span>
+            </div>
+            <div class="cctv-gallery-grid" id="cctv-gallery-grid"></div>
+          </div>
+        </div>
+
+        <!-- TAB 4: SOUND TEST & CASSETTES -->
+        <div class="extras-tab-view hidden" id="extras-view-audio">
+          <div class="soundtest-container">
+            <!-- Retro Cassette Tape Deck Header -->
+            <div class="extras-tape-deck">
+              <div class="tape-deck-left">
+                <div class="tape-spool-wrap">
+                  <div class="extras-tape-reel" id="extras-reel-1"></div>
+                  <div class="tape-window">
+                    <div class="tape-ribbon"></div>
+                  </div>
+                  <div class="extras-tape-reel" id="extras-reel-2"></div>
+                </div>
+                <div class="tape-deck-meta">
+                  <div class="tape-status-tag"><span class="rec-dot"></span>AUDIO CASSETTE DECK</div>
+                  <div class="tape-now-playing" id="soundtest-now-playing">IDLE • SELECT TRACK TO PLAY</div>
+                </div>
+              </div>
+              <button class="secondary-btn" id="btn-soundtest-stop">■ STOP ALL AUDIO</button>
+            </div>
+
+            <!-- Sound List -->
+            <div class="soundtest-list" id="soundtest-list"></div>
+          </div>
+        </div>
+
+        <!-- TAB 5: CHEATS & RADAR -->
+        <div class="extras-tab-view hidden" id="extras-view-cheats">
+          <div class="extras-cheats-container">
+            <div class="cheats-notice-box">
+              <span class="notice-icon">⚡</span>
+              <div>
+                <div class="notice-title">PARISH ARCHIVAL OVERRIDES &amp; MODIFIERS</div>
+                <div class="notice-desc">Enable game modifiers to practice your survival instincts or explore the church security system with enhanced telemetry.</div>
+              </div>
+            </div>
+
+            <div class="cheats-list">
+              <!-- Cheat 1: Radar Map -->
+              <div class="cheat-item-card">
+                <div class="cheat-item-info">
+                  <div class="cheat-item-title">RADAR MAP / SURVEILLANCE TRACKER</div>
+                  <div class="cheat-item-desc">Overlays real-time statue position beacons (Angel, Saint, Mourner) directly onto the CCTV floorplan during the night shifts.</div>
+                </div>
+                <label class="switch-control">
+                  <input type="checkbox" id="cheat-toggle-radar">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <!-- Cheat 2: Fast Nights -->
+              <div class="cheat-item-card">
+                <div class="cheat-item-info">
+                  <div class="cheat-item-title">FAST NIGHTS (CLOCK OVERCLOCK)</div>
+                  <div class="cheat-item-desc">In-game clock advances at 2x speed (each hour takes 30 real seconds instead of 60 seconds).</div>
+                </div>
+                <label class="switch-control">
+                  <input type="checkbox" id="cheat-toggle-fast">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <!-- Cheat 3: Infinite Generator Power -->
+              <div class="cheat-item-card">
+                <div class="cheat-item-info">
+                  <div class="cheat-item-title">INFINITE BACKUP GENERATOR</div>
+                  <div class="cheat-item-desc">Auxiliary battery power remains locked at 100% capacity regardless of doors, spotlights, or CCTV monitor usage.</div>
+                </div>
+                <label class="switch-control">
+                  <input type="checkbox" id="cheat-toggle-battery">
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Direct Shift Deployment Jump -->
+            <div class="cheats-night-jumper">
+              <div class="jumper-title">INSTANT SHIFT DEPLOYMENT</div>
+              <div class="jumper-buttons">
+                <button class="extras-night-jump-btn" data-night="1">NIGHT 1</button>
+                <button class="extras-night-jump-btn" data-night="2">NIGHT 2</button>
+                <button class="extras-night-jump-btn" data-night="3">NIGHT 3</button>
+                <button class="extras-night-jump-btn" data-night="4">NIGHT 4</button>
+                <button class="extras-night-jump-btn" data-night="5">NIGHT 5</button>
+                <button class="extras-night-jump-btn jumper-vigil" data-night="6">NIGHT 6 (VIGIL)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extras Footer -->
+        <div class="extras-footer">
+          <div class="extras-footer-info">
+            <span>© 2026 RL3 STUDIO • FNAF HORROR ARCHIVES</span>
+          </div>
+          <button class="primary-btn btn-extras-close" id="btn-extras-close">
+            <span>BACK TO TITLE MENU</span>
+            <kbd>[ESC]</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fullscreen Dedicated Jumpscare Cinema Player Overlay -->
+    <div class="screen-modal hidden" id="extras-jumpscare-player">
+      <div class="jumpscare-player-inner">
+        <video id="extras-jumpscare-video" class="extras-jumpscare-video" playsinline></video>
+        <div class="extras-jumpscare-strobe" id="extras-jumpscare-strobe"></div>
+        <button class="btn-jumpscare-player-close" id="btn-jumpscare-player-close">✕ SKIP [CLICK / ESC]</button>
+      </div>
+    </div>
+
+    <!-- Fullscreen CCTV Lightbox Viewer -->
+    <div class="screen-modal hidden" id="cctv-lightbox">
+      <div class="cctv-lightbox-inner">
+        <div class="lightbox-header">
+          <div>
+            <h3 class="lightbox-title" id="cctv-lightbox-title">CAM 01 // SANCTUARY ALTAR</h3>
+            <div class="lightbox-sub" id="cctv-lightbox-desc">Surveillance archival capture</div>
+          </div>
+          <div class="lightbox-nav-row">
+            <span class="lightbox-counter" id="cctv-lightbox-counter">1 / 20</span>
+            <button class="lightbox-nav-btn" id="btn-lightbox-prev">◀ PREV</button>
+            <button class="lightbox-nav-btn" id="btn-lightbox-next">NEXT ▶</button>
+            <button class="options-close-x" id="btn-lightbox-close">&times;</button>
+          </div>
+        </div>
+        <div class="lightbox-image-wrap">
+          <img id="cctv-lightbox-img" src="" alt="CCTV Inspection" />
+          <div class="cctv-card-scanlines"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal: Game Over Screen -->
     <div class="screen-modal hidden" id="gameover-screen">
       <h2 class="gameover-title">FACILITY BREACHED</h2>
@@ -1116,9 +1457,10 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261020_v53"></script>
-  <script src="js/textures.js?v=20261020_v53"></script>
-  <script src="js/models.js?v=20261020_v53"></script>
-  <script src="js/game.js?v=20261020_v53"></script>
+  <script src="js/audio.js?v=20261109_v54"></script>
+  <script src="js/textures.js?v=20261109_v54"></script>
+  <script src="js/models.js?v=20261109_v54"></script>
+  <script src="js/extras.js?v=20261109_v54"></script>
+  <script src="js/game.js?v=20261109_v54"></script>
 </body>
 </html>
