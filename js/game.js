@@ -3664,11 +3664,11 @@ class GameEngine {
 
       const cTag = `CAM_0${c}`;
       const entities = [];
-      if (angelLoc === cTag) entities.push('👼');
-      if (saintLoc === cTag) entities.push('⚔️');
-      if (mournerLoc === cTag) entities.push('🕷️');
+      if (angelLoc === cTag) entities.push('[A]');
+      if (saintLoc === cTag) entities.push('[S]');
+      if (mournerLoc === cTag) entities.push('[M]');
 
-      beacon.textContent = entities.join('');
+      beacon.textContent = entities.join(' ');
       beacon.style.display = entities.length > 0 ? 'inline-flex' : 'none';
     }
   }

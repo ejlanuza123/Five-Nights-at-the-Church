@@ -2446,6 +2446,22 @@ video::-webkit-media-controls-overlay-play-button {
   margin-bottom: 8px;
 }
 
+.fnaf-title-seal {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.fnaf-title-icon-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 38, 38, 0.7);
+  box-shadow: 0 0 14px rgba(220, 38, 38, 0.5);
+  object-fit: cover;
+  display: block;
+}
+
 .fnaf-game-title {
   margin: 0;
   font-family: var(--font-gothic), Impact, 'Arial Black', sans-serif;
@@ -3325,6 +3341,15 @@ kbd.key-badge {
   justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.entity-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
 }
 
 .angel-avatar {
@@ -3572,6 +3597,16 @@ kbd.key-badge {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.options-seal-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid rgba(220, 38, 38, 0.6);
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .options-gear-icon {
@@ -5727,6 +5762,16 @@ kbd.key-badge {
     align-items: flex-start !important;
   }
 
+  .fnaf-title-seal {
+    margin-bottom: 4px !important;
+  }
+
+  .fnaf-title-icon-img {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+  }
+
   /* Classic Game Title: Compact vertical stacked words */
   .fnaf-game-title {
     display: flex !important;
@@ -6176,6 +6221,12 @@ kbd.key-badge {
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
+  }
+
+  .options-seal-img {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 4px !important;
   }
 
   .options-gear-icon {

@@ -9,10 +9,13 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261109_v54">
+  <link rel="stylesheet" href="css/style.css?v=20261109_v55">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>⛪</text></svg>">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icon/app_icon.png">
+  <link rel="shortcut icon" href="assets/icon/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon/app_icon.png">
 </head>
 <body>
   <!-- Mobile Portrait Orientation Guard -->
@@ -94,13 +97,20 @@
       <!-- Father Thomas Cassette Player / Nightly Briefing HUD Widget -->
       <div id="cassette-call-widget" class="cassette-widget hidden">
         <div class="cassette-header-row">
-          <div class="cassette-tape-spin">📼</div>
+          <div class="cassette-tape-spin">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <circle cx="8" cy="11" r="2.5"></circle>
+              <circle cx="16" cy="11" r="2.5"></circle>
+              <path d="M8 13.5h8"></path>
+            </svg>
+          </div>
           <div class="cassette-meta">
             <span class="cassette-title">FR. THOMAS // BRIEFING TAPE</span>
             <span class="cassette-rec-badge"><span class="rec-dot"></span>PLAYBACK</span>
           </div>
           <button class="cassette-mute-btn" id="btn-mute-cassette" title="Mute briefing tape [M]">
-            <span class="mute-icon">🔇</span> MUTE [M]
+            <span class="mute-icon">[ M ]</span> MUTE
           </button>
         </div>
       </div>
@@ -381,6 +391,9 @@
       <!-- Retro Typography & Vertical Menu Stack -->
       <div class="fnaf-menu-container">
         <div class="fnaf-title-block">
+          <div class="fnaf-title-seal">
+            <img src="assets/icon/app_icon.png" alt="Five Nights at the Church" class="fnaf-title-icon-img" />
+          </div>
           <h1 class="fnaf-game-title">
             <span class="title-word">FIVE</span>
             <span class="title-word">NIGHTS</span>
@@ -390,9 +403,9 @@
           <div class="fnaf-sub-title">ST. JUDE CATHOLIC PARISH • FACILITY SURVEILLANCE PROTOCOL</div>
           <!-- Unlockable Shift Victory Stars (Vigil Badges) -->
           <div class="menu-stars-row" id="menu-stars-row">
-            <span class="star-icon hidden" id="star-5" title="⭐ Night 5 Consecrated (Standard Five Nights Completed)">★</span>
-            <span class="star-icon hidden" id="star-6" title="⭐⭐ Night 6 Consecrated (The Vigil Shift Completed)">★</span>
-            <span class="star-icon hidden" id="star-20" title="⭐⭐⭐ Consecration Vigil Master (20/20/20 Mode Conquered)">★</span>
+            <span class="star-icon hidden" id="star-5" title="Night 5 Consecrated (Standard Five Nights Completed)">★</span>
+            <span class="star-icon hidden" id="star-6" title="Night 6 Consecrated (The Vigil Shift Completed)">★</span>
+            <span class="star-icon hidden" id="star-20" title="Consecration Vigil Master (20/20/20 Mode Conquered)">★</span>
           </div>
         </div>
 
@@ -477,7 +490,7 @@
         <div class="options-header">
           <div class="options-header-top">
             <div class="options-seal-block">
-              <span class="options-gear-icon">⚙️</span>
+              <img src="assets/icon/app_icon.png" alt="Parish Seal" class="options-seal-img" />
               <div>
                 <h2 class="options-main-title">FACILITY OPTIONS &amp; SURVIVAL PROTOCOLS</h2>
                 <div class="options-doc-id">ST. JUDE CATHOLIC PARISH ARCHIVES • SYSTEM CONFIGURATION</div>
@@ -517,21 +530,35 @@
             </h3>
             <div class="manual-objective-grid">
               <div class="objective-card">
-                <div class="objective-icon">⏰</div>
+                <div class="objective-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#f59e0b" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
                 <div class="objective-text">
                   <strong>Survive Until 06:00 AM</strong>
                   <p>Your night shift starts at 12:00 AM and completes when morning church carillon bells ring at 6:00 AM (approx. 6 real-time minutes at standard speed).</p>
                 </div>
               </div>
               <div class="objective-card">
-                <div class="objective-icon">👁️</div>
+                <div class="objective-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#38bdf8" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </div>
                 <div class="objective-text">
                   <strong>Vigilant Camera Observation</strong>
                   <p>The consecrated stone statues remain frozen while observed on surveillance feeds. If unmonitored, they will advance swiftly toward your security office!</p>
                 </div>
               </div>
               <div class="objective-card">
-                <div class="objective-icon">⚡</div>
+                <div class="objective-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ef4444" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                </div>
                 <div class="objective-text">
                   <strong>Generator Battery Management</strong>
                   <p>All defenses (door maglock, halogen window beam, vent shutter, CCTV) drain backup battery. A total blackout leaves you completely defenseless in the dark!</p>
@@ -655,7 +682,9 @@
               <!-- Entity 1 -->
               <div class="entity-guide-card entity-border-angel">
                 <div class="entity-card-header">
-                  <div class="entity-avatar angel-avatar">🕊️</div>
+                  <div class="entity-avatar angel-avatar">
+                    <img src="assets/office/door_peeking_angel.jpg" alt="Weeping Angel" class="entity-avatar-img" />
+                  </div>
                   <div class="entity-meta">
                     <div class="entity-name-row">
                       <h4 class="entity-title">OUR LADY / WEEPING ANGEL</h4>
@@ -663,7 +692,7 @@
                     </div>
                     <span class="entity-latin">Mater Dolorosa • Weeping Marble Effigy</span>
                     <span class="entity-route">
-                      <strong>Route:</strong> CAM 01 (Altar) ➔ Window Glass ➔ CAM 05 (Outside Door) ➔ <strong>Left Doorway</strong>
+                      <strong>Route:</strong> CAM 01 (Altar) &rarr; Window Glass &rarr; CAM 05 (Outside Door) &rarr; <strong>Left Doorway</strong>
                     </span>
                   </div>
                 </div>
@@ -681,7 +710,9 @@
               <!-- Entity 2 -->
               <div class="entity-guide-card entity-border-saint">
                 <div class="entity-card-header">
-                  <div class="entity-avatar saint-avatar">⚔️</div>
+                  <div class="entity-avatar saint-avatar">
+                    <img src="assets/office/door_peeking_saint.jpg" alt="Haloed Saint" class="entity-avatar-img" />
+                  </div>
                   <div class="entity-meta">
                     <div class="entity-name-row">
                       <h4 class="entity-title">THE HALOED SAINT</h4>
@@ -689,7 +720,7 @@
                     </div>
                     <span class="entity-latin">The Martyr • Haloed Stalker of the Cloister</span>
                     <span class="entity-route">
-                      <strong>Route:</strong> CAM 03 (Confessional) ➔ Window Glass ➔ <strong>CAM 05 (Outside Door)</strong> ➔ Left Door
+                      <strong>Route:</strong> CAM 03 (Confessional) &rarr; Window Glass &rarr; <strong>CAM 05 (Outside Door)</strong> &rarr; Left Door
                     </span>
                   </div>
                 </div>
@@ -707,7 +738,9 @@
               <!-- Entity 3 -->
               <div class="entity-guide-card entity-border-mourner">
                 <div class="entity-card-header">
-                  <div class="entity-avatar mourner-avatar">💨</div>
+                  <div class="entity-avatar mourner-avatar">
+                    <img src="assets/office/vent_peeking_mourner.jpg" alt="Veiled Mourner" class="entity-avatar-img" />
+                  </div>
                   <div class="entity-meta">
                     <div class="entity-name-row">
                       <h4 class="entity-title">THE VEILED MOURNER</h4>
@@ -715,7 +748,7 @@
                     </div>
                     <span class="entity-latin">The Duct Crawler • Shrouded Effigy</span>
                     <span class="entity-route">
-                      <strong>Route:</strong> CAM 02 (Memorial) ➔ CAM 01 ➔ CAM 04 (Air Duct) ➔ <strong>Right Wall Vent</strong>
+                      <strong>Route:</strong> CAM 02 (Memorial) &rarr; CAM 01 &rarr; CAM 04 (Air Duct) &rarr; <strong>Right Wall Vent</strong>
                     </span>
                   </div>
                 </div>
@@ -783,7 +816,12 @@
               <p class="settings-hint">Click any key button below, then press your desired key on your keyboard to rebind it.</p>
             </div>
             <div class="mobile-touch-hint">
-              <span class="touch-hint-icon">📱</span>
+              <span class="touch-hint-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#38bdf8" stroke-width="2" style="vertical-align: middle;">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+              </span>
               <span><strong>TOUCH CONTROLS ACTIVE:</strong> On mobile devices, office defenses (Doors, Lights, Vents) and the CCTV monitor are controlled using on-screen tactile buttons and the camera flip bar. Physical keyboard hotkeys apply when an external keyboard is connected.</span>
             </div>
 
@@ -982,7 +1020,7 @@
           </div>
           <div class="options-footer-actions">
             <button class="options-quit-btn" id="btn-quit-to-menu" title="Abandon shift and return to main menu">
-              <span class="quit-btn-icon">🚪</span>
+              <span class="quit-btn-icon">&lt;&lt;</span>
               <span class="quit-btn-text">QUIT TO MAIN MENU</span>
             </button>
             <button class="options-save-btn" id="btn-close-options" title="Save changes and resume/close options [ESC]">
@@ -1001,7 +1039,7 @@
         <div class="options-header">
           <div class="options-header-top">
             <div class="options-seal-block">
-              <span class="options-gear-icon">⛧</span>
+              <img src="assets/icon/app_icon.png" alt="Parish Seal" class="options-seal-img" />
               <div>
                 <h2 class="options-main-title">CONSECRATION PROTOCOL: CUSTOM NIGHT</h2>
                 <div class="options-doc-id">CALIBRATE STATUE OBSESSION FREQUENCIES (A.I. LEVEL 0 - 20)</div>
