@@ -807,6 +807,7 @@ class ExtrasManager {
     const playBtns = this.screen.querySelectorAll('.btn-play-jumpscare');
     playBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const entityId = btn.dataset.entity || btn.closest('.extras-jumpscare-card')?.dataset.entity;
         if (entityId) {
@@ -817,16 +818,28 @@ class ExtrasManager {
 
     const cards = this.screen.querySelectorAll('.extras-jumpscare-card');
     cards.forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-play-jumpscare')) return;
         const entityId = card.dataset.entity;
         if (entityId) {
           this.playJumpscare(entityId);
         }
       });
     });
+
+    const skipBtn = document.getElementById('jumpscare-skip-btn');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeJumpscare();
+      });
+    }
   }
 
   playJumpscare(entityId) {
+    if (this.isJumpscarePlaying) return;
+
     const videoMap = {
       weepingAngel: document.getElementById('jumpscare-video-angel'),
       haloedSaint: document.getElementById('jumpscare-video-saint'),
@@ -836,7 +849,6 @@ class ExtrasManager {
     const targetVideo = videoMap[entityId] || videoMap.weepingAngel;
     const container = document.getElementById('jumpscare-video-container');
     const flash = document.getElementById('jumpscare-flash');
-    const redTint = document.getElementById('jumpscare-red-tint');
 
     if (!container || !targetVideo) {
       console.warn('[Extras] Jumpscare elements not available');
@@ -846,14 +858,36 @@ class ExtrasManager {
     this.isJumpscarePlaying = true;
     this.activeJumpscareVideo = targetVideo;
 
-    // Hide any other jumpscare videos
+    // Direct fallback video sources
+    const directSrcs = {
+      weepingAngel: 'assets/jumpscares/angel_jumpscare.mp4',
+      haloedSaint: 'assets/jumpscares/michael_jumpscare.mp4',
+      veiledMourner: 'assets/jumpscares/mary_jumpscare.mp4'
+    };
+    if (!targetVideo.src || targetVideo.src === window.location.href || targetVideo.src.endsWith('/')) {
+      targetVideo.src = directSrcs[entityId] || directSrcs.weepingAngel;
+    }
+
+    // Hide all other jumpscare videos
     Object.values(videoMap).forEach(v => {
-      if (v && v !== targetVideo) {
-        v.classList.remove('active');
-        v.classList.add('hidden');
+      if (v) {
         v.pause();
+        if (v !== targetVideo) {
+          v.classList.remove('active');
+          v.classList.add('hidden');
+        }
       }
     });
+
+    // Muted video guarantees mobile/WebView playback without autoplay policy rejection
+    targetVideo.muted = true;
+    targetVideo.playsInline = true;
+    targetVideo.setAttribute('playsinline', '');
+    targetVideo.setAttribute('webkit-playsinline', '');
+
+    try {
+      targetVideo.currentTime = 0;
+    } catch (e) {}
 
     // Reveal container and target video
     container.classList.remove('hidden');
@@ -861,57 +895,90 @@ class ExtrasManager {
     targetVideo.classList.remove('hidden');
     targetVideo.classList.add('active');
 
-    targetVideo.currentTime = 0;
-    targetVideo.playsInline = true;
-    targetVideo.muted = false;
-
-    // Trigger authentic screaming jumpscare audio & red flash
+    // Trigger authentic screaming jumpscare audio through WebAudio
     window.Sound?.playEntityJumpscare(entityId);
-    if (flash) flash.classList.add('active');
-    if (redTint) redTint.classList.add('active');
+
+    // Red horror strobe flash
+    if (flash) {
+      flash.classList.remove('active');
+      void flash.offsetWidth; // Force reflow to replay flash
+      flash.classList.add('active');
+    }
 
     // Mobile vibration burst
     if (navigator.vibrate) {
-      navigator.vibrate([180, 60, 350, 80, 500]);
+      try {
+        navigator.vibrate([180, 60, 350, 80, 500]);
+      } catch (e) {}
     }
 
     // Play video
-    const playPromise = targetVideo.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(err => {
-        console.warn('[Extras] Jumpscare play error (trying muted fallback):', err);
-        targetVideo.muted = true;
-        targetVideo.play().catch(e => console.error('[Extras] Play failed completely:', e));
-      });
+    try {
+      const playPromise = targetVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('[Extras] Jumpscare video play error, attempting load & retry:', err);
+          targetVideo.load();
+          targetVideo.play().catch(e => console.error('[Extras] Second play attempt failed:', e));
+        });
+      }
+    } catch (err) {
+      console.warn('[Extras] targetVideo.play() error:', err);
     }
 
-    // Cleanup when video ends
+    // Cleanup when video naturally finishes
     targetVideo.onended = () => {
       this.closeJumpscare();
     };
 
-    // Click anywhere on container to skip
-    container.onclick = (e) => {
-      e.stopPropagation();
+    // Safety timeout in case video ends or stalls on mobile (~3.6 seconds)
+    if (this._jumpscareTimer) clearTimeout(this._jumpscareTimer);
+    this._jumpscareTimer = setTimeout(() => {
+      if (this.isJumpscarePlaying) {
+        this.closeJumpscare();
+      }
+    }, 3800);
+
+    // Skip handler: Protect against immediate accidental trigger during click propagation!
+    const triggerTime = Date.now();
+    const handleSkip = (e) => {
+      // Ignore taps for the first 750ms so the tap that initiated the jumpscare CANNOT close it!
+      if (Date.now() - triggerTime < 750) {
+        return;
+      }
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       this.closeJumpscare();
     };
+
+    container.onclick = handleSkip;
+    container.ontouchend = handleSkip;
   }
 
   closeJumpscare() {
     this.isJumpscarePlaying = false;
+    if (this._jumpscareTimer) {
+      clearTimeout(this._jumpscareTimer);
+      this._jumpscareTimer = null;
+    }
+
     const container = document.getElementById('jumpscare-video-container');
     const flash = document.getElementById('jumpscare-flash');
-    const redTint = document.getElementById('jumpscare-red-tint');
 
     if (container) {
       container.classList.remove('active');
       container.classList.add('hidden');
       container.onclick = null;
+      container.ontouchend = null;
     }
 
     if (this.activeJumpscareVideo) {
-      this.activeJumpscareVideo.pause();
-      this.activeJumpscareVideo.currentTime = 0;
+      try {
+        this.activeJumpscareVideo.pause();
+        this.activeJumpscareVideo.currentTime = 0;
+      } catch (e) {}
       this.activeJumpscareVideo.classList.remove('active');
       this.activeJumpscareVideo.classList.add('hidden');
       this.activeJumpscareVideo.onended = null;
@@ -919,7 +986,6 @@ class ExtrasManager {
     }
 
     if (flash) flash.classList.remove('active');
-    if (redTint) redTint.classList.remove('active');
   }
 
   // =========================================================================
@@ -1079,11 +1145,12 @@ class ExtrasManager {
     nightBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const night = parseInt(btn.dataset.night, 10);
-        if (window.game) {
+        const game = window.Game || window.game;
+        if (game) {
           this.close();
-          window.game.currentNight = night;
-          window.game.isCustomNight = false;
-          window.game.startShift();
+          game.currentNight = night;
+          game.isCustomNight = false;
+          game.startShift();
         }
       });
     });

@@ -1533,8 +1533,8 @@ body::-webkit-scrollbar,
 #jumpscare-video-container {
   position: absolute;
   inset: 0;
-  z-index: 999;
-  background: transparent;
+  z-index: 99999;
+  background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1546,10 +1546,10 @@ body::-webkit-scrollbar,
 }
 
 #jumpscare-video-container.active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  background: transparent;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  background: #000000 !important;
 }
 
 #jumpscare-video-container.hidden {
@@ -1565,19 +1565,50 @@ body::-webkit-scrollbar,
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: transparent;
+  background: #000000;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
 }
 
 .jumpscare-video-el.active {
-  opacity: 1;
-  visibility: visible;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .jumpscare-video-el.hidden {
   opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+.jumpscare-skip-btn {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 100001;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #f1f5f9;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  pointer-events: auto;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.jumpscare-skip-btn:hover,
+.jumpscare-skip-btn:active {
+  background: rgba(220, 38, 38, 0.6);
+  border-color: #ef4444;
+}
   visibility: hidden !important;
 }
 
@@ -6798,12 +6829,33 @@ kbd.key-badge {
   position: relative;
   z-index: 10;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 28px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 28px 10px 28px;
   background: linear-gradient(180deg, rgba(10, 14, 22, 0.95) 0%, rgba(3, 5, 8, 0.7) 100%);
   border-bottom: 1px solid rgba(148, 163, 184, 0.18);
   flex-shrink: 0;
+}
+
+.extras-topbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .extras-topbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+  }
+
+  .extras-topbar-row {
+    width: auto;
+    gap: 32px;
+  }
 }
 
 .extras-brand {
@@ -7516,61 +7568,368 @@ kbd.key-badge {
    MOBILE RESPONSIVENESS FOR STANDALONE EXTRAS SCREEN
    ========================================================================= */
 @media (max-width: 768px) {
+  /* Header & Tabs */
   .extras-topbar {
-    padding: 10px 14px;
-    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) 14px 6px 14px;
+    gap: 6px;
+  }
+
+  .extras-brand-prefix {
+    font-size: 8px;
+    letter-spacing: 1px;
   }
 
   .extras-brand-title {
-    font-size: 16px;
+    font-size: 19px;
     letter-spacing: 3px;
   }
 
+  .extras-back-btn {
+    font-size: 11px;
+    font-weight: 700;
+    min-height: 38px;
+    padding: 6px 14px;
+    letter-spacing: 1px;
+    border-radius: 4px;
+  }
+
   .extras-nav-tabs {
-    gap: 4px;
+    gap: 6px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .extras-nav-tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .extras-tab-btn {
-    font-size: 8.5px;
+    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 1px;
-    padding: 5px 8px;
+    padding: 8px 14px;
+    min-height: 40px;
+    border-radius: 4px;
+    flex-shrink: 0;
   }
 
-  .extras-back-btn {
-    font-size: 9px;
-    padding: 5px 10px;
-    letter-spacing: 1px;
+  /* TAB 1: ANIMATRONICS (3D Stage & Footer) */
+  .extras-view#extras-view-models {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .extras-stage-wrapper {
+    flex: 1 1 auto;
+    min-height: 250px;
+  }
+
+  .extras-stage-osd {
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    font-size: 8.5px;
   }
 
   .extras-turn-btn {
-    width: 38px;
-    height: 56px;
-    font-size: 18px;
+    width: 44px;
+    height: 64px;
+    font-size: 22px;
+    background: rgba(10, 14, 22, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.3);
   }
 
-  .extras-entity-name {
-    font-size: 19px;
+  .extras-turn-btn.turn-left {
+    left: 6px;
+  }
+
+  .extras-turn-btn.turn-right {
+    right: 6px;
+  }
+
+  .extras-stage-footer {
+    padding: 8px 14px max(12px, env(safe-area-inset-bottom)) 14px;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .extras-entity-switcher {
-    gap: 12px;
+    width: 100%;
+    max-width: 440px;
+    gap: 10px;
+    justify-content: space-between;
   }
 
-  .extras-jumpscares-wrapper,
-  .extras-cctv-wrapper,
-  .extras-cheats-wrapper {
-    padding: 16px;
+  .extras-cycle-btn {
+    min-height: 40px;
+    min-width: 72px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .extras-entity-name {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+
+  .extras-entity-latin {
+    font-size: 9.5px;
+  }
+
+  .extras-quick-selector {
+    width: 100%;
+    max-width: 440px;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .extras-chip-btn {
+    flex: 1;
+    min-height: 36px;
+    padding: 6px 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .extras-entity-bio {
+    font-size: 11px;
+    line-height: 1.35;
+    max-height: 52px;
+    overflow-y: auto;
+    padding: 0 4px;
+  }
+
+  /* TAB 2: JUMPSCARES */
+  .extras-jumpscares-wrapper {
+    padding: 12px 14px max(24px, env(safe-area-inset-bottom)) 14px;
+    gap: 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .extras-sec-header {
+    font-size: 11px;
+    letter-spacing: 2px;
   }
 
   .extras-jumpscares-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .extras-jumpscare-card {
+    border-radius: 6px;
+  }
+
+  .jumpscare-card-visual {
+    height: 155px;
+  }
+
+  .jumpscare-card-body {
+    padding: 12px 14px;
+    gap: 4px;
+  }
+
+  .jumpscare-name {
+    font-size: 17px;
+  }
+
+  .jumpscare-sub {
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+
+  .extras-action-btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border-radius: 4px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* TAB 3: SURVEILLANCE */
+  .extras-cctv-wrapper {
+    padding: 12px 14px max(24px, env(safe-area-inset-bottom)) 14px;
+    gap: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .extras-cctv-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .cctv-filter-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .cctv-filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cctv-filter-chip {
+    min-height: 38px;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 4px;
+    flex-shrink: 0;
   }
 
   .cctv-gallery-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
   }
 
   .cctv-card-thumb-wrap {
-    height: 85px;
+    height: 100px;
+  }
+
+  .cctv-card-meta {
+    padding: 8px 10px;
+  }
+
+  .cctv-card-title {
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .cctv-card-sub {
+    font-size: 8.5px;
+  }
+
+  /* TAB 4: CHEATS */
+  .extras-cheats-wrapper {
+    padding: 14px 14px max(24px, env(safe-area-inset-bottom)) 14px;
+    gap: 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .extras-cheats-grid {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .extras-cheat-card {
+    padding: 12px 14px;
+    gap: 12px;
+    border-radius: 6px;
+  }
+
+  .cheat-card-title {
+    font-size: 12.5px;
+  }
+
+  .cheat-card-desc {
+    font-size: 10.5px;
+  }
+
+  .switch-control {
+    width: 52px;
+    height: 30px;
+  }
+
+  .switch-slider:before {
+    width: 22px;
+    height: 22px;
+    left: 4px;
+    bottom: 3px;
+  }
+
+  .switch-control input:checked + .switch-slider:before {
+    transform: translateX(22px);
+  }
+
+  .extras-shift-jump-box {
+    padding: 14px;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 6px;
+  }
+
+  .extras-shift-btns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+
+  .extras-night-jump-btn {
+    min-height: 44px;
+    padding: 8px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Landscape Phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  .extras-topbar {
+    padding: 6px 16px;
+    flex-direction: row;
+  }
+
+  .extras-topbar-row {
+    width: auto;
+    gap: 16px;
+  }
+
+  .extras-nav-tabs {
+    width: auto;
+  }
+
+  .extras-view#extras-view-models {
+    flex-direction: row;
+  }
+
+  .extras-stage-wrapper {
+    flex: 1.2;
+    height: 100%;
+  }
+
+  .extras-stage-footer {
+    flex: 0.8;
+    height: 100%;
+    border-top: none;
+    border-left: 1px solid rgba(148, 163, 184, 0.15);
+    justify-content: center;
+    overflow-y: auto;
   }
 }

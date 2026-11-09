@@ -51,6 +51,7 @@
       <video id="jumpscare-video-angel" class="jumpscare-video-el hidden" muted playsinline preload="auto" src="assets/jumpscares/angel_jumpscare.mp4"></video>
       <video id="jumpscare-video-saint" class="jumpscare-video-el hidden" muted playsinline preload="auto" src="assets/jumpscares/michael_jumpscare.mp4"></video>
       <video id="jumpscare-video-mourner" class="jumpscare-video-el hidden" muted playsinline preload="auto" src="assets/jumpscares/mary_jumpscare.mp4"></video>
+      <button class="jumpscare-skip-btn" id="jumpscare-skip-btn">[ SKIP ]</button>
     </div>
 
     <!-- Analog CRT TV Loss-of-Signal Glitch Overlay (Post-Jumpscare Signal Sever) -->
@@ -1092,9 +1093,16 @@
 
       <!-- Top Bar: Minimalist Title, Navigation Tabs & Back Link (Zero Emojis!) -->
       <header class="extras-topbar">
-        <div class="extras-brand">
-          <span class="extras-brand-prefix">// PARISH REPOSITORY</span>
-          <h2 class="extras-brand-title">E X T R A S</h2>
+        <div class="extras-topbar-row">
+          <div class="extras-brand">
+            <span class="extras-brand-prefix">// PARISH ARCHIVES</span>
+            <h2 class="extras-brand-title">E X T R A S</h2>
+          </div>
+
+          <button class="extras-back-btn" id="btn-extras-back" title="Return to Main Menu [ESC]">
+            <span class="extras-back-symbol">&lt;&lt;</span>
+            <span class="extras-back-text">BACK</span>
+          </button>
         </div>
 
         <nav class="extras-nav-tabs">
@@ -1103,11 +1111,6 @@
           <button class="extras-tab-btn" data-tab="cctv">SURVEILLANCE</button>
           <button class="extras-tab-btn" data-tab="cheats">CHEATS</button>
         </nav>
-
-        <button class="extras-back-btn" id="btn-extras-back" title="Return to Main Menu [ESC]">
-          <span class="extras-back-symbol">&lt;&lt;</span>
-          <span class="extras-back-text">BACK</span>
-        </button>
       </header>
 
       <!-- Main Extras Container -->
