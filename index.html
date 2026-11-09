@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261109_v56">
+  <link rel="stylesheet" href="css/style.css?v=20261109_v57">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -1134,10 +1134,11 @@
 
       <!-- Two-Column Main Layout: Left Sidebar Buttons + Right Stage/Content Area -->
       <div class="extras-fnaf-layout">
-        <!-- LEFT SIDEBAR: Authentic FNAF Extras Menu Button Placement -->
+        <!-- LEFT SIDEBAR: Creepy Gothic Church Reliquary Layout -->
         <aside class="extras-fnaf-sidebar">
           <div class="extras-fnaf-header">
-            <h1 class="extras-fnaf-title">Extras</h1>
+            <span class="extras-brand-prefix">// PARISH RELIQUARY</span>
+            <h1 class="extras-fnaf-title">EXTRAS</h1>
             <div class="extras-fnaf-title-line"></div>
           </div>
 
@@ -1194,11 +1195,27 @@
 
         <!-- RIGHT CONTENT AREA -->
         <main class="extras-fnaf-main">
-          <!-- TAB 1: ANIMATRONICS (3D Model Showcase with 360° Horizontal Turning) -->
+          <!-- TAB 1: ANIMATRONICS (3D Model Showcase with 360° Horizontal Turning & Height Adjust) -->
           <section class="extras-view" id="extras-view-models">
             <div class="extras-stage-wrapper" id="extras-canvas-wrap">
-              <div class="extras-fnaf-grid"></div>
+              <!-- Dark Cathedral Crypt Atmospheric Glow (No Purple Grid) -->
+              <div class="extras-cathedral-backdrop"></div>
               <canvas id="extras-model-canvas"></canvas>
+
+              <!-- Statue Framing & Height Adjustment Toolbar (Gothic Reliquary Console) -->
+              <div class="extras-model-framing-toolbar" id="extras-framing-toolbar" title="Adjust Statue Height and Framing">
+                <div class="framing-tool-group">
+                  <span class="framing-tool-label">HEIGHT</span>
+                  <button class="framing-tool-btn" id="btn-model-height-up" title="Raise Statue [Up]">&and;</button>
+                  <button class="framing-tool-btn" id="btn-model-height-down" title="Lower Statue [Down]">&or;</button>
+                </div>
+                <div class="framing-tool-group">
+                  <span class="framing-tool-label">SIZE</span>
+                  <button class="framing-tool-btn" id="btn-model-zoom-in" title="Zoom In [+]">+</button>
+                  <button class="framing-tool-btn" id="btn-model-zoom-out" title="Zoom Out [-]">&minus;</button>
+                </div>
+                <button class="framing-tool-btn framing-tool-reset" id="btn-model-reset-frame" title="Reset Height &amp; Framing">RESET</button>
+              </div>
 
               <!-- Loading Indicator -->
               <div class="model-viewer-loader hidden" id="model-viewer-loader">

@@ -37,8 +37,11 @@ class ExtrasManager {
     this.currentRotationY = 0;
     this.currentRotationX = 0;
     this.rotVelocityY = 0;
-    this.targetCameraZ = 3.6;
-    this.currentCameraZ = 3.6;
+    this.targetCameraZ = 4.2;
+    this.currentCameraZ = 4.2;
+    this.cameraY = 1.05;
+    this.lookAtY = 0.95;
+    this.modelElevationOffset = 0.0;
     this.isAutoRotating = true;
     this.autoRotateSpeed = 0.35;
     this.touchPinchDist = null;
@@ -67,7 +70,7 @@ class ExtrasManager {
         modelUrl: 'assets/models/weeping_angel_model.glb',
         portrait: 'assets/office/door_peeking_angel.jpg',
         videoKey: 'angel',
-        height: 2.30,
+        height: 1.70,
         scaleX: 1.0,
         scaleZ: 1.0,
         offsetY: 0.0,
@@ -83,7 +86,7 @@ class ExtrasManager {
         modelUrl: 'assets/models/saint_michael_model.glb',
         portrait: 'assets/office/door_peeking_saint.jpg',
         videoKey: 'saint',
-        height: 2.40,
+        height: 1.80,
         scaleX: 1.0,
         scaleZ: 1.0,
         offsetY: 0.0,
@@ -99,10 +102,10 @@ class ExtrasManager {
         modelUrl: 'assets/models/saint_mary_model.glb',
         portrait: 'assets/office/vent_peeking_mourner.jpg',
         videoKey: 'mourner',
-        height: 1.55,
+        height: 1.25,
         scaleX: 1.05,
         scaleZ: 1.02,
-        offsetY: -0.15,
+        offsetY: -0.05,
         roughness: 0.65,
         metalness: 0.0,
         materialColor: (typeof THREE !== 'undefined') ? new THREE.Color(2.6, 2.5, 2.4) : null,
@@ -387,9 +390,9 @@ class ExtrasManager {
 
     const rect = this.canvas.getBoundingClientRect();
     const aspect = (rect.width && rect.height) ? (rect.width / rect.height) : (16 / 9);
-    this.camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 100);
-    this.camera.position.set(0, 1.40, this.currentCameraZ);
-    this.camera.lookAt(0, 1.15, 0);
+    this.camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
+    this.camera.position.set(0, this.cameraY, this.currentCameraZ);
+    this.camera.lookAt(0, this.lookAtY, 0);
 
     // 2. WebGL Renderer
     try {
@@ -438,7 +441,7 @@ class ExtrasManager {
     fillLight.position.set(0, 0.4, 3.5);
     this.scene.add(fillLight);
 
-    // 4. Carved Weathered Marble Altar Pedestal
+    // 4. Carved Weathered Marble Altar Pedestal (Lowered & Proportioned)
     this.pedestalGroup = new THREE.Group();
     this.pedestalGroup.position.set(0, 0, 0);
 
@@ -457,31 +460,31 @@ class ExtrasManager {
     });
 
     // Lower tier
-    const baseGeo = new THREE.CylinderGeometry(1.4, 1.5, 0.15, 48);
+    const baseGeo = new THREE.CylinderGeometry(1.25, 1.35, 0.08, 48);
     const baseMesh = new THREE.Mesh(baseGeo, pedestalMat);
-    baseMesh.position.y = 0.075;
+    baseMesh.position.y = 0.04;
     baseMesh.receiveShadow = true;
     this.pedestalGroup.add(baseMesh);
 
     // Column plinth
-    const colGeo = new THREE.CylinderGeometry(1.2, 1.35, 0.25, 48);
+    const colGeo = new THREE.CylinderGeometry(1.05, 1.20, 0.12, 48);
     const colMesh = new THREE.Mesh(colGeo, pedestalMat);
-    colMesh.position.y = 0.25;
+    colMesh.position.y = 0.14;
     colMesh.receiveShadow = true;
     this.pedestalGroup.add(colMesh);
 
     // Decorative ring
-    const ringGeo = new THREE.TorusGeometry(1.22, 0.025, 16, 64);
+    const ringGeo = new THREE.TorusGeometry(1.08, 0.02, 16, 64);
     const ringMesh = new THREE.Mesh(ringGeo, ironMat);
     ringMesh.rotation.x = Math.PI / 2;
-    ringMesh.position.y = 0.375;
+    ringMesh.position.y = 0.20;
     this.pedestalGroup.add(ringMesh);
 
     this.scene.add(this.pedestalGroup);
 
-    // 5. Model Pivot Group (Entity center at y = 0.38)
+    // 5. Model Pivot Group (Entity center grounded on plinth at y = 0.20)
     this.modelPivot = new THREE.Group();
-    this.modelPivot.position.set(0, 0.38, 0);
+    this.modelPivot.position.set(0, 0.20, 0);
     this.scene.add(this.modelPivot);
 
     // 6. Interactive Horizontal Turn & Zoom Controls
@@ -569,7 +572,7 @@ class ExtrasManager {
     wrap.addEventListener('wheel', (e) => {
       e.preventDefault();
       const zoomDelta = e.deltaY * 0.0025;
-      this.targetCameraZ = Math.max(2.0, Math.min(5.2, this.targetCameraZ + zoomDelta));
+      this.targetCameraZ = Math.max(2.4, Math.min(5.5, this.targetCameraZ + zoomDelta));
     }, { passive: false });
 
     // On-Screen Directional Turn Arrows
@@ -591,6 +594,56 @@ class ExtrasManager {
         this.isAutoRotating = false;
         this.targetRotationY += Math.PI / 4;
         window.Sound?.playLightClick();
+      });
+    }
+
+    // Framing & Height Adjustment Controls (Creepy Gothic Toolbar)
+    const btnHeightUp = document.getElementById('btn-model-height-up');
+    const btnHeightDown = document.getElementById('btn-model-height-down');
+    const btnZoomIn = document.getElementById('btn-model-zoom-in');
+    const btnZoomOut = document.getElementById('btn-model-zoom-out');
+    const btnResetFrame = document.getElementById('btn-model-reset-frame');
+
+    if (btnHeightUp) {
+      btnHeightUp.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.modelElevationOffset = Math.min(0.50, this.modelElevationOffset + 0.06);
+        window.Sound?.playLightClick();
+      });
+    }
+
+    if (btnHeightDown) {
+      btnHeightDown.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.modelElevationOffset = Math.max(-0.50, this.modelElevationOffset - 0.06);
+        window.Sound?.playLightClick();
+      });
+    }
+
+    if (btnZoomIn) {
+      btnZoomIn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.targetCameraZ = Math.max(2.4, this.targetCameraZ - 0.35);
+        window.Sound?.playLightClick();
+      });
+    }
+
+    if (btnZoomOut) {
+      btnZoomOut.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.targetCameraZ = Math.min(5.5, this.targetCameraZ + 0.35);
+        window.Sound?.playLightClick();
+      });
+    }
+
+    if (btnResetFrame) {
+      btnResetFrame.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.modelElevationOffset = 0.0;
+        this.targetCameraZ = 4.2;
+        this.targetRotationX = 0;
+        this.targetRotationY = 0;
+        window.Sound?.playMechanicalClick();
       });
     }
   }
@@ -796,11 +849,13 @@ class ExtrasManager {
       if (this.modelPivot) {
         this.modelPivot.rotation.y = this.currentRotationY;
         this.modelPivot.rotation.x = this.currentRotationX;
+        this.modelPivot.position.y = 0.20 + this.modelElevationOffset;
       }
 
       if (this.camera) {
         this.camera.position.z = this.currentCameraZ;
-        this.camera.lookAt(0, 1.25, 0);
+        this.camera.position.y = this.cameraY;
+        this.camera.lookAt(0, this.lookAtY, 0);
       }
 
       if (this.renderer && this.scene && this.camera) {
