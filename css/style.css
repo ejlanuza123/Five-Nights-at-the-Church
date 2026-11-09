@@ -7034,7 +7034,7 @@ kbd.key-badge {
   text-shadow: 0 0 14px rgba(220, 38, 38, 0.65), 1px 1px 2px #000;
 }
 
-/* Cycle Arrows [ < ] and [ > ] for Animatronics */
+/* Cycle Arrows [ < ] and [ > ] for Entities */
 .fnaf-nav-arrows {
   display: inline-flex;
   gap: 4px;
