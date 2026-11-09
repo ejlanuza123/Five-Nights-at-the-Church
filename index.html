@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261109_v55">
+  <link rel="stylesheet" href="css/style.css?v=20261109_v56">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -391,9 +391,6 @@
       <!-- Retro Typography & Vertical Menu Stack -->
       <div class="fnaf-menu-container">
         <div class="fnaf-title-block">
-          <div class="fnaf-title-seal">
-            <img src="assets/icon/app_icon.png" alt="Five Nights at the Church" class="fnaf-title-icon-img" />
-          </div>
           <h1 class="fnaf-game-title">
             <span class="title-word">FIVE</span>
             <span class="title-word">NIGHTS</span>
@@ -1122,79 +1119,99 @@
       </div>
     </div>
 
-    <!-- FNAF Classic Standalone Extras Screen (Full Page, No Modal, Creepy & Minimalist) -->
+    <!-- FNAF Classic Standalone Extras Screen (Authentic Sidebar Layout Matching FNAF Screenshot) -->
     <div id="extras-screen" class="hidden">
       <!-- Dark Atmospheric Ambient Canvas & Scanline Overlays -->
       <canvas id="extras-static-canvas" class="extras-static-canvas"></canvas>
       <div class="extras-scanlines"></div>
       <div class="extras-vignette"></div>
 
-      <!-- Top Bar: Minimalist Title, Navigation Tabs & Back Link (Zero Emojis!) -->
-      <header class="extras-topbar">
-        <div class="extras-topbar-row">
-          <div class="extras-brand">
-            <span class="extras-brand-prefix">// PARISH ARCHIVES</span>
-            <h2 class="extras-brand-title">E X T R A S</h2>
+      <!-- Classic FNAF Top-Right Entity / Section Header -->
+      <div class="extras-fnaf-topright" id="extras-fnaf-topright">
+        <h2 class="extras-fnaf-entity-title" id="model-entity-name">WEEPING ANGEL</h2>
+        <span class="extras-fnaf-entity-sub" id="model-entity-latin">Mater Dolorosa</span>
+      </div>
+
+      <!-- Two-Column Main Layout: Left Sidebar Buttons + Right Stage/Content Area -->
+      <div class="extras-fnaf-layout">
+        <!-- LEFT SIDEBAR: Authentic FNAF Extras Menu Button Placement -->
+        <aside class="extras-fnaf-sidebar">
+          <div class="extras-fnaf-header">
+            <h1 class="extras-fnaf-title">Extras</h1>
+            <div class="extras-fnaf-title-line"></div>
           </div>
 
-          <button class="extras-back-btn" id="btn-extras-back" title="Return to Main Menu [ESC]">
-            <span class="extras-back-symbol">&lt;&lt;</span>
-            <span class="extras-back-text">BACK</span>
-          </button>
-        </div>
-
-        <nav class="extras-nav-tabs">
-          <button class="extras-tab-btn active" data-tab="models">ANIMATRONICS</button>
-          <button class="extras-tab-btn" data-tab="jumpscares">JUMPSCARES</button>
-          <button class="extras-tab-btn" data-tab="cctv">SURVEILLANCE</button>
-          <button class="extras-tab-btn" data-tab="cheats">CHEATS</button>
-        </nav>
-      </header>
-
-      <!-- Main Extras Container -->
-      <main class="extras-viewport-container">
-        <!-- TAB 1: ANIMATRONICS (3D Model Showcase with 360° Horizontal Turning) -->
-        <section class="extras-view" id="extras-view-models">
-          <div class="extras-stage-wrapper" id="extras-canvas-wrap">
-            <canvas id="extras-model-canvas"></canvas>
-
-            <!-- Minimalist CRT Overlay -->
-            <div class="extras-stage-osd">
-              <span class="osd-record-tag"><span class="osd-blip"></span>3D RECONSTRUCTION</span>
-              <span class="osd-turn-hint">[ DRAG HORIZONTALLY TO TURN 360&deg; ]</span>
-            </div>
-
-            <!-- On-Screen Turn Arrows for Easy Sidewards Rotation on Touch & Mouse -->
-            <button class="extras-turn-btn turn-left" id="btn-model-rot-left" title="Turn Left">&lt;</button>
-            <button class="extras-turn-btn turn-right" id="btn-model-rot-right" title="Turn Right">&gt;</button>
-
-            <!-- Loading Indicator -->
-            <div class="model-viewer-loader hidden" id="model-viewer-loader">
-              <span class="loader-spinner"></span>
-              <span>LOADING 3D GEOMETRY...</span>
-            </div>
-          </div>
-
-          <!-- Bottom Control Bar: Character Switcher & Lore Note -->
-          <footer class="extras-stage-footer">
-            <div class="extras-entity-switcher">
-              <button class="extras-cycle-btn" id="btn-model-prev" title="Previous Character">&lt; PREV</button>
-              <div class="extras-entity-info">
-                <h3 class="extras-entity-name" id="model-entity-name">WEEPING ANGEL</h3>
-                <span class="extras-entity-latin" id="model-entity-latin">Mater Dolorosa</span>
+          <nav class="extras-fnaf-nav">
+            <!-- 1. Animatronics Button + Adjacent Cycle Arrows [ < ] [ > ] -->
+            <div class="extras-fnaf-menu-row">
+              <button class="extras-tab-btn extras-fnaf-menu-btn active" data-tab="models">
+                <span class="fnaf-checkbox-box"><span class="fnaf-checkbox-fill"></span></span>
+                <span class="fnaf-menu-label">Animatronics</span>
+              </button>
+              <div class="fnaf-nav-arrows" id="fnaf-nav-arrows">
+                <button class="fnaf-arrow-box" id="btn-model-prev" title="Previous Entity">&lt;</button>
+                <button class="fnaf-arrow-box" id="btn-model-next" title="Next Entity">&gt;</button>
               </div>
-              <button class="extras-cycle-btn" id="btn-model-next" title="Next Character">NEXT &gt;</button>
             </div>
 
-            <div class="extras-quick-selector">
-              <button class="extras-chip-btn active" data-index="0">01. ANGEL</button>
-              <button class="extras-chip-btn" data-index="1">02. SAINT</button>
-              <button class="extras-chip-btn" data-index="2">03. MOURNER</button>
+            <!-- 2. Cheats Button -->
+            <div class="extras-fnaf-menu-row">
+              <button class="extras-tab-btn extras-fnaf-menu-btn" data-tab="cheats">
+                <span class="fnaf-checkbox-box"><span class="fnaf-checkbox-fill"></span></span>
+                <span class="fnaf-menu-label">Cheats</span>
+              </button>
             </div>
 
-            <p class="extras-entity-bio" id="model-entity-bio">Loading archival dossier...</p>
-          </footer>
-        </section>
+            <!-- 3. Jumpscares Button -->
+            <div class="extras-fnaf-menu-row">
+              <button class="extras-tab-btn extras-fnaf-menu-btn" data-tab="jumpscares">
+                <span class="fnaf-checkbox-box"><span class="fnaf-checkbox-fill"></span></span>
+                <span class="fnaf-menu-label">Jumpscares</span>
+              </button>
+            </div>
+
+            <!-- 4. Surveillance Button -->
+            <div class="extras-fnaf-menu-row">
+              <button class="extras-tab-btn extras-fnaf-menu-btn" data-tab="cctv">
+                <span class="fnaf-checkbox-box"><span class="fnaf-checkbox-fill"></span></span>
+                <span class="fnaf-menu-label">Surveillance</span>
+              </button>
+            </div>
+
+            <!-- 5. Back Button -->
+            <div class="extras-fnaf-menu-row">
+              <button class="extras-fnaf-menu-btn extras-fnaf-back" id="btn-extras-back" title="Return to Main Menu [ESC]">
+                <span class="fnaf-checkbox-box"><span class="fnaf-checkbox-fill"></span></span>
+                <span class="fnaf-menu-label">Back</span>
+              </button>
+            </div>
+          </nav>
+
+          <div class="extras-fnaf-footer-hint" id="extras-fnaf-hint">
+            [ DRAG TO ROTATE 360&deg; ]
+          </div>
+        </aside>
+
+        <!-- RIGHT CONTENT AREA -->
+        <main class="extras-fnaf-main">
+          <!-- TAB 1: ANIMATRONICS (3D Model Showcase with 360° Horizontal Turning) -->
+          <section class="extras-view" id="extras-view-models">
+            <div class="extras-stage-wrapper" id="extras-canvas-wrap">
+              <div class="extras-fnaf-grid"></div>
+              <canvas id="extras-model-canvas"></canvas>
+
+              <!-- Loading Indicator -->
+              <div class="model-viewer-loader hidden" id="model-viewer-loader">
+                <span class="loader-spinner"></span>
+                <span>LOADING 3D GEOMETRY...</span>
+              </div>
+            </div>
+
+            <!-- Subtle character description pill (non-intrusive) -->
+            <div class="extras-fnaf-bio-card" id="extras-fnaf-bio-card">
+              <p class="extras-entity-bio" id="model-entity-bio">Loading archival dossier...</p>
+            </div>
+          </section>
 
         <!-- TAB 2: JUMPSCARES (Attack Sequences Triggering Fullscreen Hardware Video) -->
         <section class="extras-view hidden" id="extras-view-jumpscares">
@@ -1333,6 +1350,7 @@
         </section>
       </main>
     </div>
+  </div>
 
     <!-- Fullscreen CCTV Lightbox Viewer -->
     <div class="screen-modal hidden" id="cctv-lightbox">

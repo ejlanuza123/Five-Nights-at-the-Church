@@ -322,6 +322,30 @@ class ExtrasManager {
       btn.classList.toggle('active', btn.dataset.tab === tabName);
     });
 
+    // Update Top Right Header & Footer Hint
+    const titleEl = document.getElementById('model-entity-name');
+    const subEl = document.getElementById('model-entity-latin');
+    const hintEl = document.getElementById('extras-fnaf-hint');
+
+    if (tabName === 'models') {
+      const entity = this.entities[this.selectedEntityIndex];
+      if (titleEl && entity) titleEl.textContent = entity.name;
+      if (subEl && entity) subEl.textContent = entity.latinName;
+      if (hintEl) hintEl.textContent = '[ DRAG TO ROTATE 360\u00B0 ]';
+    } else if (tabName === 'cheats') {
+      if (titleEl) titleEl.textContent = 'CHEATS';
+      if (subEl) subEl.textContent = 'Parish Modifiers & Overrides';
+      if (hintEl) hintEl.textContent = '[ ESC ] RETURN TO LOBBY';
+    } else if (tabName === 'jumpscares') {
+      if (titleEl) titleEl.textContent = 'JUMPSCARES';
+      if (subEl) subEl.textContent = 'Attack Sequences';
+      if (hintEl) hintEl.textContent = '[ ESC ] RETURN TO LOBBY';
+    } else if (tabName === 'cctv') {
+      if (titleEl) titleEl.textContent = 'SURVEILLANCE';
+      if (subEl) subEl.textContent = 'Security Footage Logs';
+      if (hintEl) hintEl.textContent = '[ ESC ] RETURN TO LOBBY';
+    }
+
     // Update Views
     const views = this.screen.querySelectorAll('.extras-view');
     views.forEach(v => {
@@ -577,14 +601,22 @@ class ExtrasManager {
     const btnNext = document.getElementById('btn-model-next');
 
     if (btnPrev) {
-      btnPrev.addEventListener('click', () => {
+      btnPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.currentTab !== 'models') {
+          this.switchTab('models');
+        }
         const newIdx = (this.selectedEntityIndex - 1 + this.entities.length) % this.entities.length;
         this.displayEntity(newIdx);
       });
     }
 
     if (btnNext) {
-      btnNext.addEventListener('click', () => {
+      btnNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.currentTab !== 'models') {
+          this.switchTab('models');
+        }
         const newIdx = (this.selectedEntityIndex + 1) % this.entities.length;
         this.displayEntity(newIdx);
       });
