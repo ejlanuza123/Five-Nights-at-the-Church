@@ -365,6 +365,7 @@ class ExtrasManager {
     window.Sound?.playMenuBlip();
     this.stopStaticNoise();
     this.stopRendering();
+    this.stopStageJumpscares();
     this.closeJumpscare();
 
     const lightbox = document.getElementById('cctv-lightbox');
@@ -373,6 +374,11 @@ class ExtrasManager {
 
   switchTab(tabName) {
     this.currentTab = tabName;
+
+    // Stop in-stage jumpscares if navigating away
+    if (tabName !== 'jumpscares') {
+      this.stopStageJumpscares();
+    }
 
     // Update Tab Navigation Active State
     const tabButtons = this.screen.querySelectorAll('.extras-tab-btn');
@@ -398,7 +404,7 @@ class ExtrasManager {
       const item = this.jumpscareList[this.selectedJumpscareIndex];
       if (titleEl && item) titleEl.textContent = item.name;
       if (subEl && item) subEl.textContent = item.latinName;
-      if (hintEl) hintEl.textContent = '[ CLICK TO REPLAY // USE < > TO SWITCH ]';
+      if (hintEl) hintEl.textContent = '[ TAP SCREEN TO REPLAY // USE < > TO SWITCH ]';
     } else if (tabName === 'cctv') {
       if (titleEl) titleEl.textContent = 'SURVEILLANCE';
       if (subEl) subEl.textContent = 'Security Footage Logs';
@@ -947,7 +953,7 @@ class ExtrasManager {
   }
 
   // =========================================================================
-  // 2. JUMPSCARES (INSTANT PLAYBACK, NEXT/PREV CYCLING & FULLSCREEN CINEMA)
+  // 2. JUMPSCARES (RIGHT-SIDE STAGE SCREEN, AUTOMATIC PLAYBACK & NEXT/PREV CYCLING)
   // =========================================================================
   initJumpscaresGallery() {
     // 1. Sidebar Arrow Navigation (< and > right beside Jumpscares button)
@@ -996,71 +1002,101 @@ class ExtrasManager {
       });
     }
 
-    // 3. Stage Replay Button & Tap Trigger
-    const btnReplay = document.getElementById('btn-jumpscare-replay');
-    if (btnReplay) {
-      btnReplay.addEventListener('click', (e) => {
-        e.stopPropagation();
+    // 3. Click / Tap Video Screen on Right Side to Restart Attack Animation
+    const stageViewport = document.getElementById('extras-jumpscare-viewport');
+    if (stageViewport) {
+      stageViewport.addEventListener('click', (e) => {
         this.displayJumpscare(this.selectedJumpscareIndex, true);
-      });
-    }
-
-    const stageVisual = document.getElementById('jumpscare-stage-visual');
-    if (stageVisual) {
-      stageVisual.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-jumpscare-stage-prev') || e.target.closest('#btn-jumpscare-stage-next')) return;
-        this.displayJumpscare(this.selectedJumpscareIndex, true);
-      });
-    }
-
-    // 4. Skip Button Handler
-    const skipBtn = document.getElementById('jumpscare-skip-btn');
-    if (skipBtn) {
-      skipBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.closeJumpscare();
       });
     }
   }
 
-  displayJumpscare(index, autoPlay = true) {
+  displayJumpscare(index, playSound = true) {
     if (index < 0 || index >= this.jumpscareList.length) return;
     this.selectedJumpscareIndex = index;
     const item = this.jumpscareList[index];
 
-    // Update Top Right Header
+    // 1. Update Top Right Entity Name & Latin Subtitle (Above the screen on right)
     const titleEl = document.getElementById('model-entity-name');
     const subEl = document.getElementById('model-entity-latin');
     const hintEl = document.getElementById('extras-fnaf-hint');
 
     if (titleEl) titleEl.textContent = item.name;
     if (subEl) subEl.textContent = item.latinName;
-    if (hintEl) hintEl.textContent = '[ CLICK TO REPLAY // USE < > TO SWITCH ]';
+    if (hintEl) hintEl.textContent = '[ TAP SCREEN TO REPLAY // USE < > TO SWITCH ]';
 
-    // Update Stage Elements
-    const imgEl = document.getElementById('jumpscare-preview-img');
-    const tagEl = document.getElementById('jumpscare-stage-tag');
+    // 2. Update Bottom Bio Description Card
     const bioEl = document.getElementById('jumpscare-stage-bio');
-
-    if (imgEl) imgEl.src = item.still;
-    if (tagEl) tagEl.textContent = `[ ATTACK SEQUENCE 0${index + 1} / 0${this.jumpscareList.length} ]`;
     if (bioEl) bioEl.textContent = item.sub;
 
-    window.Sound?.playLightClick();
+    // 3. Play Dedicated Video on the Right Side Screen
+    const videoMap = {
+      weepingAngel: document.getElementById('extras-video-angel'),
+      haloedSaint: document.getElementById('extras-video-saint'),
+      veiledMourner: document.getElementById('extras-video-mourner')
+    };
 
-    if (autoPlay) {
-      setTimeout(() => {
-        this.playJumpscare(item.id);
-      }, 40);
+    const targetVideo = videoMap[item.id] || videoMap.weepingAngel;
+
+    Object.values(videoMap).forEach(v => {
+      if (v) {
+        try {
+          v.pause();
+        } catch (e) {}
+        if (v !== targetVideo) {
+          v.classList.add('hidden');
+        }
+      }
+    });
+
+    if (targetVideo) {
+      targetVideo.classList.remove('hidden');
+      targetVideo.muted = true;
+      targetVideo.playsInline = true;
+      targetVideo.setAttribute('playsinline', '');
+      targetVideo.setAttribute('webkit-playsinline', '');
+      targetVideo.loop = true;
+
+      try {
+        targetVideo.currentTime = 0;
+      } catch (e) {}
+
+      const playPromise = targetVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('[Extras] In-stage video play error:', err);
+          targetVideo.load();
+          targetVideo.play().catch(e => console.warn('[Extras] Secondary attempt:', e));
+        });
+      }
+    }
+
+    // 4. Trigger authentic screeching audio through WebAudio
+    if (playSound) {
+      window.Sound?.playEntityJumpscare(item.id);
     }
   }
 
+  stopStageJumpscares() {
+    const videoMap = {
+      weepingAngel: document.getElementById('extras-video-angel'),
+      haloedSaint: document.getElementById('extras-video-saint'),
+      veiledMourner: document.getElementById('extras-video-mourner')
+    };
+
+    Object.values(videoMap).forEach(v => {
+      if (v) {
+        try {
+          v.pause();
+          v.currentTime = 0;
+        } catch (e) {}
+        v.classList.add('hidden');
+      }
+    });
+  }
+
   playActiveJumpscare() {
-    const item = this.jumpscareList[this.selectedJumpscareIndex];
-    if (item) {
-      this.playJumpscare(item.id);
-    }
+    this.displayJumpscare(this.selectedJumpscareIndex, true);
   }
 
   playJumpscare(entityId) {

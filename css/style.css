@@ -7448,25 +7448,8 @@ kbd.key-badge {
 /* =========================================================================
    TAB 2: JUMPSCARES
    ========================================================================= */
-.extras-jumpscares-wrapper {
-  flex: 1;
-  padding: 28px 36px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.extras-sec-header {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: #64748b;
-  text-transform: uppercase;
-}
-
 /* =========================================================================
-   TAB 2: JUMPSCARE CINEMATIC STAGE
+   TAB 2: JUMPSCARE CINEMATIC STAGE (Right-Side Screen, No Play Button)
    ========================================================================= */
 .extras-jumpscare-stage {
   flex: 1;
@@ -7478,135 +7461,67 @@ kbd.key-badge {
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 50% 50%, #0d131f 0%, #05080e 65%, #010204 100%);
-  cursor: pointer;
-  touch-action: manipulation;
+  user-select: none;
 }
 
-.jumpscare-stage-visual {
+/* Dedicated Screen on the Right Side (Plays the jumpscare video continuously) */
+.extras-jumpscare-viewport {
   position: relative;
-  width: 82%;
-  max-width: 800px;
-  height: 72%;
-  max-height: 500px;
+  width: 86%;
+  max-width: 860px;
+  height: 76%;
+  max-height: 540px;
   border-radius: 6px;
   overflow: hidden;
   border: 1.5px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(220, 38, 38, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.95), 0 0 30px rgba(220, 38, 38, 0.22);
   background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.extras-jumpscare-stage:hover .jumpscare-stage-visual {
+.extras-jumpscare-viewport:hover {
   border-color: rgba(220, 38, 38, 0.65);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.95), 0 0 35px rgba(220, 38, 38, 0.4);
-  transform: scale(1.015);
+  box-shadow: 0 14px 48px rgba(0, 0, 0, 0.98), 0 0 40px rgba(220, 38, 38, 0.4);
+  transform: scale(1.01);
 }
 
-.jumpscare-stage-img {
+.extras-stage-video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-  filter: contrast(1.1) brightness(0.9);
-  transition: transform 0.3s ease, filter 0.3s ease;
+  background: #000000;
+  pointer-events: none;
 }
 
-.extras-jumpscare-stage:hover .jumpscare-stage-img {
-  transform: scale(1.04);
-  filter: contrast(1.15) brightness(1.0);
+.extras-stage-video.hidden {
+  display: none !important;
 }
 
-.jumpscare-stage-vignette {
+.extras-video-vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(3, 5, 8, 0.8) 100%);
+  background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(3, 5, 8, 0.75) 100%);
 }
 
-.jumpscare-stage-scanlines {
+.extras-video-scanlines {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: repeating-linear-gradient(
     0deg,
-    rgba(0, 0, 0, 0.28) 0px,
-    rgba(0, 0, 0, 0.28) 1px,
+    rgba(0, 0, 0, 0.20) 0px,
+    rgba(0, 0, 0, 0.20) 1px,
     transparent 1px,
     transparent 3px
   );
-  opacity: 0.85;
-}
-
-.jumpscare-stage-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: rgba(3, 5, 8, 0.35);
-  backdrop-filter: blur(2px);
-  pointer-events: none;
-  transition: background 0.2s ease;
-}
-
-.extras-jumpscare-stage:hover .jumpscare-stage-center {
-  background: rgba(3, 5, 8, 0.2);
-}
-
-.jumpscare-stage-play-btn {
-  pointer-events: auto;
-  background: rgba(185, 28, 28, 0.88);
-  border: 1.5px solid #ef4444;
-  color: #ffffff;
-  padding: 10px 24px;
-  border-radius: 4px;
-  font-family: var(--font-gothic);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 2.5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  outline: none;
-  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.55), inset 0 0 10px rgba(239, 68, 68, 0.6);
-  transition: all 0.15s ease;
-}
-
-.jumpscare-stage-play-btn:hover {
-  background: #dc2626;
-  box-shadow: 0 6px 28px rgba(220, 38, 38, 0.85), inset 0 0 14px rgba(255, 255, 255, 0.4);
-  transform: scale(1.05);
-}
-
-.jumpscare-stage-play-btn:active {
-  transform: scale(0.96);
-}
-
-.jumpscare-play-triangle {
-  font-size: 14px;
-  color: #ffffff;
-}
-
-.jumpscare-play-sub {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: rgba(226, 232, 240, 0.7);
-  text-shadow: 1px 1px 2px #000;
-}
-
-.jumpscare-stage-tag {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 2px;
-  color: #ef4444;
-  margin-bottom: 2px;
+  opacity: 0.65;
 }
 
 /* =========================================================================
@@ -8300,19 +8215,10 @@ kbd.key-badge {
     font-size: 9px;
   }
 
-  .jumpscare-stage-visual {
-    width: 90%;
+  .extras-jumpscare-viewport {
+    width: 92%;
     height: 74%;
-  }
-
-  .jumpscare-stage-play-btn {
-    font-size: 13px;
-    padding: 8px 16px;
-    letter-spacing: 1.5px;
-  }
-
-  .jumpscare-play-sub {
-    font-size: 8.5px;
+    max-height: 380px;
   }
 
   #extras-view-cctv,

@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261110_v58">
+  <link rel="stylesheet" href="css/style.css?v=20261110_v59">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -1234,35 +1234,29 @@
             </div>
           </section>
 
-        <!-- TAB 2: JUMPSCARES (Attack Sequences with Instant Playback & Stage Replay) -->
+        <!-- TAB 2: JUMPSCARES (Integrated Stage Screen with Automatic Loop Playback & No Play Button) -->
         <section class="extras-view hidden" id="extras-view-jumpscares">
           <div class="extras-stage-wrapper extras-jumpscare-stage" id="extras-jumpscare-stage">
             <!-- Cathedral Crypt Backdrop (Dark Atmospheric Glow) -->
             <div class="extras-cathedral-backdrop"></div>
 
-            <!-- Jumpscare Stage Preview Frame (Clickable to Replay) -->
-            <div class="jumpscare-stage-visual" id="jumpscare-stage-visual" title="Click to Trigger Jumpscare Attack">
-              <img id="jumpscare-preview-img" src="assets/office/door_peeking_angel.jpg" alt="Jumpscare Attack Sequence" class="jumpscare-stage-img" />
-              <div class="jumpscare-stage-vignette"></div>
-              <div class="jumpscare-stage-scanlines"></div>
+            <!-- In-Stage Screen Playing Jumpscare (No Play Button, Automatically Plays & Loops) -->
+            <div class="extras-jumpscare-viewport" id="extras-jumpscare-viewport" title="Click to Restart Attack Animation">
+              <video id="extras-video-angel" class="extras-stage-video" muted playsinline preload="auto" loop src="assets/jumpscares/angel_jumpscare.mp4"></video>
+              <video id="extras-video-saint" class="extras-stage-video hidden" muted playsinline preload="auto" loop src="assets/jumpscares/michael_jumpscare.mp4"></video>
+              <video id="extras-video-mourner" class="extras-stage-video hidden" muted playsinline preload="auto" loop src="assets/jumpscares/mary_jumpscare.mp4"></video>
 
-              <!-- Center Interactive Play/Replay Prompt -->
-              <div class="jumpscare-stage-center">
-                <button class="jumpscare-stage-play-btn" id="btn-jumpscare-replay" title="Trigger Attack Sequence">
-                  <span class="jumpscare-play-triangle">&#9658;</span>
-                  <span class="jumpscare-play-text">PLAY JUMPSCARE</span>
-                </button>
-                <span class="jumpscare-play-sub">[ CLICK ANYWHERE OR PRESS SPACE TO TRIGGER ]</span>
-              </div>
+              <!-- Subtle CRT Glitch & Vignette Overlays -->
+              <div class="extras-video-vignette"></div>
+              <div class="extras-video-scanlines"></div>
             </div>
 
-            <!-- On-Screen Left & Right Cycle Arrows (for easy mobile touch & quick switching) -->
-            <button class="extras-turn-btn turn-left" id="btn-jumpscare-stage-prev" title="Previous Jumpscare">&lt;</button>
-            <button class="extras-turn-btn turn-right" id="btn-jumpscare-stage-next" title="Next Jumpscare">&gt;</button>
+            <!-- On-Screen Left & Right Cycle Arrows on the stage -->
+            <button class="extras-turn-btn turn-left" id="btn-jumpscare-stage-prev" title="Previous Entity Jumpscare">&lt;</button>
+            <button class="extras-turn-btn turn-right" id="btn-jumpscare-stage-next" title="Next Entity Jumpscare">&gt;</button>
 
-            <!-- Bottom Information Pill (Matching Entities Bio Card) -->
-            <div class="extras-fnaf-bio-card jumpscare-bio-card" id="jumpscare-stage-card">
-              <div class="jumpscare-stage-tag" id="jumpscare-stage-tag">[ ATTACK SEQUENCE 01 / 03 ]</div>
+            <!-- Bottom Lore Pill (Matching Entities Bio Card) -->
+            <div class="extras-fnaf-bio-card" id="jumpscare-stage-card">
               <p class="extras-entity-bio" id="jumpscare-stage-bio">Left Arched Door Breach &bull; Rapid Corridor Lunge</p>
             </div>
           </div>
