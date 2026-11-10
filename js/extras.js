@@ -115,6 +115,34 @@ class ExtrasManager {
       }
     ];
 
+    this.jumpscareList = [
+      {
+        id: 'weepingAngel',
+        name: 'WEEPING ANGEL',
+        latinName: 'Mater Dolorosa ("Our Lady of Sorrows")',
+        sub: 'Left Arched Door Breach \u2022 Rapid Corridor Lunge',
+        still: 'assets/office/door_peeking_angel.jpg',
+        videoKey: 'angel'
+      },
+      {
+        id: 'haloedSaint',
+        name: 'SANCTUS MICHAEL',
+        latinName: 'Sanctus Vindex ("The Archangel")',
+        sub: 'Observation Window \u2022 Left Door Ambush',
+        still: 'assets/office/door_peeking_saint.jpg',
+        videoKey: 'saint'
+      },
+      {
+        id: 'veiledMourner',
+        name: 'VEILED MOURNER',
+        latinName: 'The Memorial Penitent ("Saint Mary / The Crawler")',
+        sub: 'HVAC Air Return Duct \u2022 Office Vent Crawl',
+        still: 'assets/office/vent_peeking_mourner.jpg',
+        videoKey: 'mourner'
+      }
+    ];
+    this.selectedJumpscareIndex = 0;
+
     this.cctvGallery = [
       { id: 'cam01_normal', cam: 'cam01', title: 'CAM 01 // SANCTUARY NAVE', sub: 'Dormant Weeping Angel on high marble dais', src: 'assets/cctv/church_cam_normal.png' },
       { id: 'cam01_angel_awake', cam: 'cam01', title: 'CAM 01 // SANCTUARY DAIS (AWAKENED)', sub: 'Weeping Angel turning head towards CCTV', src: 'assets/cctv/church_cam_01_angel_pedestal_awake.png' },
@@ -197,7 +225,7 @@ class ExtrasManager {
       });
     }
 
-    // Global ESC Key Handler
+    // Global ESC & Arrow Navigation Keys
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (this.isJumpscarePlaying) {
@@ -212,14 +240,41 @@ class ExtrasManager {
           }
           e.preventDefault();
         }
+      } else if (this.isOpen) {
+        if (e.key === 'ArrowLeft') {
+          if (this.currentTab === 'models') {
+            document.getElementById('btn-model-prev')?.click();
+            e.preventDefault();
+          } else if (this.currentTab === 'jumpscares') {
+            document.getElementById('btn-jumpscare-prev')?.click();
+            e.preventDefault();
+          }
+        } else if (e.key === 'ArrowRight') {
+          if (this.currentTab === 'models') {
+            document.getElementById('btn-model-next')?.click();
+            e.preventDefault();
+          } else if (this.currentTab === 'jumpscares') {
+            document.getElementById('btn-jumpscare-next')?.click();
+            e.preventDefault();
+          }
+        } else if (e.key === ' ' || e.key === 'Enter') {
+          if (this.currentTab === 'jumpscares' && !this.isJumpscarePlaying) {
+            this.playActiveJumpscare();
+            e.preventDefault();
+          }
+        }
       }
     });
 
-    // Top Navigation Tabs
+    // Sidebar Navigation Tabs
     const tabButtons = this.screen.querySelectorAll('.extras-tab-btn');
     tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
+        if (tab === 'jumpscares' && this.currentTab === 'jumpscares') {
+          this.playActiveJumpscare();
+          return;
+        }
         this.switchTab(tab);
       });
     });
@@ -340,9 +395,10 @@ class ExtrasManager {
       if (subEl) subEl.textContent = 'Parish Modifiers & Overrides';
       if (hintEl) hintEl.textContent = '[ ESC ] RETURN TO LOBBY';
     } else if (tabName === 'jumpscares') {
-      if (titleEl) titleEl.textContent = 'JUMPSCARES';
-      if (subEl) subEl.textContent = 'Attack Sequences';
-      if (hintEl) hintEl.textContent = '[ ESC ] RETURN TO LOBBY';
+      const item = this.jumpscareList[this.selectedJumpscareIndex];
+      if (titleEl && item) titleEl.textContent = item.name;
+      if (subEl && item) subEl.textContent = item.latinName;
+      if (hintEl) hintEl.textContent = '[ CLICK TO REPLAY // USE < > TO SWITCH ]';
     } else if (tabName === 'cctv') {
       if (titleEl) titleEl.textContent = 'SURVEILLANCE';
       if (subEl) subEl.textContent = 'Security Footage Logs';
@@ -367,6 +423,9 @@ class ExtrasManager {
         this.startRendering();
         this.displayEntity(this.selectedEntityIndex);
       }, 50);
+    } else if (tabName === 'jumpscares') {
+      this.stopRendering();
+      this.displayJumpscare(this.selectedJumpscareIndex, true);
     } else {
       this.stopRendering();
     }
@@ -888,32 +947,73 @@ class ExtrasManager {
   }
 
   // =========================================================================
-  // 2. JUMPSCARES (HARDWARE ACCELERATED VIDEO & FULLSCREEN CINEMA)
+  // 2. JUMPSCARES (INSTANT PLAYBACK, NEXT/PREV CYCLING & FULLSCREEN CINEMA)
   // =========================================================================
   initJumpscaresGallery() {
-    const playBtns = this.screen.querySelectorAll('.btn-play-jumpscare');
-    playBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
+    // 1. Sidebar Arrow Navigation (< and > right beside Jumpscares button)
+    const btnPrev = document.getElementById('btn-jumpscare-prev');
+    const btnNext = document.getElementById('btn-jumpscare-next');
+
+    if (btnPrev) {
+      btnPrev.addEventListener('click', (e) => {
         e.stopPropagation();
-        const entityId = btn.dataset.entity || btn.closest('.extras-jumpscare-card')?.dataset.entity;
-        if (entityId) {
-          this.playJumpscare(entityId);
+        if (this.currentTab !== 'jumpscares') {
+          this.switchTab('jumpscares');
         }
+        const newIdx = (this.selectedJumpscareIndex - 1 + this.jumpscareList.length) % this.jumpscareList.length;
+        this.displayJumpscare(newIdx, true);
       });
-    });
+    }
 
-    const cards = this.screen.querySelectorAll('.extras-jumpscare-card');
-    cards.forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.btn-play-jumpscare')) return;
-        const entityId = card.dataset.entity;
-        if (entityId) {
-          this.playJumpscare(entityId);
+    if (btnNext) {
+      btnNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.currentTab !== 'jumpscares') {
+          this.switchTab('jumpscares');
         }
+        const newIdx = (this.selectedJumpscareIndex + 1) % this.jumpscareList.length;
+        this.displayJumpscare(newIdx, true);
       });
-    });
+    }
 
+    // 2. Stage On-Screen Turn / Cycle Arrows
+    const btnStagePrev = document.getElementById('btn-jumpscare-stage-prev');
+    const btnStageNext = document.getElementById('btn-jumpscare-stage-next');
+
+    if (btnStagePrev) {
+      btnStagePrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newIdx = (this.selectedJumpscareIndex - 1 + this.jumpscareList.length) % this.jumpscareList.length;
+        this.displayJumpscare(newIdx, true);
+      });
+    }
+
+    if (btnStageNext) {
+      btnStageNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newIdx = (this.selectedJumpscareIndex + 1) % this.jumpscareList.length;
+        this.displayJumpscare(newIdx, true);
+      });
+    }
+
+    // 3. Stage Replay Button & Tap Trigger
+    const btnReplay = document.getElementById('btn-jumpscare-replay');
+    if (btnReplay) {
+      btnReplay.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.displayJumpscare(this.selectedJumpscareIndex, true);
+      });
+    }
+
+    const stageVisual = document.getElementById('jumpscare-stage-visual');
+    if (stageVisual) {
+      stageVisual.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-jumpscare-stage-prev') || e.target.closest('#btn-jumpscare-stage-next')) return;
+        this.displayJumpscare(this.selectedJumpscareIndex, true);
+      });
+    }
+
+    // 4. Skip Button Handler
     const skipBtn = document.getElementById('jumpscare-skip-btn');
     if (skipBtn) {
       skipBtn.addEventListener('click', (e) => {
@@ -924,8 +1024,49 @@ class ExtrasManager {
     }
   }
 
+  displayJumpscare(index, autoPlay = true) {
+    if (index < 0 || index >= this.jumpscareList.length) return;
+    this.selectedJumpscareIndex = index;
+    const item = this.jumpscareList[index];
+
+    // Update Top Right Header
+    const titleEl = document.getElementById('model-entity-name');
+    const subEl = document.getElementById('model-entity-latin');
+    const hintEl = document.getElementById('extras-fnaf-hint');
+
+    if (titleEl) titleEl.textContent = item.name;
+    if (subEl) subEl.textContent = item.latinName;
+    if (hintEl) hintEl.textContent = '[ CLICK TO REPLAY // USE < > TO SWITCH ]';
+
+    // Update Stage Elements
+    const imgEl = document.getElementById('jumpscare-preview-img');
+    const tagEl = document.getElementById('jumpscare-stage-tag');
+    const bioEl = document.getElementById('jumpscare-stage-bio');
+
+    if (imgEl) imgEl.src = item.still;
+    if (tagEl) tagEl.textContent = `[ ATTACK SEQUENCE 0${index + 1} / 0${this.jumpscareList.length} ]`;
+    if (bioEl) bioEl.textContent = item.sub;
+
+    window.Sound?.playLightClick();
+
+    if (autoPlay) {
+      setTimeout(() => {
+        this.playJumpscare(item.id);
+      }, 40);
+    }
+  }
+
+  playActiveJumpscare() {
+    const item = this.jumpscareList[this.selectedJumpscareIndex];
+    if (item) {
+      this.playJumpscare(item.id);
+    }
+  }
+
   playJumpscare(entityId) {
-    if (this.isJumpscarePlaying) return;
+    if (this.isJumpscarePlaying) {
+      this.closeJumpscare();
+    }
 
     const videoMap = {
       weepingAngel: document.getElementById('jumpscare-video-angel'),

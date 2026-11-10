@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261109_v57">
+  <link rel="stylesheet" href="css/style.css?v=20261110_v58">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -1163,12 +1163,16 @@
               </button>
             </div>
 
-            <!-- 3. Jumpscares Button -->
+            <!-- 3. Jumpscares Button + Adjacent Cycle Arrows [ < ] [ > ] -->
             <div class="extras-fnaf-menu-row">
               <button class="extras-tab-btn extras-fnaf-menu-btn" data-tab="jumpscares">
                 <span class="fnaf-checkbox-box"><span class="fnaf-checkbox-fill"></span></span>
                 <span class="fnaf-menu-label">Jumpscares</span>
               </button>
+              <div class="fnaf-nav-arrows" id="fnaf-jumpscare-arrows">
+                <button class="fnaf-arrow-box" id="btn-jumpscare-prev" title="Previous Jumpscare">&lt;</button>
+                <button class="fnaf-arrow-box" id="btn-jumpscare-next" title="Next Jumpscare">&gt;</button>
+              </div>
             </div>
 
             <!-- 4. Surveillance Button -->
@@ -1230,58 +1234,36 @@
             </div>
           </section>
 
-        <!-- TAB 2: JUMPSCARES (Attack Sequences Triggering Fullscreen Hardware Video) -->
+        <!-- TAB 2: JUMPSCARES (Attack Sequences with Instant Playback & Stage Replay) -->
         <section class="extras-view hidden" id="extras-view-jumpscares">
-          <div class="extras-jumpscares-wrapper">
-            <div class="extras-sec-header">ATTACK SEQUENCES</div>
-            <div class="extras-jumpscares-grid">
-              <!-- Jumpscare 1: Weeping Angel -->
-              <div class="extras-jumpscare-card" data-entity="weepingAngel">
-                <div class="jumpscare-card-visual">
-                  <img src="assets/office/door_peeking_angel.jpg" alt="Weeping Angel" class="jumpscare-still" />
-                  <div class="jumpscare-scanlines"></div>
-                </div>
-                <div class="jumpscare-card-body">
-                  <span class="jumpscare-code">[ ATTACK 01 ]</span>
-                  <h4 class="jumpscare-name">WEEPING ANGEL</h4>
-                  <p class="jumpscare-sub">Left Arched Door Breach &bull; Rapid Corridor Lunge</p>
-                  <button class="extras-action-btn btn-play-jumpscare" data-entity="weepingAngel">
-                    <span>PLAY JUMPSCARE</span>
-                  </button>
-                </div>
-              </div>
+          <div class="extras-stage-wrapper extras-jumpscare-stage" id="extras-jumpscare-stage">
+            <!-- Cathedral Crypt Backdrop (Dark Atmospheric Glow) -->
+            <div class="extras-cathedral-backdrop"></div>
 
-              <!-- Jumpscare 2: Haloed Saint -->
-              <div class="extras-jumpscare-card" data-entity="haloedSaint">
-                <div class="jumpscare-card-visual">
-                  <img src="assets/office/door_peeking_saint.jpg" alt="Haloed Saint" class="jumpscare-still" />
-                  <div class="jumpscare-scanlines"></div>
-                </div>
-                <div class="jumpscare-card-body">
-                  <span class="jumpscare-code">[ ATTACK 02 ]</span>
-                  <h4 class="jumpscare-name">SANCTUS MICHAEL</h4>
-                  <p class="jumpscare-sub">Observation Window &bull; Left Door Ambush</p>
-                  <button class="extras-action-btn btn-play-jumpscare" data-entity="haloedSaint">
-                    <span>PLAY JUMPSCARE</span>
-                  </button>
-                </div>
-              </div>
+            <!-- Jumpscare Stage Preview Frame (Clickable to Replay) -->
+            <div class="jumpscare-stage-visual" id="jumpscare-stage-visual" title="Click to Trigger Jumpscare Attack">
+              <img id="jumpscare-preview-img" src="assets/office/door_peeking_angel.jpg" alt="Jumpscare Attack Sequence" class="jumpscare-stage-img" />
+              <div class="jumpscare-stage-vignette"></div>
+              <div class="jumpscare-stage-scanlines"></div>
 
-              <!-- Jumpscare 3: Veiled Mourner -->
-              <div class="extras-jumpscare-card" data-entity="veiledMourner">
-                <div class="jumpscare-card-visual">
-                  <img src="assets/office/vent_peeking_mourner.jpg" alt="Veiled Mourner" class="jumpscare-still" />
-                  <div class="jumpscare-scanlines"></div>
-                </div>
-                <div class="jumpscare-card-body">
-                  <span class="jumpscare-code">[ ATTACK 03 ]</span>
-                  <h4 class="jumpscare-name">VEILED MOURNER</h4>
-                  <p class="jumpscare-sub">HVAC Air Return Duct &bull; Office Vent Crawl</p>
-                  <button class="extras-action-btn btn-play-jumpscare" data-entity="veiledMourner">
-                    <span>PLAY JUMPSCARE</span>
-                  </button>
-                </div>
+              <!-- Center Interactive Play/Replay Prompt -->
+              <div class="jumpscare-stage-center">
+                <button class="jumpscare-stage-play-btn" id="btn-jumpscare-replay" title="Trigger Attack Sequence">
+                  <span class="jumpscare-play-triangle">&#9658;</span>
+                  <span class="jumpscare-play-text">PLAY JUMPSCARE</span>
+                </button>
+                <span class="jumpscare-play-sub">[ CLICK ANYWHERE OR PRESS SPACE TO TRIGGER ]</span>
               </div>
+            </div>
+
+            <!-- On-Screen Left & Right Cycle Arrows (for easy mobile touch & quick switching) -->
+            <button class="extras-turn-btn turn-left" id="btn-jumpscare-stage-prev" title="Previous Jumpscare">&lt;</button>
+            <button class="extras-turn-btn turn-right" id="btn-jumpscare-stage-next" title="Next Jumpscare">&gt;</button>
+
+            <!-- Bottom Information Pill (Matching Entities Bio Card) -->
+            <div class="extras-fnaf-bio-card jumpscare-bio-card" id="jumpscare-stage-card">
+              <div class="jumpscare-stage-tag" id="jumpscare-stage-tag">[ ATTACK SEQUENCE 01 / 03 ]</div>
+              <p class="extras-entity-bio" id="jumpscare-stage-bio">Left Arched Door Breach &bull; Rapid Corridor Lunge</p>
             </div>
           </div>
         </section>
