@@ -63,9 +63,9 @@ class GameEngine {
 
     // AI Entities & Levels (Strictly tracked unique locations)
     this.aiConfig = {
-      weepingAngel: { level: 0, stage: 0, location: 'CAM_01', timer: 0, attackTimer: 0, awakened: false, aisle: false },
-      haloedSaint: { level: 0, stage: 0, location: 'CAM_03', timer: 0, attackTimer: 0, awakened: false },
-      veiledMourner: { level: 0, stage: 0, location: 'CAM_02', timer: 0, attackTimer: 0, awakened: false }
+      weepingAngel: { level: 0, stage: 0, location: 'CAM_01', timer: 0, attackTimer: 0, awakened: false, aisle: false, hasActivated: false },
+      haloedSaint: { level: 0, stage: 0, location: 'CAM_03', timer: 0, attackTimer: 0, awakened: false, hasActivated: false },
+      veiledMourner: { level: 0, stage: 0, location: 'CAM_02', timer: 0, attackTimer: 0, awakened: false, hasActivated: false }
     };
 
     // Modern 3D Camera Viewpoints
@@ -902,12 +902,52 @@ class GameEngine {
     this.aiConfig.haloedSaint._doorWarningPlayed = false;
     this.aiConfig.veiledMourner._ventWarningPlayed = false;
     this._officeLightFlickerUntil = 0;
-    this.setAngelStage(0);
-    this.setSaintStage(0);
-    this.setMournerStage(0);
-    this._lastAngelStage = 0;
-    this._lastSaintStage = 0;
-    this._lastMournerStage = 0;
+
+    const isNight6OrHard = (this.currentNight >= 6 || this.isCustomNight);
+    if (isNight6OrHard) {
+      // Night 6 (The Consecration Vigil) & Custom Night: Entities are awakened and aggressive from 12:00 AM!
+      // They do NOT start in peaceful dormant daytime statue poses!
+      this.aiConfig.weepingAngel.hasActivated = true;
+      this.aiConfig.weepingAngel.awakened = true;
+      this.aiConfig.weepingAngel.aisle = true;
+      this.aiConfig.weepingAngel.stage = -1;
+      this.aiConfig.weepingAngel.location = 'CAM_01'; // Central aisle
+
+      this.aiConfig.haloedSaint.hasActivated = true;
+      this.aiConfig.haloedSaint.awakened = true;
+      this.aiConfig.haloedSaint.stage = -1;
+      this.aiConfig.haloedSaint.location = 'CAM_03'; // Confessional anomaly
+
+      this.aiConfig.veiledMourner.hasActivated = true;
+      this.aiConfig.veiledMourner.awakened = true;
+      this.aiConfig.veiledMourner.stage = -1;
+      this.aiConfig.veiledMourner.location = 'CAM_02'; // Crypt anomaly
+
+      if (this.world?.statues?.weepingAngel) this.world.statues.weepingAngel.visible = false;
+      if (this.world?.statues?.haloedSaint) this.world.statues.haloedSaint.visible = false;
+      if (this.world?.statues?.veiledMourner) this.world.statues.veiledMourner.visible = false;
+
+      this._lastAngelStage = -1;
+      this._lastSaintStage = -1;
+      this._lastMournerStage = -1;
+    } else {
+      // Nights 1 - 5: Start dormant until awakened during the night shift
+      this.aiConfig.weepingAngel.hasActivated = false;
+      this.aiConfig.weepingAngel.awakened = false;
+      this.aiConfig.weepingAngel.aisle = false;
+      this.aiConfig.haloedSaint.hasActivated = false;
+      this.aiConfig.haloedSaint.awakened = false;
+      this.aiConfig.veiledMourner.hasActivated = false;
+      this.aiConfig.veiledMourner.awakened = false;
+
+      this.setAngelStage(0);
+      this.setSaintStage(0);
+      this.setMournerStage(0);
+      this._lastAngelStage = 0;
+      this._lastSaintStage = 0;
+      this._lastMournerStage = 0;
+    }
+
     this._isVentCrawlingSoundPlaying = false;
     if (window.Sound && window.Sound.stopVentGlitchSound) {
       window.Sound.stopVentGlitchSound(0.05);
@@ -1061,19 +1101,20 @@ class GameEngine {
   startMournerVentRetreatTimer() {
     this.clearMournerVentRetreatTimer();
     this.aiConfig.veiledMourner.attackTimer = 0;
-    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 900 : 1300;
-    // Immediate shutter impact clatter when closed in front of her
-    window.Sound.playVentClatter(0.8);
+    const retreatMs = (this.currentNight >= 6 || (this.isCustomNight && this.aiConfig.veiledMourner.level >= 14)) ? 1400 : 2000;
+    // Heavy shutter impact clatter when closed in front of her at office vent
+    window.Sound.playVentClatter(0.95);
+    window.Sound.playStoneGrind(0.75);
     this.vibrate(40);
     this._mournerVentRetreatTimer = setTimeout(() => {
       this._mournerVentRetreatTimer = null;
       const mourner = this.aiConfig.veiledMourner;
-      const isMournerInVent = (mourner.stage >= 1 && mourner.stage <= 3) || mourner.location === 'CAM_04' || mourner.location === 'RIGHT_VENT';
-      if (this.isVentClosed && isMournerInVent) {
+      const isMournerAtVentOpening = (mourner.stage === 3 || mourner.location === 'RIGHT_VENT');
+      if (this.isVentClosed && isMournerAtVentOpening) {
         this.vibrate([60, 50, 90]);
         window.Sound.playVentClatter(0.95);
-        window.Sound.playStoneGrind(0.7);
-        this.pushBackMournerInVent();
+        window.Sound.playStoneGrind(0.75);
+        this.retreatMournerOutOfVent();
       }
     }, retreatMs);
   }
@@ -1085,77 +1126,64 @@ class GameEngine {
     }
   }
 
-  pushBackMournerInVent() {
+  retreatMournerOutOfVent() {
+    this.clearMournerVentRetreatTimer();
     const ai = this.aiConfig.veiledMourner;
-    const prevStage = ai.stage;
     const prevLoc = ai.location;
 
-    if (prevStage === 3 || prevLoc === 'RIGHT_VENT') {
-      // PUSHED BACK from office vent opening into duct (Stage 2 - crawling near):
-      // The entity retreats back into the camera view on CAM 04!
-      this.setMournerStage(2);
-      ai.attackTimer = 0;
-      ai._ventWarningPlayed = false;
+    // Completely hide 3D vent crawling model
+    const mourner = this.world?.statues?.veiledMourner;
+    if (mourner) mourner.visible = false;
 
-      // In office: she is no longer at the vent opening!
-      const mourner = this.world?.statues?.veiledMourner;
-      if (mourner) mourner.visible = false;
+    // Moves out of the vent into an active church room (never stage 0 dormant):
+    const isWindowFree = !this.isWindowSpotOn &&
+      this.aiConfig.weepingAngel.location !== 'WINDOW' &&
+      this.aiConfig.haloedSaint.location !== 'WINDOW';
 
-      this.triggerCameraMotionError(4, 1.2);
-      window.Sound.playVentClatter(0.85);
-      window.Sound.playStoneGrind(0.65);
+    const rand = Math.random();
+    let targetLoc = 'CAM_02';
 
-      this.updateVentAudio();
-      if (this.isCCTVOpen) {
-        this.updateCCTVFeed();
-      }
+    if (isWindowFree && rand < 0.45) {
+      targetLoc = 'WINDOW';
+    } else if (rand < 0.70) {
+      targetLoc = 'CAM_05'; // West corridor
+    } else if (rand < 0.85) {
+      targetLoc = 'CAM_01'; // Sanctuary nave
+    } else {
+      targetLoc = 'CAM_02'; // Crypt anomaly
+    }
 
-      // If vent shutter remains closed, continue pushing her back further down the duct!
-      if (this.isVentClosed) {
-        this.startMournerVentRetreatTimer();
-      }
-    } else if (prevStage === 2) {
-      // PUSHED BACK further down the duct (Stage 1 - crawling far):
-      this.setMournerStage(1);
-      ai.attackTimer = 0;
-      ai._ventWarningPlayed = false;
+    ai.stage = -1;
+    ai.location = targetLoc;
+    ai.awakened = true;
+    ai.hasActivated = true;
+    ai.attackTimer = 0;
+    ai.timer = 0;
+    ai._ventWarningPlayed = false;
+    this._lastMournerStage = -1;
 
-      const mourner = this.world?.statues?.veiledMourner;
-      if (mourner) mourner.visible = false;
+    // Trigger static glitch on CAM 04 as she vacates the duct
+    if (this.cameraErrorTimers) {
+      this.cameraErrorTimers[4] = 1.8;
+    }
 
-      this.triggerCameraMotionError(4, 1.2);
-      window.Sound.playVentClatter(0.75);
+    const camNumMap = { 'CAM_01': 1, 'CAM_02': 2, 'CAM_03': 3, 'CAM_04': 4, 'CAM_05': 5 };
+    if (camNumMap[targetLoc]) {
+      this.triggerCameraMotionError(camNumMap[targetLoc], 1.8);
+    }
 
-      this.updateVentAudio();
-      if (this.isCCTVOpen) {
-        this.updateCCTVFeed();
-      }
+    window.Sound.playVentClatter(0.8);
+    window.Sound.playStoneGrind(0.7);
 
-      // If vent shutter remains closed, push her completely out of the duct!
-      if (this.isVentClosed) {
-        this.startMournerVentRetreatTimer();
-      }
-    } else if (prevStage === 1 || prevLoc === 'CAM_04') {
-      // PUSHED BACK completely out of duct back to CAM 02 Crypt (Home base):
-      this.setMournerStage(0);
-      ai.awakened = false;
-      ai.attackTimer = 0;
-      ai.timer = 0;
-      ai._ventWarningPlayed = false;
-
-      this.triggerCameraMotionError(4, 1.8);
-      this.triggerCameraMotionError(2, 1.8);
-      window.Sound.playVentClatter(0.7);
-      window.Sound.playStoneGrind(0.8);
-
-      this.updateVentAudio();
-      if (this.isCCTVOpen) {
-        this.updateCCTVFeed();
-      }
+    this.handleEntityMovement(prevLoc, targetLoc, 'veiledMourner');
+    this.updateVentAudio();
+    this.updateWindowHallwayView();
+    if (this.isCCTVOpen) {
+      this.updateCCTVFeed();
     }
   }
 
-    // --- VENT CRAWLING & VENT CAM GLITCH AUDIO ENGINE ---
+  // --- VENT CRAWLING & VENT CAM GLITCH AUDIO ENGINE ---
   updateVentAudio() {
     if (!this.isRunning || this.gameOver || this.victory || this.isBlackout) {
       if (this._isVentCrawlingSoundPlaying) {
@@ -1299,9 +1327,15 @@ class GameEngine {
     const prevLoc = this.aiConfig.weepingAngel.location;
     const prevStage = this.aiConfig.weepingAngel.stage;
     this.aiConfig.weepingAngel.stage = stage;
-    if (stage === 0) {
-      this.aiConfig.weepingAngel.awakened = false;
-      this.aiConfig.weepingAngel.aisle = false;
+    if (stage > 0) {
+      this.aiConfig.weepingAngel.hasActivated = true;
+      this.aiConfig.weepingAngel.awakened = true;
+      this.aiConfig.weepingAngel.aisle = true;
+    } else if (stage === 0) {
+      if (!this.aiConfig.weepingAngel.hasActivated) {
+        this.aiConfig.weepingAngel.awakened = false;
+        this.aiConfig.weepingAngel.aisle = false;
+      }
     }
 
     // Strict Unique Location mapping (Angel is only ever in ONE place)
@@ -1326,7 +1360,7 @@ class GameEngine {
       case 0: // CAM 01 - Sanctuary Altar (Home base)
         angel.position.set(0, 0.88, -34);
         angel.rotation.set(0, 0, 0);
-        angel.visible = true;
+        angel.visible = !this.aiConfig.weepingAngel.hasActivated;
         break;
       case 1: // CAM 05 - Cloister Hallway approach
       case 2: // CAM 05 - Narthex Corridor outside office window
@@ -1358,7 +1392,14 @@ class GameEngine {
     const prevLoc = this.aiConfig.haloedSaint.location;
     const prevStage = this.aiConfig.haloedSaint.stage;
     this.aiConfig.haloedSaint.stage = stage;
-    if (stage === 0) this.aiConfig.haloedSaint.awakened = false;
+    if (stage > 0) {
+      this.aiConfig.haloedSaint.hasActivated = true;
+      this.aiConfig.haloedSaint.awakened = true;
+    } else if (stage === 0) {
+      if (!this.aiConfig.haloedSaint.hasActivated) {
+        this.aiConfig.haloedSaint.awakened = false;
+      }
+    }
 
     // Strict Unique Location mapping (Saint is only ever in ONE place)
     // Stage 0: CAM_03 (Reconciliation Chapel)
@@ -1382,7 +1423,7 @@ class GameEngine {
       case 0: // CAM 03 - Reconciliation Chapel (Home base)
         saint.position.set(-35, 0.0, -31);
         saint.rotation.set(0, 0, 0);
-        saint.visible = true;
+        saint.visible = !this.aiConfig.haloedSaint.hasActivated;
         break;
       case 1: // CAM 05 - Cloister Hallway approach
       case 2: // CAM 05 - Right outside observation window
@@ -1414,7 +1455,14 @@ class GameEngine {
     const prevLoc = this.aiConfig.veiledMourner.location;
     const prevStage = this.aiConfig.veiledMourner.stage;
     this.aiConfig.veiledMourner.stage = stage;
-    if (stage === 0) this.aiConfig.veiledMourner.awakened = false;
+    if (stage > 0) {
+      this.aiConfig.veiledMourner.hasActivated = true;
+      this.aiConfig.veiledMourner.awakened = true;
+    } else if (stage === 0) {
+      if (!this.aiConfig.veiledMourner.hasActivated) {
+        this.aiConfig.veiledMourner.awakened = false;
+      }
+    }
 
     // Strict Unique Location mapping (Mourner is only ever in ONE place)
     const locMap = { 0: 'CAM_02', 1: 'CAM_04', 2: 'CAM_04', 3: 'RIGHT_VENT', 4: 'OFFICE' };
@@ -1433,7 +1481,7 @@ class GameEngine {
       case 0: // CAM 02 - Memorial Columbarium Stand (Home base)
         mourner.position.set(38, 0.45, -32);
         mourner.rotation.set(0, -Math.PI / 3, 0);
-        mourner.visible = true;
+        mourner.visible = !this.aiConfig.veiledMourner.hasActivated;
         break;
       case 1: // CAM 04 - Entering modern HVAC Air Duct (crawling far in duct - NOT visible from office)
         mourner.position.set(5.8, 0.02, 0.45);
@@ -1450,6 +1498,9 @@ class GameEngine {
         mourner.rotation.set(0, -Math.PI * 0.54, 0); // Head and face looking directly out of vent toward player desk
         mourner.visible = !this.isVentClosed; // Visible when flashing vent light in office (if shutter not sealed)!
         this._mournerStage3ArrivalTime = Date.now();
+        if (this.isVentClosed) {
+          this.startMournerVentRetreatTimer();
+        }
         break;
       case 4: // Inside Office - Attack position
         mourner.position.set(1.2, 0.0, -0.6);
@@ -1481,30 +1532,33 @@ class GameEngine {
 
     if (prevLoc === 'WINDOW') {
       // Banished from window glass by spotlight:
-      // The role of the spotlight is to move entities FAR away from the office!
-      // Weeping Angel is banished far back to Sanctuary Altar & Nave (CAM 01)!
+      // Repelled back into the sanctuary nave center aisle (stays anomalous, never dormant)
       banishTarget = 'CAM_01';
-      targetStage = 0;
+      targetStage = -1;
       targetCamNum = 1;
     } else {
       // Banished from Left Door / CAM 05:
-      // Entities cannot teleport far! Can only move to nearby places:
-      // Nearby to CAM 05: WINDOW or CAM 03 (Reconciliation Chapel down west hallway)!
-      if (isWindowFree && rand < 0.50) {
+      // Moves to nearby areas: WINDOW, CAM_03, or CAM_01
+      if (isWindowFree && rand < 0.45) {
         banishTarget = 'WINDOW';
         targetStage = 1;
         targetCamNum = 0;
-      } else {
+      } else if (rand < 0.75) {
         banishTarget = 'CAM_03';
         targetStage = -1;
         targetCamNum = 3;
+      } else {
+        banishTarget = 'CAM_01';
+        targetStage = -1;
+        targetCamNum = 1;
       }
     }
 
     ai.stage = targetStage;
     ai.location = banishTarget;
-    ai.awakened = false;
-    ai.aisle = false;
+    ai.hasActivated = true;
+    ai.awakened = true;
+    ai.aisle = true;
     ai.attackTimer = 0;
     ai.timer = 0;
     ai.windowTimer = 0;
@@ -1522,13 +1576,8 @@ class GameEngine {
 
     const angel = this.world?.statues?.weepingAngel;
     if (angel) {
-      if (targetStage === 0) {
-        angel.position.set(0, 0.88, -34);
-        angel.rotation.set(0, 0, 0);
-        angel.visible = true;
-      } else {
-        angel.visible = false;
-      }
+      // 3D altar pedestal statue stays hidden: she never returns to peaceful daytime pose while shift is ongoing
+      angel.visible = false;
     }
 
     if (banishTarget === 'WINDOW') {
@@ -1561,29 +1610,32 @@ class GameEngine {
 
     if (prevLoc === 'WINDOW') {
       // Banished from window glass by spotlight:
-      // The role of the spotlight is to move entities FAR away from the office!
-      // Haloed Saint is banished far back to Reconciliation Chapel (CAM 03)!
+      // Repelled back to Reconciliation Chapel (stays screaming/anomalous, never dormant)
       banishTarget = 'CAM_03';
       targetStage = -1;
       targetCamNum = 3;
     } else {
       // Banished from Left Door / CAM 05:
-      // Entities cannot teleport far! Can only move to nearby places:
-      // Nearby to CAM 05: WINDOW or CAM 03!
-      if (isWindowFree && rand < 0.50) {
+      // Moves to nearby areas: WINDOW, CAM_03, or CAM_01
+      if (isWindowFree && rand < 0.45) {
         banishTarget = 'WINDOW';
         targetStage = 1;
         targetCamNum = 0;
-      } else {
+      } else if (rand < 0.75) {
         banishTarget = 'CAM_03';
         targetStage = -1;
         targetCamNum = 3;
+      } else {
+        banishTarget = 'CAM_01';
+        targetStage = -1;
+        targetCamNum = 1;
       }
     }
 
     ai.stage = targetStage;
     ai.location = banishTarget;
-    ai.awakened = false;
+    ai.hasActivated = true;
+    ai.awakened = true;
     ai.attackTimer = 0;
     ai.timer = 0;
     ai.windowTimer = 0;
@@ -1601,6 +1653,7 @@ class GameEngine {
 
     const saint = this.world?.statues?.haloedSaint;
     if (saint) {
+      // 3D alcove statue stays hidden: never returns to peaceful daytime pose while shift is ongoing
       saint.visible = false;
     }
 
@@ -1630,40 +1683,43 @@ class GameEngine {
       this.aiConfig.haloedSaint.location !== 'WINDOW';
 
     let banishTarget = 'CAM_02';
-    let targetStage = 0;
+    let targetStage = -1;
     let targetCamNum = 2;
     const rand = Math.random();
 
     if (prevLoc === 'WINDOW') {
       // Banished from window glass by spotlight:
-      // The role of the spotlight is to move entities FAR away from the office!
-      // Veiled Mourner is banished far back to Columbarium Crypt (CAM 02)!
+      // Repelled back to Columbarium Crypt (stays upright anomalous, never dormant)
       banishTarget = 'CAM_02';
-      targetStage = 0;
+      targetStage = -1;
       targetCamNum = 2;
     } else {
-      // Banished from right vent shutter:
-      // Cannot teleport far! Can only retreat into nearby CAM 02 Crypt or WINDOW!
+      // Banished from Left Door / CAM 05:
       if (isWindowFree && rand < 0.45) {
         banishTarget = 'WINDOW';
         targetStage = -1;
         targetCamNum = 0;
-      } else {
+      } else if (rand < 0.75) {
         banishTarget = 'CAM_02';
         targetStage = -1;
         targetCamNum = 2;
+      } else {
+        banishTarget = 'CAM_01';
+        targetStage = -1;
+        targetCamNum = 1;
       }
     }
 
     ai.stage = -1;
     ai.location = banishTarget;
-    ai.awakened = false;
+    ai.hasActivated = true;
+    ai.awakened = true;
     ai.attackTimer = 0;
     ai.timer = 0;
     ai._ventWarningPlayed = false;
     this._lastMournerStage = -1;
 
-    // Completely hide 3D vent crawling model when banished
+    // Completely hide 3D vent crawling and crypt model when banished
     const mourner = this.world?.statues?.veiledMourner;
     if (mourner) {
       mourner.visible = false;
@@ -1671,9 +1727,9 @@ class GameEngine {
 
     this.handleEntityMovement(prevLoc, banishTarget, 'veiledMourner');
 
-    // Trigger static glitch on CAM 04 to show she vacated the HVAC duct
+    // Trigger static glitch on CAM 05 or CAM 04
     if (this.cameraErrorTimers) {
-      this.cameraErrorTimers[4] = 1.8;
+      this.cameraErrorTimers[5] = 1.8;
     }
 
     if (targetCamNum > 0) {
@@ -1682,10 +1738,10 @@ class GameEngine {
 
     if (banishTarget === 'WINDOW') {
       window.Sound.playStoneGrind(0.65);
-    } else if (banishTarget === 'CAM_04') {
-      window.Sound.playVentClatter(0.8);
     } else if (banishTarget === 'CAM_05') {
       window.Sound.playLeftFootstep(0.7);
+    } else {
+      window.Sound.playStoneGrind(0.7);
     }
 
     this.updateVentAudio();
@@ -3187,18 +3243,19 @@ class GameEngine {
     window.Sound.playVentSound(this.isVentClosed);
 
     const mourner = this.aiConfig.veiledMourner;
-    const isMournerInVent = (mourner.stage >= 1 && mourner.stage <= 3) || mourner.location === 'CAM_04' || mourner.location === 'RIGHT_VENT';
+    const isMournerAtVentOpening = (mourner.stage === 3 || mourner.location === 'RIGHT_VENT');
     const mournerStatue = this.world?.statues?.veiledMourner;
 
     if (this.isVentClosed) {
-      if (mournerStatue && (mourner.stage === 3 || mourner.location === 'RIGHT_VENT')) {
+      if (mournerStatue && isMournerAtVentOpening) {
         mournerStatue.visible = false;
       }
-      if (isMournerInVent) {
+      // Shutter impact and retreat timer ONLY trigger when Mourner has crawled to the office opening (stage 3)
+      if (isMournerAtVentOpening) {
         this.startMournerVentRetreatTimer();
       }
     } else {
-      if (mournerStatue && (mourner.stage === 3 || mourner.location === 'RIGHT_VENT')) {
+      if (mournerStatue && isMournerAtVentOpening) {
         mournerStatue.visible = true;
       }
       this.clearMournerVentRetreatTimer();
@@ -3405,9 +3462,9 @@ class GameEngine {
     const saintLoc = this.aiConfig.haloedSaint.location;
     const mournerLoc = this.aiConfig.veiledMourner.location;
 
-    const isAngelDormant = angelLoc === 'CAM_01' && this.aiConfig.weepingAngel.stage === 0 && !this.aiConfig.weepingAngel.awakened && !this.aiConfig.weepingAngel.aisle;
-    const isSaintDormant = saintLoc === 'CAM_03' && this.aiConfig.haloedSaint.stage === 0 && !this.aiConfig.haloedSaint.awakened;
-    const isMournerDormant = mournerLoc === 'CAM_02' && this.aiConfig.veiledMourner.stage === 0 && !this.aiConfig.veiledMourner.awakened;
+    const isAngelDormant = angelLoc === 'CAM_01' && this.aiConfig.weepingAngel.stage === 0 && !this.aiConfig.weepingAngel.hasActivated && !this.aiConfig.weepingAngel.awakened && !this.aiConfig.weepingAngel.aisle;
+    const isSaintDormant = saintLoc === 'CAM_03' && this.aiConfig.haloedSaint.stage === 0 && !this.aiConfig.haloedSaint.hasActivated && !this.aiConfig.haloedSaint.awakened;
+    const isMournerDormant = mournerLoc === 'CAM_02' && this.aiConfig.veiledMourner.stage === 0 && !this.aiConfig.veiledMourner.hasActivated && !this.aiConfig.veiledMourner.awakened;
 
     if (camId === 1) {
       // CAM 01: Sanctuary Altar & Nave
@@ -3427,14 +3484,14 @@ class GameEngine {
       if (mournerLoc === 'CAM_01') {
         return 'assets/cctv/church_cam_01_mary_altar.png';
       }
-      // Case 4: Angel at CAM 01
+      // Case 5: Angel at CAM 01
       if (angelLoc === 'CAM_01') {
-        if (this.aiConfig.weepingAngel.aisle || this.aiConfig.weepingAngel.stage === -1) {
-          // 3rd Phase Movement: Pedestal is empty, Angel is standing in center aisle between pews
+        if (this.aiConfig.weepingAngel.hasActivated || this.aiConfig.weepingAngel.aisle || this.aiConfig.weepingAngel.stage === -1) {
+          // Pedestal is empty, Angel is standing in center aisle between pews (never returns to peaceful pose)
           return 'assets/cctv/church_cam_anomaly.png';
         }
         if (this.aiConfig.weepingAngel.awakened) {
-          // 2nd Phase Movement: Weeping Angel awakened on pedestal, hands down staring forward
+          // Weeping Angel awakened on pedestal, hands down staring forward
           return 'assets/cctv/church_cam_01_angel_pedestal_awake.png';
         }
         return 'assets/cctv/church_cam_normal.png'; // 1st Phase: Angel dormant on altar pedestal (original pose)
@@ -3454,8 +3511,8 @@ class GameEngine {
       }
       // Case 3: Mourner at CAM 02
       if (mournerLoc === 'CAM_02') {
-        if (this.aiConfig.veiledMourner.awakened || this.aiConfig.veiledMourner.stage === -1) {
-          return 'assets/cctv/church_cam_02_columbarium_anomaly.png'; // Mourner standing upright in crypt tombs
+        if (this.aiConfig.veiledMourner.hasActivated || this.aiConfig.veiledMourner.awakened || this.aiConfig.veiledMourner.stage === -1) {
+          return 'assets/cctv/church_cam_02_columbarium_anomaly.png'; // Mourner standing upright in crypt tombs (never returns to dormant pose)
         }
         return 'assets/cctv/church_cam_02_columbarium.png'; // Mourner seated dormant on crypt pedestal
       }
@@ -3474,8 +3531,8 @@ class GameEngine {
       }
       // Case 3: Saint at CAM 03
       if (saintLoc === 'CAM_03') {
-        if (this.aiConfig.haloedSaint.awakened || this.aiConfig.haloedSaint.stage === -1) {
-          return 'assets/cctv/church_cam_03_confessional_anomaly.png'; // Saint screaming close up
+        if (this.aiConfig.haloedSaint.hasActivated || this.aiConfig.haloedSaint.awakened || this.aiConfig.haloedSaint.stage === -1) {
+          return 'assets/cctv/church_cam_03_confessional_anomaly.png'; // Saint screaming close up (never returns to dormant pose)
         }
         return 'assets/cctv/church_cam_03_confessional.png'; // Saint standing dormant in alcove
       }
@@ -3483,10 +3540,10 @@ class GameEngine {
     }
 
     if (camId === 4) {
-      // CAM 04: Return Air Duct (Mourner crawl progression)
+      // CAM 04: Return Air Duct (Veiled Mourner ONLY - Angel and Saint strictly prohibited)
       // 1st Phase: Empty vent duct ('assets/cctv/church_cam_04_vent.png')
-      // 2nd Phase: Entity is further down the duct ('assets/cctv/church_cam_04_vent_far.png')
-      // 3rd Phase: Entity is closer up at duct camera opening ('assets/cctv/church_cam_04_vent_anomaly.png')
+      // 2nd Phase: Mourner is further down the duct ('assets/cctv/church_cam_04_vent_far.png')
+      // 3rd Phase: Mourner is closer up at duct camera opening ('assets/cctv/church_cam_04_vent_anomaly.png')
       if (mournerLoc === 'CAM_04') {
         if (this.aiConfig.veiledMourner.stage === 1) {
           return 'assets/cctv/church_cam_04_vent_far.png'; // 2nd Phase: Entity further down duct
@@ -3648,8 +3705,8 @@ class GameEngine {
 
       const cTag = `CAM_0${c}`;
       const entities = [];
-      if (angelLoc === cTag) entities.push('[A]');
-      if (saintLoc === cTag) entities.push('[S]');
+      if (c !== 4 && angelLoc === cTag) entities.push('[A]');
+      if (c !== 4 && saintLoc === cTag) entities.push('[S]');
       if (mournerLoc === cTag) entities.push('[M]');
 
       beacon.textContent = entities.join(' ');
@@ -4034,13 +4091,12 @@ class GameEngine {
       const windowPatience = isNight6OrHard ? 2.2 : 3.5;
       if (ai.windowTimer >= windowPatience) {
         ai.windowTimer = 0;
-        // MISSED! Moves closer: near CAM 05 or Vent
-        if (Math.random() < 0.30) {
+        // MISSED! Moves closer: near CAM 05 or CAM 03 (CAM 04 vent is strictly isolated to Mourner)
+        if (Math.random() < 0.35) {
           ai.stage = -1;
-          ai.location = 'CAM_04';
+          ai.location = 'CAM_03';
           this._lastAngelStage = -1;
-          this.handleEntityMovement('WINDOW', 'CAM_04', 'weepingAngel');
-          window.Sound.playVentClatter(0.85);
+          this.handleEntityMovement('WINDOW', 'CAM_03', 'weepingAngel');
           window.Sound.playStoneGrind(0.7);
         } else {
           this.setAngelStage(2); // Advances to CAM_05 outside left door!
@@ -4070,8 +4126,8 @@ class GameEngine {
       if (roll <= ai.level) {
         if (ai.stage === -1) {
           if (ai.location === 'CAM_02') {
-            // From CAM 02 Crypt: nearby is WINDOW, or roam back to CAM 01, or slip into CAM 04 vent duct.
-            // Entities cannot teleport far: NEVER directly to CAM 05!
+            // From CAM 02 Crypt: nearby is WINDOW, or roam back to CAM 01, or CAM 03.
+            // CAM 04 vent is strictly isolated to Mourner - Angel never enters vent!
             if (!this.isWindowSpotOn && this.aiConfig.haloedSaint.location !== 'WINDOW' && this.aiConfig.veiledMourner.location !== 'WINDOW') {
               this.setAngelStage(1);
             } else if (Math.random() < 0.65) {
@@ -4080,10 +4136,10 @@ class GameEngine {
               this.handleEntityMovement('CAM_02', 'CAM_01', 'weepingAngel');
               this.triggerCameraMotionError(1, 1.8);
             } else {
-              ai.location = 'CAM_04';
+              ai.location = 'CAM_03';
               ai.stage = -1;
-              this.handleEntityMovement('CAM_02', 'CAM_04', 'weepingAngel');
-              this.triggerCameraMotionError(4, 1.8);
+              this.handleEntityMovement('CAM_02', 'CAM_03', 'weepingAngel');
+              this.triggerCameraMotionError(3, 1.8);
             }
             window.Sound.playStoneGrind(0.7);
           } else if (ai.location === 'CAM_05') {
@@ -4125,9 +4181,10 @@ class GameEngine {
             window.Sound.playDistantWeeping('sob2', 0.15, 0.90); // Stone shudder down sanctuary aisle
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
-            // Phase 3 -> Leaves CAM 01
-            ai.awakened = false;
-            ai.aisle = false;
+            // Phase 3 -> Leaves CAM 01 (stays active and anomalous, never returns to dormant state)
+            ai.hasActivated = true;
+            ai.awakened = true;
+            ai.aisle = true;
             // 35% chance to roam into CAM 02 Crypt (where Mourner is), producing the dual scene
             if (Math.random() < 0.35 && this.aiConfig.veiledMourner.location === 'CAM_02') {
               ai.stage = -1;
@@ -4271,13 +4328,12 @@ class GameEngine {
       const windowPatience = isNight6OrHard ? 2.2 : 3.5;
       if (ai.windowTimer >= windowPatience) {
         ai.windowTimer = 0;
-        // MISSED! Moves closer: near CAM 05 or Vent
-        if (Math.random() < 0.25) {
+        // MISSED! Moves closer: near CAM 05 or CAM 01 (CAM 04 vent is strictly isolated to Mourner)
+        if (Math.random() < 0.35) {
           ai.stage = -1;
-          ai.location = 'CAM_04';
+          ai.location = 'CAM_01';
           this._lastSaintStage = -1;
-          this.handleEntityMovement('WINDOW', 'CAM_04', 'haloedSaint');
-          window.Sound.playVentClatter(0.85);
+          this.handleEntityMovement('WINDOW', 'CAM_01', 'haloedSaint');
           window.Sound.playStoneGrind(0.7);
         } else {
           this.setSaintStage(2); // Advances to CAM_05 outside left door!
@@ -4344,7 +4400,9 @@ class GameEngine {
             window.Sound.playStoneGrind(0.6);
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
-            ai.awakened = false;
+            // Leaves CAM 03 (stays active and anomalous, never returns to dormant state)
+            ai.hasActivated = true;
+            ai.awakened = true;
             // 35% chance to roam into CAM 01 Sanctuary Nave (where Angel is), producing the dual scene
             if (Math.random() < 0.35 && this.aiConfig.weepingAngel.location === 'CAM_01') {
               ai.stage = -1;
@@ -4390,10 +4448,12 @@ class GameEngine {
     if (ai.level <= 0) return;
 
     const isNight6OrHard = (this.currentNight >= 6 || (this.isCustomNight && ai.level >= 14));
-    const isMournerInVent = (ai.stage >= 1 && ai.stage <= 3) || ai.location === 'CAM_04' || ai.location === 'RIGHT_VENT';
+    const isMournerAtVentOpening = (ai.stage === 3 || ai.location === 'RIGHT_VENT');
 
-    // If vent shutter is closed while Mourner is inside or at the vent:
-    if (this.isVentClosed && isMournerInVent) {
+    // Only when Mourner has crawled all the way to the office vent opening (stage 3)
+    // does a closed vent shutter block office entry and trigger the retreat timer.
+    // While crawling in duct (stages 1 and 2), she continues advancing even if the shutter is closed!
+    if (this.isVentClosed && isMournerAtVentOpening) {
       ai.attackTimer = 0;
       if (!this._mournerVentRetreatTimer) {
         this.startMournerVentRetreatTimer();
@@ -4509,31 +4569,15 @@ class GameEngine {
       const roll = Math.floor(Math.random() * 20) + 1;
       if (roll <= ai.level) {
         if (ai.stage === -1) {
-          // If the vent shutter is currently closed, she cannot enter CAM_04 HVAC duct!
-          if (this.isVentClosed) {
-            if (ai.location !== 'WINDOW' && !this.isWindowSpotOn &&
-                this.aiConfig.weepingAngel.location !== 'WINDOW' &&
-                this.aiConfig.haloedSaint.location !== 'WINDOW') {
-              ai.location = 'WINDOW';
-              this.updateWindowHallwayView();
-              if (this.isCCTVOpen) this.updateCCTVFeed();
-              window.Sound.playStoneGrind(0.6);
-            } else if (ai.location !== 'CAM_01') {
-              ai.location = 'CAM_01';
-              if (this.isCCTVOpen) this.updateCCTVFeed();
-              window.Sound.playStoneGrind(0.6);
-            }
-            return;
-          }
-
-          // Banishment recovery from WINDOW or CAM_05 or CAM_03 into CAM_04 HVAC return duct
+          // Banishment recovery from WINDOW or CAM_05 or CAM_03 or CAM_01 into CAM_04 HVAC return duct
+          // Note: Mourner can enter CAM_04 duct even if the office vent shutter is closed (she enters from church end)
           if (ai.location === 'WINDOW') {
             this.setMournerStage(1);
             window.Sound.playStoneGrind(0.6);
             window.Sound.playVentClatter(0.75);
           } else if (ai.location === 'CAM_05') {
             // From CAM 05 corridor: can move to WINDOW or enter CAM 04 vent duct
-            if (Math.random() < 0.50 && !this.isWindowSpotOn &&
+            if (Math.random() < 0.45 && !this.isWindowSpotOn &&
                 this.aiConfig.weepingAngel.location !== 'WINDOW' &&
                 this.aiConfig.haloedSaint.location !== 'WINDOW') {
               ai.location = 'WINDOW';
@@ -4546,8 +4590,8 @@ class GameEngine {
               window.Sound.playVentClatter(0.75);
             }
           } else if (ai.location === 'CAM_03') {
-            // From CAM 03 Reconciliation Chapel, advances to WINDOW or CAM 05 or CAM 01. NEVER CAM 04!
-            if (Math.random() < 0.45 && !this.isWindowSpotOn &&
+            // From CAM 03 Reconciliation Chapel, advances to WINDOW or CAM 05 or CAM 01
+            if (Math.random() < 0.40 && !this.isWindowSpotOn &&
                 this.aiConfig.weepingAngel.location !== 'WINDOW' &&
                 this.aiConfig.haloedSaint.location !== 'WINDOW') {
               ai.location = 'WINDOW';
@@ -4564,7 +4608,7 @@ class GameEngine {
               window.Sound.playStoneGrind(0.6);
             }
           } else if (ai.location === 'CAM_01') {
-            // From CAM 01 Sanctuary Nave, advances to WINDOW or roams back to CAM 02 / CAM 03
+            // From CAM 01 Sanctuary Nave, advances to WINDOW or enters CAM 04 duct
             if (!this.isWindowSpotOn &&
                 this.aiConfig.weepingAngel.location !== 'WINDOW' &&
                 this.aiConfig.haloedSaint.location !== 'WINDOW') {
@@ -4573,13 +4617,9 @@ class GameEngine {
               if (this.isCCTVOpen) this.updateCCTVFeed();
               window.Sound.playStoneGrind(0.6);
             } else {
-              const roamCam = (Math.random() < 0.50) ? 'CAM_02' : 'CAM_03';
-              ai.location = roamCam;
-              if (roamCam === 'CAM_02') {
-                this.setMournerStage(0);
-              }
-              if (this.isCCTVOpen) this.updateCCTVFeed();
+              this.setMournerStage(1);
               window.Sound.playStoneGrind(0.6);
+              window.Sound.playVentClatter(0.75);
             }
           } else {
             this.setMournerStage(1);
@@ -4587,19 +4627,15 @@ class GameEngine {
             window.Sound.playVentClatter(0.75);
           }
         } else if (ai.location === 'WINDOW') {
-          // Advances from window glass into CAM_04 HVAC return duct (only if vent is open)
-          if (!this.isVentClosed) {
-            this.setMournerStage(1);
-            window.Sound.playStoneGrind(0.6);
-            window.Sound.playVentClatter(0.75);
-          }
+          // Advances from window glass into CAM_04 HVAC return duct (even if vent shutter is closed)
+          this.setMournerStage(1);
+          window.Sound.playStoneGrind(0.6);
+          window.Sound.playVentClatter(0.75);
         } else if (ai.location === 'CAM_05') {
-          // Advances from CAM_05 (outside door) into CAM_04 HVAC return duct (only if vent is open)
-          if (!this.isVentClosed) {
-            this.setMournerStage(1);
-            window.Sound.playStoneGrind(0.6);
-            window.Sound.playVentClatter(0.75);
-          }
+          // Advances from CAM_05 into CAM_04 HVAC return duct (even if vent shutter is closed)
+          this.setMournerStage(1);
+          window.Sound.playStoneGrind(0.6);
+          window.Sound.playVentClatter(0.75);
         } else if (ai.stage === 0) {
           if (!ai.awakened) {
             ai.awakened = true;
@@ -4607,7 +4643,9 @@ class GameEngine {
             window.Sound.playStoneGrind(0.5);
             if (this.isCCTVOpen) this.updateCCTVFeed();
           } else {
-            ai.awakened = false;
+            // Leaves CAM 02 (stays active and anomalous, never returns to dormant state)
+            ai.hasActivated = true;
+            ai.awakened = true;
             // 30% chance to roam into CAM 01 Sanctuary Altar & Nave (where Angel is), producing the dual scene
             if (Math.random() < 0.30 && this.aiConfig.weepingAngel.location === 'CAM_01') {
               ai.stage = -1;
@@ -4625,31 +4663,24 @@ class GameEngine {
               this.triggerCameraMotionError(3, 1.8);
               window.Sound.playStoneGrind(0.7);
               if (this.isCCTVOpen) this.updateCCTVFeed();
-            } else if (!this.isVentClosed) {
+            } else {
+              // Enters CAM_04 vent duct (even if vent shutter is closed)
               this.setMournerStage(1);
               window.Sound.playStoneGrind(0.6);
               window.Sound.playVentClatter(0.75);
-            } else {
-              // Vent is shut: flank to window or nearby CAM 01 (never directly to CAM 05 from CAM 02!)
-              ai.stage = -1;
-              ai.location = (!this.isWindowSpotOn &&
-                this.aiConfig.weepingAngel.location !== 'WINDOW' &&
-                this.aiConfig.haloedSaint.location !== 'WINDOW') ? 'WINDOW' : 'CAM_01';
-              this.updateWindowHallwayView();
-              if (this.isCCTVOpen) this.updateCCTVFeed();
-              window.Sound.playStoneGrind(0.6);
             }
           }
         } else if (ai.stage < 3) {
-          if (!this.isVentClosed) {
-            const nextStage = ai.stage + 1;
-            this.setMournerStage(nextStage);
-            window.Sound.playStoneGrind(0.6);
-            window.Sound.playVentClatter(0.8 + nextStage * 0.05); // 3D stereo vent scraping clatter panned +0.88!
-          } else {
-            if (!this._mournerVentRetreatTimer) {
-              this.startMournerVentRetreatTimer();
-            }
+          // Crawls forward inside the duct regardless of whether the vent shutter is closed:
+          // Stage 1 -> 2: Appears closer in CAM 04 duct CCTV
+          // Stage 2 -> 3: Reaches the office vent opening (peeking out into office)
+          const nextStage = ai.stage + 1;
+          this.setMournerStage(nextStage);
+          window.Sound.playStoneGrind(0.6);
+          window.Sound.playVentClatter(0.8 + nextStage * 0.05); // 3D stereo vent scraping clatter panned +0.88!
+          if (nextStage === 3 && this.isVentClosed) {
+            // Arrives at closed shutter: shutter blocks office entry and retreat timer starts!
+            this.startMournerVentRetreatTimer();
           }
         }
       }
