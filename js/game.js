@@ -2391,11 +2391,6 @@ class GameEngine {
       }
       window.Sound.playCameraStatic(0.18, 0.35);
 
-      // Subtle, rare distant crying from the statue on the right
-      if (Math.random() < 0.22) {
-        window.Sound.playDistantWeeping('short', 0.65, 0.35);
-      }
-
       // 160-220ms duration: sudden quick flash then immediate snap back to normal
       const duration = 160 + Math.random() * 60;
       setTimeout(() => {
@@ -2428,17 +2423,6 @@ class GameEngine {
 
     // The FIRST twitch fires ONLY AFTER the player has spent 4.5 to 6.0 seconds viewing the calm normal sanctuary
     this._menuTwitchTimeout = setTimeout(triggerTwitch, 4500 + Math.random() * 1500);
-
-    // Ambient distant weeping loop in the main menu lobby (very faint, echoing from right nave)
-    const triggerMenuAmbientWeep = () => {
-      if (this.isRunning || this.isNightTransitioning) return;
-      const fnafMenu = document.getElementById('fnaf-main-menu');
-      if (fnafMenu && !fnafMenu.classList.contains('hidden')) {
-        window.Sound.playDistantWeeping('random', 0.65, 0.32);
-      }
-      this._menuWeepTimeout = setTimeout(triggerMenuAmbientWeep, 35000 + Math.random() * 40000);
-    };
-    this._menuWeepTimeout = setTimeout(triggerMenuAmbientWeep, 16000);
   }
 
   startNightWithTransition(night = 1) {

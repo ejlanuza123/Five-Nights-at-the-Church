@@ -234,15 +234,21 @@ class ExtrasManager {
         } else if (this.isOpen) {
           const lightbox = document.getElementById('cctv-lightbox');
           if (lightbox && !lightbox.classList.contains('hidden')) {
-            lightbox.classList.add('hidden');
+            this.closeCCTVLightbox();
           } else {
             this.close();
           }
           e.preventDefault();
         }
       } else if (this.isOpen) {
+        const lightbox = document.getElementById('cctv-lightbox');
+        const isLightboxOpen = lightbox && !lightbox.classList.contains('hidden');
+
         if (e.key === 'ArrowLeft') {
-          if (this.currentTab === 'models') {
+          if (isLightboxOpen) {
+            this.navigateCCTVLightbox(-1);
+            e.preventDefault();
+          } else if (this.currentTab === 'models') {
             document.getElementById('btn-model-prev')?.click();
             e.preventDefault();
           } else if (this.currentTab === 'jumpscares') {
@@ -250,7 +256,10 @@ class ExtrasManager {
             e.preventDefault();
           }
         } else if (e.key === 'ArrowRight') {
-          if (this.currentTab === 'models') {
+          if (isLightboxOpen) {
+            this.navigateCCTVLightbox(1);
+            e.preventDefault();
+          } else if (this.currentTab === 'models') {
             document.getElementById('btn-model-next')?.click();
             e.preventDefault();
           } else if (this.currentTab === 'jumpscares') {
@@ -368,11 +377,11 @@ class ExtrasManager {
     this.stopStageJumpscares();
     this.closeJumpscare();
 
-    const lightbox = document.getElementById('cctv-lightbox');
-    if (lightbox) lightbox.classList.add('hidden');
+    this.closeCCTVLightbox();
   }
 
   switchTab(tabName) {
+    this.closeCCTVLightbox();
     this.currentTab = tabName;
 
     // Stop in-stage jumpscares if navigating away
@@ -1277,14 +1286,20 @@ class ExtrasManager {
     // Lightbox Controls
     const lightbox = document.getElementById('cctv-lightbox');
     const btnLightboxClose = document.getElementById('btn-lightbox-close');
-    if (btnLightboxClose && lightbox) {
-      btnLightboxClose.addEventListener('click', () => {
-        lightbox.classList.add('hidden');
-        window.Sound?.playLightClick();
-      });
+    if (btnLightboxClose) {
+      const handleClose = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.closeCCTVLightbox();
+      };
+      btnLightboxClose.addEventListener('click', handleClose);
+      btnLightboxClose.addEventListener('touchend', handleClose);
+    }
+
+    if (lightbox) {
       lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
-          lightbox.classList.add('hidden');
+        if (e.target === lightbox || e.target.classList.contains('screen-modal')) {
+          this.closeCCTVLightbox();
         }
       });
     }
@@ -1292,24 +1307,51 @@ class ExtrasManager {
     const btnPrev = document.getElementById('btn-lightbox-prev');
     const btnNext = document.getElementById('btn-lightbox-next');
     if (btnPrev) {
-      btnPrev.addEventListener('click', () => {
-        const activeList = this.getFilteredCCTVList();
-        const currentFilteredIdx = activeList.findIndex(item => item === this.cctvGallery[this.currentLightboxIndex]);
-        const newFilteredIdx = (currentFilteredIdx - 1 + activeList.length) % activeList.length;
-        const newGlobalIdx = this.cctvGallery.indexOf(activeList[newFilteredIdx]);
-        this.openCCTVLightbox(newGlobalIdx);
+      btnPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.navigateCCTVLightbox(-1);
       });
     }
 
     if (btnNext) {
-      btnNext.addEventListener('click', () => {
-        const activeList = this.getFilteredCCTVList();
-        const currentFilteredIdx = activeList.findIndex(item => item === this.cctvGallery[this.currentLightboxIndex]);
-        const newFilteredIdx = (currentFilteredIdx + 1) % activeList.length;
-        const newGlobalIdx = this.cctvGallery.indexOf(activeList[newFilteredIdx]);
-        this.openCCTVLightbox(newGlobalIdx);
+      btnNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.navigateCCTVLightbox(1);
       });
     }
+
+    const btnSidePrev = document.getElementById('btn-lightbox-side-prev');
+    const btnSideNext = document.getElementById('btn-lightbox-side-next');
+    if (btnSidePrev) {
+      btnSidePrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.navigateCCTVLightbox(-1);
+      });
+    }
+    if (btnSideNext) {
+      btnSideNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.navigateCCTVLightbox(1);
+      });
+    }
+  }
+
+  closeCCTVLightbox() {
+    const lightbox = document.getElementById('cctv-lightbox');
+    if (lightbox && !lightbox.classList.contains('hidden')) {
+      lightbox.classList.add('hidden');
+      window.Sound?.playLightClick();
+    }
+  }
+
+  navigateCCTVLightbox(dir) {
+    const activeList = this.getFilteredCCTVList();
+    if (!activeList || activeList.length === 0) return;
+    const currentFilteredIdx = activeList.findIndex(item => item === this.cctvGallery[this.currentLightboxIndex]);
+    const safeIdx = currentFilteredIdx >= 0 ? currentFilteredIdx : 0;
+    const newFilteredIdx = (safeIdx + dir + activeList.length) % activeList.length;
+    const newGlobalIdx = this.cctvGallery.indexOf(activeList[newFilteredIdx]);
+    this.openCCTVLightbox(newGlobalIdx >= 0 ? newGlobalIdx : 0);
   }
 
   getFilteredCCTVList() {

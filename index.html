@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261110_v60">
+  <link rel="stylesheet" href="css/style.css?v=20261110_v61">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -1349,20 +1349,22 @@
     <div class="screen-modal hidden" id="cctv-lightbox">
       <div class="cctv-lightbox-inner">
         <div class="lightbox-header">
-          <div>
+          <div class="lightbox-title-box">
             <h3 class="lightbox-title" id="cctv-lightbox-title">CAM 01 // SANCTUARY ALTAR</h3>
             <div class="lightbox-sub" id="cctv-lightbox-desc">Surveillance archival capture</div>
           </div>
           <div class="lightbox-nav-row">
             <span class="lightbox-counter" id="cctv-lightbox-counter">1 / 20</span>
-            <button class="lightbox-nav-btn" id="btn-lightbox-prev">◀ PREV</button>
-            <button class="lightbox-nav-btn" id="btn-lightbox-next">NEXT ▶</button>
-            <button class="options-close-x" id="btn-lightbox-close">&times;</button>
+            <button class="lightbox-nav-btn" id="btn-lightbox-prev" title="Previous Footage">&lt; PREV</button>
+            <button class="lightbox-nav-btn" id="btn-lightbox-next" title="Next Footage">NEXT &gt;</button>
+            <button class="lightbox-close-btn" id="btn-lightbox-close" title="Close Security Footage">CLOSE &times;</button>
           </div>
         </div>
-        <div class="lightbox-image-wrap">
+        <div class="lightbox-image-wrap" id="cctv-lightbox-wrap">
           <img id="cctv-lightbox-img" src="" alt="CCTV Inspection" />
           <div class="cctv-card-scanlines"></div>
+          <button class="extras-turn-btn turn-left" id="btn-lightbox-side-prev" title="Previous Image">&lt;</button>
+          <button class="extras-turn-btn turn-right" id="btn-lightbox-side-next" title="Next Image">&gt;</button>
         </div>
       </div>
     </div>
@@ -1406,10 +1408,10 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261109_v54"></script>
+  <script src="js/audio.js?v=20261110_v61"></script>
   <script src="js/textures.js?v=20261109_v54"></script>
   <script src="js/models.js?v=20261109_v54"></script>
-  <script src="js/extras.js?v=20261110_v60"></script>
-  <script src="js/game.js?v=20261109_v54"></script>
+  <script src="js/extras.js?v=20261110_v61"></script>
+  <script src="js/game.js?v=20261110_v61"></script>
 </body>
 </html>

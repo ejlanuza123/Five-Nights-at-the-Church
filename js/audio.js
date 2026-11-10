@@ -246,6 +246,9 @@ class SoundEngine {
       this.fadeAudioOut(this.gameAudio, 300);
     }
 
+    // Guarantee no in-game weeping / crying audio leaks into the lobby
+    this.stopDistantWeeping(0.1);
+
     this.updateBGMVolume();
 
     if (this.lobbyAudio) {

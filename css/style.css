@@ -7646,6 +7646,184 @@ kbd.key-badge {
 }
 
 /* =========================================================================
+   CCTV LIGHTBOX VIEWER (Full Screen Photo Inspector & Archival Telemetry)
+   ========================================================================= */
+#cctv-lightbox {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 5000 !important;
+  background: rgba(2, 4, 8, 0.96) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: clamp(6px, 2vh, 16px) clamp(8px, 2vw, 20px) !important;
+  box-sizing: border-box;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+#cctv-lightbox.hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+.cctv-lightbox-inner {
+  position: relative;
+  width: min(96vw, 1020px);
+  height: min(92vh, 600px);
+  display: flex;
+  flex-direction: column;
+  background: #060911;
+  border: 1.5px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.95), 0 0 35px rgba(56, 189, 248, 0.15);
+  box-sizing: border-box;
+}
+
+.lightbox-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(13, 20, 36, 0.98);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  box-sizing: border-box;
+}
+
+.lightbox-title-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lightbox-title {
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 2vw, 13px);
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 1px;
+  margin: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lightbox-sub {
+  font-family: var(--font-mono);
+  font-size: clamp(9px, 1.5vw, 10.5px);
+  color: #94a3b8;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lightbox-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.lightbox-counter {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.lightbox-nav-btn {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-nav-btn:hover,
+.lightbox-nav-btn:active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.lightbox-close-btn {
+  background: rgba(220, 38, 38, 0.3) !important;
+  border: 1px solid #ef4444 !important;
+  color: #ffffff !important;
+  font-family: var(--font-mono) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;
+  padding: 6px 14px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  min-width: 68px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+  transition: all 0.15s ease;
+}
+
+.lightbox-close-btn:hover,
+.lightbox-close-btn:active {
+  background: #dc2626 !important;
+  border-color: #f87171 !important;
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.8) !important;
+  transform: scale(1.04);
+}
+
+.lightbox-image-wrap {
+  flex: 1;
+  position: relative;
+  background: #020306;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#cctv-lightbox-img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: auto;
+}
+
+/* =========================================================================
    TAB 4: CHEATS & MODIFIERS
    ========================================================================= */
 .extras-cheats-wrapper {
@@ -8224,5 +8402,45 @@ kbd.key-badge {
   #extras-view-cctv,
   #extras-view-cheats {
     padding: 48px 16px 20px 8px;
+  }
+
+  /* Mobile Landscape CCTV Lightbox Viewer */
+  #cctv-lightbox {
+    padding: 4px 6px !important;
+  }
+
+  .cctv-lightbox-inner {
+    width: 98vw !important;
+    height: 96vh !important;
+    max-height: 96vh !important;
+  }
+
+  .lightbox-header {
+    padding: 4px 8px !important;
+  }
+
+  .lightbox-title {
+    font-size: 10px !important;
+  }
+
+  .lightbox-sub {
+    font-size: 8px !important;
+  }
+
+  .lightbox-counter {
+    font-size: 9.5px !important;
+  }
+
+  .lightbox-nav-btn {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    min-height: 32px !important;
+  }
+
+  .lightbox-close-btn {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+    min-height: 32px !important;
+    min-width: 58px !important;
   }
 }
