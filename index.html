@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261110_v59">
+  <link rel="stylesheet" href="css/style.css?v=20261110_v60">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -1240,11 +1240,11 @@
             <!-- Cathedral Crypt Backdrop (Dark Atmospheric Glow) -->
             <div class="extras-cathedral-backdrop"></div>
 
-            <!-- In-Stage Screen Playing Jumpscare (No Play Button, Automatically Plays & Loops) -->
-            <div class="extras-jumpscare-viewport" id="extras-jumpscare-viewport" title="Click to Restart Attack Animation">
-              <video id="extras-video-angel" class="extras-stage-video" muted playsinline preload="auto" loop src="assets/jumpscares/angel_jumpscare.mp4"></video>
-              <video id="extras-video-saint" class="extras-stage-video hidden" muted playsinline preload="auto" loop src="assets/jumpscares/michael_jumpscare.mp4"></video>
-              <video id="extras-video-mourner" class="extras-stage-video hidden" muted playsinline preload="auto" loop src="assets/jumpscares/mary_jumpscare.mp4"></video>
+            <!-- In-Stage Screen Playing Jumpscare (Plays once per entity, restart via Prev / Next or tap) -->
+            <div class="extras-jumpscare-viewport" id="extras-jumpscare-viewport" title="Click to Replay Attack Animation">
+              <video id="extras-video-angel" class="extras-stage-video" muted playsinline preload="auto" src="assets/jumpscares/angel_jumpscare.mp4"></video>
+              <video id="extras-video-saint" class="extras-stage-video hidden" muted playsinline preload="auto" src="assets/jumpscares/michael_jumpscare.mp4"></video>
+              <video id="extras-video-mourner" class="extras-stage-video hidden" muted playsinline preload="auto" src="assets/jumpscares/mary_jumpscare.mp4"></video>
 
               <!-- Subtle CRT Glitch & Vignette Overlays -->
               <div class="extras-video-vignette"></div>
@@ -1409,7 +1409,7 @@
   <script src="js/audio.js?v=20261109_v54"></script>
   <script src="js/textures.js?v=20261109_v54"></script>
   <script src="js/models.js?v=20261109_v54"></script>
-  <script src="js/extras.js?v=20261109_v54"></script>
+  <script src="js/extras.js?v=20261110_v60"></script>
   <script src="js/game.js?v=20261109_v54"></script>
 </body>
 </html>

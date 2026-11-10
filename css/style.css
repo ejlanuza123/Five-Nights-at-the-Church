@@ -7464,7 +7464,7 @@ kbd.key-badge {
   user-select: none;
 }
 
-/* Dedicated Screen on the Right Side (Plays the jumpscare video continuously) */
+/* Dedicated Screen on the Right Side (Plays the jumpscare video once per selection) */
 .extras-jumpscare-viewport {
   position: relative;
   width: 86%;

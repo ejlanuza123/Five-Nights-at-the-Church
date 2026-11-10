@@ -1055,7 +1055,8 @@ class ExtrasManager {
       targetVideo.playsInline = true;
       targetVideo.setAttribute('playsinline', '');
       targetVideo.setAttribute('webkit-playsinline', '');
-      targetVideo.loop = true;
+      targetVideo.loop = false;
+      targetVideo.removeAttribute('loop');
 
       try {
         targetVideo.currentTime = 0;
