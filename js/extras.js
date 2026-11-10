@@ -178,6 +178,148 @@ class ExtrasManager {
     this.currentLightboxIndex = 0;
     this.currentCctvFilter = 'all';
 
+    // Confidential Tapes Lore Archive & Audio Telemetry
+    this.confidentialTapes = [
+      {
+        id: 1,
+        night: 1,
+        title: 'TAPE 01: NIGHT 1 ORIENTATION',
+        classification: 'PARISH ARCHIVE // LEVEL 1',
+        date: 'November 1983',
+        speaker: 'FATHER THOMAS REYES (RECTOR)',
+        duration: '00:38',
+        photoCam: 'cam01',
+        photoTitle: 'CAM 01 // SANCTUARY DAIS',
+        photoThumb: 'assets/cctv/church_cam_normal.png',
+        summary: 'Fr. Thomas welcomes the new night watchman, outlining diocesan energy quotas, the magnetic iron threshold door, and the disturbing tendency of Our Lady of Sorrows to vacate the high altar dais when unwatched.',
+        transcript: [
+          "If you're hearing this, you survived your first few minutes in the parish security office.",
+          "Now, don't worry about the rumors. The diocese has us on a strict energy quota, so keep an eye on that backup battery.",
+          "That arched door on your left? It's on a magnetic lock.",
+          "Lock it if you hear heavy stone steps in the corridor, but don't waste power leaving it shut.",
+          "Watch the altar camera. One of the statues... she likes to wander when nobody is watching.",
+          "Keep checking the cameras. God be with you tonight."
+        ]
+      },
+      {
+        id: 2,
+        night: 2,
+        title: 'TAPE 02: NIGHT 2 THREAT ESCALATION',
+        classification: 'PARISH ARCHIVE // LEVEL 2',
+        date: 'November 1983',
+        speaker: 'FATHER THOMAS REYES (RECTOR)',
+        duration: '00:46',
+        photoCam: 'cam05',
+        photoTitle: 'CAM 05 // WEST CLOISTER NARTHEX',
+        photoThumb: 'assets/cctv/church_cam_05_saint_hallway.png',
+        summary: 'Warning concerning Sanctus Michael (The Archangel) prowling outside the security office observation window. Instructions on conserving office power while using the desk halogen spotlight beam to repel his aggressive patrols.',
+        transcript: [
+          "Hello again! Glad to see you back for Night Two.",
+          "Listen closely: you've probably noticed the big observation window right in front of your desk.",
+          "Outside is the cloister hallway. Sanctus Michael... the martyr with the halo... he stalks that corridor.",
+          "If you look through that glass and see him standing in the gloom, do NOT panic.",
+          "Hit that halogen spotlight switch right on your desk. The beam blinds him and forces his effigy back.",
+          "Keep your light usage conservative though... and check the vent. We've had strange sounds in the ductwork."
+        ]
+      },
+      {
+        id: 3,
+        night: 3,
+        title: 'TAPE 03: SUB-BASEMENT & DUCT PENETRATION',
+        classification: 'PARISH ARCHIVE // LEVEL 3',
+        date: 'November 1983',
+        speaker: 'FATHER THOMAS REYES (RECTOR)',
+        duration: '00:52',
+        photoCam: 'cam04',
+        photoTitle: 'CAM 04 // HVAC RETURN AIR DUCT',
+        photoThumb: 'assets/cctv/church_cam_04_vent_anomaly.png',
+        summary: 'Notice regarding the crypt seal breach. The Veiled Mourner has entered the HVAC ventilation shafts. Protocol commands switching on the duct inspection beam and pulling the emergency fire shutter when she approaches the grille.',
+        transcript: [
+          "Uh, hello? Okay, listen. Night Three is usually when things... escalate.",
+          "The maintenance crew sealed the crypt, but the return air duct on your right connects into the sub-basement.",
+          "There's an effigy down there—the Veiled Penitent. If you hear metallic clanging in the ductwork, she's crawling inside.",
+          "Turn on that duct inspection light. If she's peeking right out of the grate... pull the emergency fire shutter immediately.",
+          "Hold it shut until you hear her stone fingers slide back. Stay calm."
+        ]
+      },
+      {
+        id: 4,
+        night: 4,
+        title: 'TAPE 04: ARCHWAY BREACH & PANIC LOG',
+        classification: 'PARISH ARCHIVE // CRITICAL',
+        date: 'November 1983',
+        speaker: 'FATHER THOMAS REYES (FINAL RECORDING)',
+        duration: '00:34',
+        photoCam: 'cam05',
+        photoTitle: 'CAM 05 // DUAL ENTITY THRESHOLD',
+        photoThumb: 'assets/cctv/church_cam_05_saint_angel.png',
+        summary: 'Fr. Thomas in acute panic during a simultaneous breach. Static distortions, warning of Latin whispers outside the office window, and a violent impact before the recording violently cuts off.',
+        transcript: [
+          "Hello? (heavy static) Can you hear me? Listen... I don't have much time.",
+          "They're... they're moving together now. If the power cuts, the generator won't kick in.",
+          "The candles won't protect you in the dark.",
+          "If you hear Latin whispering outside your window... flash the light immediately! Don't look away from CAM 01!",
+          "(distant loud stone crash) Oh God... they're outside the archway... Lock the door! Lock the—",
+          "(harsh tape static cut)"
+        ]
+      },
+      {
+        id: 5,
+        night: 5,
+        title: 'TAPE 05: VATICAN CONGREGATION DOSSIER 1892',
+        classification: 'VATICAN HOLY OFFICE // CLASSIFIED',
+        date: 'October 1892',
+        speaker: 'MONSIGNOR VALERIUS (VATICAN INQUISITOR)',
+        duration: '01:05',
+        photoCam: 'cam02',
+        photoTitle: 'CAM 02 // COLUMBARIUM PLAGUE VAULT',
+        photoThumb: 'assets/cctv/church_cam_02_columbarium.png',
+        summary: 'The secret origin of the church curse: During the 1888 plague, an unholy binding ritual bound malevolent entities into the sanctuary effigies. Explains why holy water and prayers fail, and why direct observation forces them to lock into rigid stone.',
+        transcript: [
+          "Vatican Congregation of Rites, October 1892. Dictated by Monsignor Valerius.",
+          "Our investigation into the Parish of Saint Jude has revealed an unspeakable desecration.",
+          "During the plague of 1888, the previous rector attempted an unholy binding ritual in the catacombs.",
+          "Rather than commending the departed to consecrated ground, demonic entities were channeled into the sanctuary's marble effigies.",
+          "The Weeping Angel, Sanctus Michael, and the Veiled Mourner... they are no longer inert stone.",
+          "They are physical anchors for ancient malevolent spirits that hunger for human warmth.",
+          "Holy water cannot exorcise them; prayers only agitate the stone.",
+          "They can only be immobilized by direct observation. When perceived, their vessel locks into rigid mineral form.",
+          "May the Lord have mercy on anyone left in this church after midnight."
+        ]
+      },
+      {
+        id: 6,
+        night: 6,
+        title: 'TAPE 06: POLICE CORONER INCIDENT REPORT 1983',
+        classification: 'COUNTY CORONER // CASE 83-409',
+        date: 'November 1983',
+        speaker: 'DETECTIVE MARCUS VANCE (COUNTY INVESTIGATOR)',
+        duration: '00:58',
+        photoCam: 'cam01',
+        photoTitle: 'CAM 01 // VACATED SANCTUARY DAIS',
+        photoThumb: 'assets/cctv/church_cam_01_empty.png',
+        summary: 'Official police post-mortem examination of night watchman Thomas Reyes found dead against the security door. Zero physical trauma, frozen expression of pure terror, sub-zero skin, and marble dust residue on his throat.',
+        transcript: [
+          "County Coroner's Audio Log. Case File 83-409. Detective Marcus Vance recording.",
+          "We are inspecting the basement security annex beneath the parish nave.",
+          "The night watchman, Thomas Reyes, was discovered sitting upright against the magnetic iron door.",
+          "There are no puncture wounds, no lacerations, and no blunt force trauma on the body.",
+          "However, the victim's facial expression is locked in a state of catastrophic shock.",
+          "His skin was sub-zero to the touch, and microscopic traces of powdered marble dust were found on his neck.",
+          "The facility's circuit breakers had tripped at 03:42 AM. The backup batteries were completely depleted.",
+          "The church elders refused to answer questions regarding why the marble altar statue was missing from CAM 01.",
+          "Case classified pending diocesan review. Tape concluded."
+        ]
+      }
+    ];
+
+    this.selectedTapeIndex = 0;
+    this.isTapePlaying = false;
+    this.isTapePaused = false;
+    this.tapeElapsedSeconds = 0;
+    this.tapeTimerInterval = null;
+    this.tapeVuAnimId = null;
+
     this.loadSavedCheats();
   }
 
@@ -292,6 +434,7 @@ class ExtrasManager {
     this.initStaticCanvas();
     this.init3DViewer();
     this.initJumpscaresGallery();
+    this.initConfidentialTapes();
     this.initCCTVArchive();
     this.initCheatsSection();
 
@@ -376,12 +519,21 @@ class ExtrasManager {
     this.stopRendering();
     this.stopStageJumpscares();
     this.closeJumpscare();
+    this.stopActiveTape();
+    window.Sound?.stopCassetteTape();
 
     this.closeCCTVLightbox();
   }
 
   switchTab(tabName) {
     this.closeCCTVLightbox();
+
+    // Stop cassette tape if navigating away from confidential tapes
+    if (this.currentTab === 'tapes' && tabName !== 'tapes') {
+      this.stopActiveTape();
+      window.Sound?.stopCassetteTape();
+    }
+
     this.currentTab = tabName;
 
     // Stop in-stage jumpscares if navigating away
@@ -414,10 +566,10 @@ class ExtrasManager {
       if (titleEl && item) titleEl.textContent = item.name;
       if (subEl && item) subEl.textContent = item.latinName;
       if (hintEl) hintEl.textContent = '[ TAP SCREEN TO REPLAY // USE < > TO SWITCH ]';
-    } else if (tabName === 'cctv') {
-      if (titleEl) titleEl.textContent = 'SURVEILLANCE';
-      if (subEl) subEl.textContent = 'Security Footage Logs';
-      if (hintEl) hintEl.textContent = '[ ESC ] RETURN TO LOBBY';
+    } else if (tabName === 'tapes' || tabName === 'cctv') {
+      if (titleEl) titleEl.textContent = 'CONFIDENTIAL TAPES';
+      if (subEl) subEl.textContent = 'Parish Audio Archives & Vatican Incident Dossiers';
+      if (hintEl) hintEl.textContent = '[ SELECT CASSETTE TAPE TO PLAY // TAP STOP TO HALT ]';
     }
 
     // Update Views
@@ -1263,7 +1415,412 @@ class ExtrasManager {
   }
 
   // =========================================================================
-  // 3. SURVEILLANCE CCTV ARCHIVE & LIGHTBOX
+  // 3. CONFIDENTIAL TAPES ARCHIVE (Interactive Vintage Cassette Player & Lore)
+  // =========================================================================
+  initConfidentialTapes() {
+    this.renderTapesRack();
+
+    // Transport buttons
+    const btnPlay = document.getElementById('btn-tape-play');
+    const btnPause = document.getElementById('btn-tape-pause');
+    const btnStop = document.getElementById('btn-tape-stop');
+    const btnRewind = document.getElementById('btn-tape-rewind');
+
+    if (btnPlay) {
+      btnPlay.addEventListener('click', () => {
+        if (this.isTapePaused) {
+          this.resumeActiveTape();
+        } else {
+          this.playActiveTape();
+        }
+      });
+    }
+
+    if (btnPause) {
+      btnPause.addEventListener('click', () => {
+        this.pauseActiveTape();
+      });
+    }
+
+    if (btnStop) {
+      btnStop.addEventListener('click', () => {
+        this.stopActiveTape();
+      });
+    }
+
+    if (btnRewind) {
+      btnRewind.addEventListener('click', () => {
+        this.stopActiveTape();
+        this.tapeElapsedSeconds = 0;
+        this.updateTapeTimerDisplay(0);
+        window.Sound?.playTapeDeckClick(false);
+      });
+    }
+
+    // Full transcript drawer toggle
+    const btnToggleTranscript = document.getElementById('btn-toggle-transcript');
+    const transcriptEl = document.getElementById('deck-full-transcript');
+    if (btnToggleTranscript && transcriptEl) {
+      btnToggleTranscript.addEventListener('click', () => {
+        const isHidden = transcriptEl.classList.toggle('hidden');
+        btnToggleTranscript.textContent = isHidden ? 'VIEW FULL TRANSCRIPT' : 'HIDE FULL TRANSCRIPT';
+        window.Sound?.playLightClick();
+      });
+    }
+
+    // Sub-tab toggling: CONFIDENTIAL TAPES vs SURVEILLANCE PHOTOS
+    const btnSubtabTapes = document.getElementById('btn-subtab-tapes');
+    const btnSubtabPhotos = document.getElementById('btn-subtab-photos');
+    const audioView = document.getElementById('tapes-audio-view');
+    const photosView = document.getElementById('tapes-photos-view');
+
+    if (btnSubtabTapes && btnSubtabPhotos && audioView && photosView) {
+      btnSubtabTapes.addEventListener('click', () => {
+        btnSubtabTapes.classList.add('active');
+        btnSubtabPhotos.classList.remove('active');
+        audioView.classList.remove('hidden');
+        photosView.classList.add('hidden');
+        window.Sound?.playLightClick();
+      });
+
+      btnSubtabPhotos.addEventListener('click', () => {
+        btnSubtabPhotos.classList.add('active');
+        btnSubtabTapes.classList.remove('active');
+        photosView.classList.remove('hidden');
+        audioView.classList.add('hidden');
+        window.Sound?.playLightClick();
+      });
+    }
+
+    // Initialize with first tape ready
+    this.selectTape(0, false);
+  }
+
+  renderTapesRack() {
+    const list = document.getElementById('tapes-rack-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+    this.confidentialTapes.forEach((tape, index) => {
+      const card = document.createElement('div');
+      card.className = `tape-card-item ${index === this.selectedTapeIndex ? 'active' : ''}`;
+      card.dataset.index = index;
+
+      card.innerHTML = `
+        <div class="tape-card-cassette-mini">
+          <div class="mini-tape-window">
+            <div class="mini-spool"></div>
+            <div class="mini-bridge"></div>
+            <div class="mini-spool"></div>
+          </div>
+          <span class="mini-tape-number">TAPE 0${tape.id}</span>
+        </div>
+        <div class="tape-card-info">
+          <div class="tape-card-toprow">
+            <span class="tape-card-class">${tape.classification}</span>
+            <span class="tape-card-duration">${tape.duration}</span>
+          </div>
+          <div class="tape-card-title">${tape.title}</div>
+          <div class="tape-card-meta">${tape.date} &bull; ${tape.speaker}</div>
+          <div class="tape-card-lore">${tape.summary}</div>
+        </div>
+        <div class="tape-evidence-thumb" title="Click to view attached CCTV photographic evidence">
+          <img src="${tape.photoThumb}" alt="Evidence" class="tape-evidence-img" loading="lazy" />
+          <div class="tape-evidence-scanlines"></div>
+          <span class="tape-evidence-badge">${tape.photoCam.toUpperCase()}</span>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        if (this.selectedTapeIndex !== index || (!this.isTapePlaying && !this.isTapePaused)) {
+          this.selectTape(index, true);
+        }
+      });
+
+      const evidenceThumb = card.querySelector('.tape-evidence-thumb');
+      if (evidenceThumb) {
+        evidenceThumb.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cctvIdx = this.cctvGallery.findIndex(c => c.src === tape.photoThumb || c.cam === tape.photoCam);
+          if (cctvIdx >= 0) {
+            this.openCCTVLightbox(cctvIdx);
+          }
+        });
+      }
+
+      list.appendChild(card);
+    });
+  }
+
+  selectTape(index, autoPlay = false) {
+    if (this.isTapePlaying || this.isTapePaused) {
+      this.stopActiveTape();
+    }
+
+    this.selectedTapeIndex = index;
+    const tape = this.confidentialTapes[index];
+    if (!tape) return;
+
+    // Highlight active card
+    const cards = document.querySelectorAll('#tapes-rack-list .tape-card-item');
+    cards.forEach((c, idx) => {
+      c.classList.toggle('active', idx === index);
+    });
+
+    // Update cassette deck HUD
+    const titleEl = document.getElementById('deck-tape-title');
+    const classEl = document.getElementById('deck-tape-class');
+    const speakerEl = document.getElementById('deck-speaker-name');
+    const timerEl = document.getElementById('deck-timer-osd');
+    const statusEl = document.getElementById('tape-status-text');
+    const subtitleEl = document.getElementById('deck-subtitle-text');
+    const transcriptEl = document.getElementById('deck-full-transcript');
+
+    if (titleEl) titleEl.textContent = tape.title;
+    if (classEl) classEl.textContent = tape.classification;
+    if (speakerEl) speakerEl.textContent = `SPEAKER: ${tape.speaker}`;
+    if (timerEl) timerEl.textContent = '00:00';
+    if (statusEl) {
+      statusEl.textContent = 'READY TO PLAY';
+      statusEl.className = 'tape-status-indicator status-ready';
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = `Select PLAY to initiate audio transcription for ${tape.title}...`;
+    }
+
+    // Populate full transcript drawer
+    if (transcriptEl) {
+      transcriptEl.innerHTML = `
+        <div class="transcript-header">// FULL AUDIO TRANSCRIPT: ${tape.title}</div>
+        <div class="transcript-meta">CLASSIFICATION: ${tape.classification} | RECORDED: ${tape.date}</div>
+        <div class="transcript-body">
+          ${tape.transcript.map((line, i) => `
+            <div class="transcript-line">
+              <span class="line-num">[0${i + 1}]</span>
+              <span class="line-text">${line}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    if (autoPlay) {
+      this.playActiveTape();
+    }
+  }
+
+  playActiveTape() {
+    const tape = this.confidentialTapes[this.selectedTapeIndex];
+    if (!tape) return;
+
+    this.isTapePlaying = true;
+    this.isTapePaused = false;
+    this.tapeElapsedSeconds = 0;
+    this.updateTapeTimerDisplay(0);
+
+    // Deck HUD
+    const statusEl = document.getElementById('tape-status-text');
+    if (statusEl) {
+      statusEl.textContent = 'PLAYING [AUD]';
+      statusEl.className = 'tape-status-indicator status-playing';
+    }
+
+    const reelLeft = document.getElementById('deck-reel-left');
+    const reelRight = document.getElementById('deck-reel-right');
+    if (reelLeft) reelLeft.classList.add('spinning');
+    if (reelRight) reelRight.classList.add('spinning');
+
+    const vuMeter = document.getElementById('tape-vu-meter');
+    if (vuMeter) vuMeter.classList.add('active');
+    this.startVuMeter();
+
+    // Start timer interval
+    if (this.tapeTimerInterval) clearInterval(this.tapeTimerInterval);
+    this.tapeTimerInterval = setInterval(() => {
+      this.tapeElapsedSeconds++;
+      this.updateTapeTimerDisplay(this.tapeElapsedSeconds);
+    }, 1000);
+
+    // Play tape audio via SoundEngine
+    window.Sound?.playCassetteTape(
+      tape.night,
+      (line) => {
+        this.onTapeSubtitle(line);
+      },
+      () => {
+        this.onTapeEnded();
+      }
+    );
+  }
+
+  pauseActiveTape() {
+    if (!this.isTapePlaying || this.isTapePaused) return;
+
+    this.isTapePaused = true;
+    window.Sound?.pauseCassetteTape();
+
+    if (this.tapeTimerInterval) {
+      clearInterval(this.tapeTimerInterval);
+      this.tapeTimerInterval = null;
+    }
+
+    this.stopVuMeter();
+    const reelLeft = document.getElementById('deck-reel-left');
+    const reelRight = document.getElementById('deck-reel-right');
+    if (reelLeft) reelLeft.classList.remove('spinning');
+    if (reelRight) reelRight.classList.remove('spinning');
+
+    const statusEl = document.getElementById('tape-status-text');
+    if (statusEl) {
+      statusEl.textContent = 'PAUSED';
+      statusEl.className = 'tape-status-indicator status-paused';
+    }
+  }
+
+  resumeActiveTape() {
+    if (!this.isTapePlaying || !this.isTapePaused) return;
+
+    this.isTapePaused = false;
+    window.Sound?.resumeCassetteTape();
+
+    if (this.tapeTimerInterval) clearInterval(this.tapeTimerInterval);
+    this.tapeTimerInterval = setInterval(() => {
+      this.tapeElapsedSeconds++;
+      this.updateTapeTimerDisplay(this.tapeElapsedSeconds);
+    }, 1000);
+
+    const reelLeft = document.getElementById('deck-reel-left');
+    const reelRight = document.getElementById('deck-reel-right');
+    if (reelLeft) reelLeft.classList.add('spinning');
+    if (reelRight) reelRight.classList.add('spinning');
+
+    const vuMeter = document.getElementById('tape-vu-meter');
+    if (vuMeter) vuMeter.classList.add('active');
+    this.startVuMeter();
+
+    const statusEl = document.getElementById('tape-status-text');
+    if (statusEl) {
+      statusEl.textContent = 'PLAYING [AUD]';
+      statusEl.className = 'tape-status-indicator status-playing';
+    }
+  }
+
+  stopActiveTape() {
+    this.isTapePlaying = false;
+    this.isTapePaused = false;
+
+    if (this.tapeTimerInterval) {
+      clearInterval(this.tapeTimerInterval);
+      this.tapeTimerInterval = null;
+    }
+
+    this.stopVuMeter();
+
+    const reelLeft = document.getElementById('deck-reel-left');
+    const reelRight = document.getElementById('deck-reel-right');
+    if (reelLeft) reelLeft.classList.remove('spinning');
+    if (reelRight) reelRight.classList.remove('spinning');
+
+    const vuMeter = document.getElementById('tape-vu-meter');
+    if (vuMeter) vuMeter.classList.remove('active');
+
+    const statusEl = document.getElementById('tape-status-text');
+    if (statusEl) {
+      statusEl.textContent = 'DECK IDLE';
+      statusEl.className = 'tape-status-indicator';
+    }
+
+    this.tapeElapsedSeconds = 0;
+    this.updateTapeTimerDisplay(0);
+
+    window.Sound?.stopCassetteTape();
+  }
+
+  onTapeSubtitle(line) {
+    const subtitleEl = document.getElementById('deck-subtitle-text');
+    if (!subtitleEl) return;
+    subtitleEl.style.opacity = '0';
+    setTimeout(() => {
+      subtitleEl.textContent = `"${line}"`;
+      subtitleEl.style.opacity = '1';
+    }, 120);
+  }
+
+  onTapeEnded() {
+    this.isTapePlaying = false;
+    this.isTapePaused = false;
+
+    if (this.tapeTimerInterval) {
+      clearInterval(this.tapeTimerInterval);
+      this.tapeTimerInterval = null;
+    }
+
+    this.stopVuMeter();
+
+    const reelLeft = document.getElementById('deck-reel-left');
+    const reelRight = document.getElementById('deck-reel-right');
+    if (reelLeft) reelLeft.classList.remove('spinning');
+    if (reelRight) reelRight.classList.remove('spinning');
+
+    const vuMeter = document.getElementById('tape-vu-meter');
+    if (vuMeter) vuMeter.classList.remove('active');
+
+    const statusEl = document.getElementById('tape-status-text');
+    if (statusEl) {
+      statusEl.textContent = 'END OF TAPE';
+      statusEl.className = 'tape-status-indicator status-ended';
+    }
+
+    const subtitleEl = document.getElementById('deck-subtitle-text');
+    if (subtitleEl) {
+      subtitleEl.textContent = '[ END OF RECORDING // CASSETTE AUTO-STOP ENGAGED ]';
+    }
+  }
+
+  updateTapeTimerDisplay(seconds) {
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    const timerEl = document.getElementById('deck-timer-osd');
+    if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+  }
+
+  startVuMeter() {
+    if (this.tapeVuAnimId) return;
+    const vuBars = document.querySelectorAll('#tape-vu-meter .vu-bar');
+    if (!vuBars || !vuBars.length) return;
+
+    let lastTick = 0;
+    const animate = (time) => {
+      if (!this.isTapePlaying || this.isTapePaused) {
+        this.tapeVuAnimId = null;
+        return;
+      }
+      if (time - lastTick > 90) {
+        lastTick = time;
+        vuBars.forEach((bar, idx) => {
+          const rand = Math.random();
+          const heightPct = Math.min(100, Math.max(12, Math.floor(rand * 95) + (idx < 5 ? 15 : 0)));
+          bar.style.height = `${heightPct}%`;
+        });
+      }
+      this.tapeVuAnimId = requestAnimationFrame(animate);
+    };
+    this.tapeVuAnimId = requestAnimationFrame(animate);
+  }
+
+  stopVuMeter() {
+    if (this.tapeVuAnimId) {
+      cancelAnimationFrame(this.tapeVuAnimId);
+      this.tapeVuAnimId = null;
+    }
+    const vuBars = document.querySelectorAll('#tape-vu-meter .vu-bar');
+    vuBars.forEach(bar => {
+      bar.style.height = '10%';
+    });
+  }
+
+  // =========================================================================
+  // 4. SURVEILLANCE CCTV ARCHIVE & LIGHTBOX
   // =========================================================================
   initCCTVArchive() {
     const grid = document.getElementById('cctv-gallery-grid');

@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261110_v61">
+  <link rel="stylesheet" href="css/style.css?v=20261110_v62">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -1175,11 +1175,11 @@
               </div>
             </div>
 
-            <!-- 4. Surveillance Button -->
+            <!-- 4. Confidential Tapes Button -->
             <div class="extras-fnaf-menu-row">
-              <button class="extras-tab-btn extras-fnaf-menu-btn" data-tab="cctv">
+              <button class="extras-tab-btn extras-fnaf-menu-btn" data-tab="tapes">
                 <span class="fnaf-checkbox-box"><span class="fnaf-checkbox-fill"></span></span>
-                <span class="fnaf-menu-label">Surveillance</span>
+                <span class="fnaf-menu-label">Confidential Tapes</span>
               </button>
             </div>
 
@@ -1262,11 +1262,110 @@
           </div>
         </section>
 
-        <!-- TAB 3: SURVEILLANCE (CCTV Archives) -->
-        <section class="extras-view hidden" id="extras-view-cctv">
-          <div class="extras-cctv-wrapper">
-            <div class="extras-cctv-top">
-              <div class="extras-sec-header">SECURITY FOOTAGE LOGS</div>
+        <!-- TAB 3: CONFIDENTIAL TAPES & PARISH DOSSIERS -->
+        <section class="extras-view hidden" id="extras-view-tapes">
+          <div class="extras-tapes-wrapper">
+            <!-- Top Controls Bar: Sub-Tab Toggle between Audio Tapes and Photographic Archives -->
+            <div class="extras-tapes-topbar">
+              <div class="extras-sec-header">PARISH ARCHIVAL CASSETTES &bull; DIOCESAN EVIDENCE</div>
+              <div class="tapes-view-toggle">
+                <button class="tapes-subtab-btn active" id="btn-subtab-tapes">CONFIDENTIAL TAPES (6)</button>
+                <button class="tapes-subtab-btn" id="btn-subtab-photos">SURVEILLANCE PHOTOS (20)</button>
+              </div>
+            </div>
+
+            <!-- View A: Interactive Vintage Tape Player Deck & Cassette Rack -->
+            <div class="extras-tapes-container" id="tapes-audio-view">
+              <!-- Left/Top: Heavy Mechanical Tape Deck Console -->
+              <div class="tape-deck-console">
+                <!-- Cassette Housing Unit -->
+                <div class="tape-player-housing">
+                  <div class="tape-deck-brand">
+                    <span class="tape-deck-badge">// PARISH RELIQUARY TELEMETRY</span>
+                    <span class="tape-status-indicator" id="tape-status-text">DECK IDLE</span>
+                  </div>
+
+                  <!-- Cassette Tape Window with Spinning Spools -->
+                  <div class="cassette-window">
+                    <div class="cassette-body">
+                      <div class="cassette-label-strip">
+                        <span class="cassette-classification" id="deck-tape-class">DIOCESE RESTRICTED</span>
+                        <span class="cassette-title-label" id="deck-tape-title">TAPE 01: NIGHT 1 BRIEFING</span>
+                      </div>
+                      <div class="cassette-reels-row">
+                        <div class="cassette-reel reel-left" id="deck-reel-left">
+                          <div class="reel-teeth"></div>
+                        </div>
+                        <div class="cassette-tape-bridge">
+                          <div class="tape-ribbon"></div>
+                          <span class="tape-timer-osd" id="deck-timer-osd">00:00</span>
+                        </div>
+                        <div class="cassette-reel reel-right" id="deck-reel-right">
+                          <div class="reel-teeth"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Animated VU Audio Meter -->
+                  <div class="tape-vu-container">
+                    <span class="tape-vu-label">SIGNAL</span>
+                    <div class="tape-vu-meter" id="tape-vu-meter">
+                      <div class="vu-bar bar-1"></div>
+                      <div class="vu-bar bar-2"></div>
+                      <div class="vu-bar bar-3"></div>
+                      <div class="vu-bar bar-4"></div>
+                      <div class="vu-bar bar-5"></div>
+                      <div class="vu-bar bar-6"></div>
+                      <div class="vu-bar bar-7"></div>
+                      <div class="vu-bar bar-8"></div>
+                      <div class="vu-bar bar-9"></div>
+                      <div class="vu-bar bar-10"></div>
+                    </div>
+                  </div>
+
+                  <!-- Physical Tape Deck Buttons -->
+                  <div class="tape-transport-controls">
+                    <button class="tape-btn tape-btn-play" id="btn-tape-play" title="Play Active Tape">
+                      <span class="tape-btn-icon">&#9654;</span> PLAY
+                    </button>
+                    <button class="tape-btn tape-btn-pause" id="btn-tape-pause" title="Pause Tape">
+                      <span class="tape-btn-icon">&#10074;&#10074;</span> PAUSE
+                    </button>
+                    <button class="tape-btn tape-btn-stop" id="btn-tape-stop" title="Stop Tape">
+                      <span class="tape-btn-icon">&#9632;</span> STOP
+                    </button>
+                    <button class="tape-btn tape-btn-rewind" id="btn-tape-rewind" title="Rewind to Beginning">
+                      <span class="tape-btn-icon">&#9664;&#9664;</span> REWIND
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Live Subtitles & Speaker Dossier -->
+                <div class="tape-subtitles-card">
+                  <div class="tape-speaker-header">
+                    <span class="tape-speaker-tag" id="deck-speaker-name">SPEAKER: FATHER THOMAS (PARISH RECTOR)</span>
+                    <button class="tape-transcript-toggle" id="btn-toggle-transcript">VIEW FULL TRANSCRIPT</button>
+                  </div>
+                  <div class="tape-subtitle-readout" id="deck-subtitle-text">
+                    Select a confidential parish tape to begin audio playback...
+                  </div>
+                  <!-- Full transcript area -->
+                  <div class="tape-full-transcript hidden" id="deck-full-transcript"></div>
+                </div>
+              </div>
+
+              <!-- Right/Bottom: Tape Selection Rack (The Archival Tape Library) -->
+              <div class="tapes-rack-container">
+                <div class="tapes-rack-header">AVAILABLE RECORDINGS</div>
+                <div class="tapes-rack-list" id="tapes-rack-list">
+                  <!-- Generated dynamically via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- View B: Surveillance Photos Grid (Preserved as Photographic Evidence) -->
+            <div class="extras-cctv-gallery-view hidden" id="tapes-photos-view">
               <div class="cctv-filter-bar">
                 <button class="cctv-filter-chip active" data-filter="all">ALL</button>
                 <button class="cctv-filter-chip" data-filter="cam01">CAM 01</button>
@@ -1276,8 +1375,8 @@
                 <button class="cctv-filter-chip" data-filter="cam05">CAM 05</button>
                 <button class="cctv-filter-chip" data-filter="office">OFFICE</button>
               </div>
+              <div class="cctv-gallery-grid" id="cctv-gallery-grid"></div>
             </div>
-            <div class="cctv-gallery-grid" id="cctv-gallery-grid"></div>
           </div>
         </section>
 
@@ -1408,10 +1507,10 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261110_v61"></script>
+  <script src="js/audio.js?v=20261110_v62"></script>
   <script src="js/textures.js?v=20261109_v54"></script>
   <script src="js/models.js?v=20261109_v54"></script>
-  <script src="js/extras.js?v=20261110_v61"></script>
-  <script src="js/game.js?v=20261110_v61"></script>
+  <script src="js/extras.js?v=20261110_v62"></script>
+  <script src="js/game.js?v=20261110_v62"></script>
 </body>
 </html>

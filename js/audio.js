@@ -2066,9 +2066,31 @@ class SoundEngine {
         "If you hear Latin whispering outside your window... flash the light immediately! Don't look away from CAM 01!",
         "(distant loud stone crash) Oh God... they're outside the archway... Lock the door! Lock the—",
         "(harsh tape static cut)"
+      ],
+      5: [
+        "Vatican Congregation of Rites, October 1892. Dictated by Monsignor Valerius.",
+        "Our investigation into the Parish of Saint Jude has revealed an unspeakable desecration.",
+        "During the plague of 1888, the previous rector attempted an unholy binding ritual in the catacombs.",
+        "Rather than commending the departed to consecrated ground, demonic entities were channeled into the sanctuary's marble effigies.",
+        "The Weeping Angel, Sanctus Michael, and the Veiled Mourner... they are no longer inert stone.",
+        "They are physical anchors for ancient malevolent spirits that hunger for human warmth.",
+        "Holy water cannot exorcise them; prayers only agitate the stone.",
+        "They can only be immobilized by direct observation. When perceived, their vessel locks into rigid mineral form.",
+        "May the Lord have mercy on anyone left in this church after midnight."
+      ],
+      6: [
+        "County Coroner's Audio Log. Case File 83-409. Detective Marcus Vance recording.",
+        "We are inspecting the basement security annex beneath the parish nave.",
+        "The night watchman, Thomas Reyes, was discovered sitting upright against the magnetic iron door.",
+        "There are no puncture wounds, no lacerations, and no blunt force trauma on the body.",
+        "However, the victim's facial expression is locked in a state of catastrophic shock.",
+        "His skin was sub-zero to the touch, and microscopic traces of powdered marble dust were found on his neck.",
+        "The facility's circuit breakers had tripped at 03:42 AM. The backup batteries were completely depleted.",
+        "The church elders refused to answer questions regarding why the marble altar statue was missing from CAM 01.",
+        "Case classified pending diocesan review. Tape concluded."
       ]
     };
-    return scripts[night] || null;
+    return scripts[night] || scripts[parseInt(night, 10)] || null;
   }
 
   playCassetteTape(night, onSubtitleCallback, onEndCallback) {
@@ -2207,6 +2229,7 @@ class SoundEngine {
 
   stopCassetteTape() {
     this.isCassettePlaying = false;
+    this.isCassettePaused = false;
     this.activeCassetteNight = null;
     if (this._cassetteLineTimer) {
       clearTimeout(this._cassetteLineTimer);
@@ -2221,6 +2244,28 @@ class SoundEngine {
       const cb = this._cassetteEndCallback;
       this._cassetteEndCallback = null;
       try { cb(); } catch (e) {}
+    }
+  }
+
+  pauseCassetteTape() {
+    if (!this.isCassettePlaying) return;
+    this.isCassettePaused = true;
+    if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+      try { window.speechSynthesis.pause(); } catch (e) {}
+    }
+    if (this._cassetteLineTimer) {
+      clearTimeout(this._cassetteLineTimer);
+      this._cassetteLineTimer = null;
+    }
+    this.playTapeDeckClick(false);
+  }
+
+  resumeCassetteTape() {
+    if (!this.isCassettePlaying || !this.isCassettePaused) return;
+    this.isCassettePaused = false;
+    this.playTapeDeckClick(true);
+    if ('speechSynthesis' in window && window.speechSynthesis.paused) {
+      try { window.speechSynthesis.resume(); } catch (e) {}
     }
   }
 }
