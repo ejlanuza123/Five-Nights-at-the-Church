@@ -1336,7 +1336,7 @@ class WorldBuilder {
           });
 
           // Gracefully hide procedural fallback geometry
-          const fallback = targetGroup.getObjectByName('proceduralFallback');
+          const fallback = targetGroup.getObjectByName('proceduralFallback') || targetGroup.parent?.getObjectByName('proceduralFallback');
           if (fallback) {
             fallback.visible = false;
           }
@@ -1371,10 +1371,31 @@ class WorldBuilder {
       });
     }
 
-    // 2. Sanctus Michael (Haloed Saint)
-    // Normal heroic human statue proportions (natural broad shoulders and halo)
+    // 2. Sanctus Michael (Haloed Saint) - Dual Pose Models
+    // Two distinct heroic statues: Pose 1 (Guard) and Pose 2 (Vengeant/Aggressive)
+    // When appearing outside the left door, the game randomly alternates between Pose 1 and Pose 2!
     if (this.statues.haloedSaint) {
-      this.loadEntityGLB('assets/models/saint_michael_model.glb', this.statues.haloedSaint, {
+      const pose1Group = new THREE.Group();
+      pose1Group.name = 'saintPose1';
+      this.statues.haloedSaint.add(pose1Group);
+      this.statues.haloedSaintPose1 = pose1Group;
+
+      const pose2Group = new THREE.Group();
+      pose2Group.name = 'saintPose2';
+      pose2Group.visible = false;
+      this.statues.haloedSaint.add(pose2Group);
+      this.statues.haloedSaintPose2 = pose2Group;
+
+      // Pose 1
+      this.loadEntityGLB('assets/models/saint_michael_model.glb', pose1Group, {
+        targetHeight: 2.35,
+        scaleX: 0.90,
+        scaleZ: 0.92,
+        rotX: 0
+      });
+
+      // Pose 2
+      this.loadEntityGLB('assets/models/saint_michael_model2.glb', pose2Group, {
         targetHeight: 2.35,
         scaleX: 0.90,
         scaleZ: 0.92,
@@ -1382,10 +1403,22 @@ class WorldBuilder {
       });
     }
 
-    // 3. The Penitent / Veiled Mourner (Saint Mary - Crawling Entity)
-    // Menacing crawling posture in HVAC duct with brightened stone/veil PBR
+    // 3. The Penitent / Veiled Mourner (Saint Mary - Crawling & Standing Models)
+    // Dual models: Crawling in HVAC return duct & Standing for Left Arched Door
     if (this.statues.veiledMourner) {
-      this.loadEntityGLB('assets/models/saint_mary_model.glb', this.statues.veiledMourner, {
+      const crawlGroup = new THREE.Group();
+      crawlGroup.name = 'mournerCrawl';
+      this.statues.veiledMourner.add(crawlGroup);
+      this.statues.veiledMournerCrawl = crawlGroup;
+
+      const standGroup = new THREE.Group();
+      standGroup.name = 'mournerStanding';
+      standGroup.visible = false;
+      this.statues.veiledMourner.add(standGroup);
+      this.statues.veiledMournerStanding = standGroup;
+
+      // Model 1: Menacing crawling posture in HVAC duct
+      this.loadEntityGLB('assets/models/saint_mary_model.glb', crawlGroup, {
         targetHeight: 1.08,
         scaleX: 1.05,
         scaleZ: 1.02,
@@ -1394,6 +1427,19 @@ class WorldBuilder {
         roughness: 0.65,                             // Matte weathered stone and drapery
         materialColor: new THREE.Color(2.6, 2.5, 2.4), // Brightens dark charcoal map so face veil and folds pop
         emissiveColor: 0x241d1d,                     // Soft eerie ambient rim prevents pure-black crushing
+        emissiveIntensity: 0.42
+      });
+
+      // Model 2: Menacing standing posture for Left Arched Doorway
+      this.loadEntityGLB('assets/models/saint_mary_model_standing.glb', standGroup, {
+        targetHeight: 2.25,
+        scaleX: 0.88,
+        scaleZ: 0.90,
+        rotX: 0,
+        metalness: 0.0,
+        roughness: 0.65,
+        materialColor: new THREE.Color(2.6, 2.5, 2.4),
+        emissiveColor: 0x241d1d,
         emissiveIntensity: 0.42
       });
     }

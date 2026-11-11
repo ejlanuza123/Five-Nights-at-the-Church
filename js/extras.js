@@ -81,8 +81,8 @@ class ExtrasManager {
       },
       {
         id: 'haloedSaint',
-        name: 'HALOED SAINT',
-        latinName: 'Sanctus Michael ("Sanctus Vindex / The Archangel")',
+        name: 'HALOED SAINT (POSE 1)',
+        latinName: 'Sanctus Michael ("Sanctus Vindex / Guard Stance")',
         modelUrl: 'assets/models/saint_michael_model.glb',
         portrait: 'assets/office/door_peeking_saint.jpg',
         videoKey: 'saint',
@@ -93,12 +93,28 @@ class ExtrasManager {
         roughness: 0.48,
         metalness: 0.20,
         color: 0xf1f5f9,
-        bio: 'A monumental crusader archangel holding a downward stone broadsword and crowned with a golden halo. Originally consecrated in the reconciliation alcoves, Sanctus Michael is prone to sudden, hyper-aggressive territorial patrols towards the security desk.'
+        bio: 'A monumental crusader archangel holding a downward stone broadsword and crowned with a golden halo. Consecrated in the reconciliation alcoves, Sanctus Michael guards the sanctuary before advancing down the western cloister corridor.'
+      },
+      {
+        id: 'haloedSaint2',
+        name: 'HALOED SAINT (POSE 2)',
+        latinName: 'Sanctus Michael ("Sanctus Vindex / Aggressive Stance")',
+        modelUrl: 'assets/models/saint_michael_model2.glb',
+        portrait: 'assets/office/door_peeking_saint.jpg',
+        videoKey: 'saint',
+        height: 1.80,
+        scaleX: 1.0,
+        scaleZ: 1.0,
+        offsetY: 0.0,
+        roughness: 0.48,
+        metalness: 0.20,
+        color: 0xf1f5f9,
+        bio: 'The alternate aggressive stance of Sanctus Michael. When he breaches through the west cloister corridor to confront the night watchman at the left arched doorway, the archangel alternates between dynamic stances.'
       },
       {
         id: 'veiledMourner',
-        name: 'VEILED MOURNER',
-        latinName: 'The Memorial Penitent ("Saint Mary / The Crawler")',
+        name: 'VEILED MOURNER (CRAWLING)',
+        latinName: 'The Memorial Penitent ("Saint Mary / HVAC Duct Crawler")',
         modelUrl: 'assets/models/saint_mary_model.glb',
         portrait: 'assets/office/vent_peeking_mourner.jpg',
         videoKey: 'mourner',
@@ -111,7 +127,25 @@ class ExtrasManager {
         materialColor: (typeof THREE !== 'undefined') ? new THREE.Color(2.6, 2.5, 2.4) : null,
         emissiveColor: 0x241d1d,
         emissiveIntensity: 0.42,
-        bio: 'A shrouded funeral penitent hailing from the subterranean columbarium memorial niches. Silent and calculating, she avoids open corridors, choosing instead to crawl through the narrow steel shafts of the parish HVAC return air ducts.'
+        bio: 'A shrouded funeral penitent hailing from the subterranean columbarium memorial niches. Silent and calculating, she crawls through the steel shafts of the parish HVAC return air ducts to reach the office vent.'
+      },
+      {
+        id: 'veiledMournerStanding',
+        name: 'VEILED MOURNER (STANDING)',
+        latinName: 'The Memorial Penitent ("Saint Mary / Left Arched Door Stance")',
+        modelUrl: 'assets/models/saint_mary_model_standing.glb',
+        portrait: 'assets/office/window_hallway_mary.jpg',
+        videoKey: 'mourner',
+        height: 1.80,
+        scaleX: 0.95,
+        scaleZ: 0.95,
+        offsetY: 0.0,
+        roughness: 0.65,
+        metalness: 0.0,
+        materialColor: (typeof THREE !== 'undefined') ? new THREE.Color(2.6, 2.5, 2.4) : null,
+        emissiveColor: 0x241d1d,
+        emissiveIntensity: 0.42,
+        bio: 'The looming standing stance of the Veiled Mourner. No longer confined only to the ventilation shafts, she rises to her full height to flank the security office via the left arched doorway.'
       }
     ];
 
