@@ -1907,7 +1907,7 @@ class SoundEngine {
     });
   }
 
-  // --- DISTANT CATHEDRAL WEEPING (OUR LADY OF SORROWS / WEEPING ANGEL) ---
+  // --- DISTANT CATHEDRAL WEEPING (ANGELUS LACRIMARUM / WEEPING ANGEL) ---
   playDistantWeeping(variation = 'random', pan = 0.0, volMult = 1.0) {
     if (this.isMuted) return null;
     if (!this.ctx) {

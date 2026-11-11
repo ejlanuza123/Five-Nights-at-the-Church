@@ -989,7 +989,7 @@ class WorldBuilder {
 
   // ================= 4. MODERN SACRED STATUES (POLISHED CARRARA MARBLE & 3D GLB MODELS) =================
 
-  // --- STATUE 1: OUR LADY / WEEPING MARBLE ANGEL ("Mater Dolorosa") ---
+  // --- STATUE 1: WEEPING MARBLE ANGEL ("Angelus Lacrimarum") ---
   createWeepingAngel() {
     const angel = new THREE.Group();
     angel.name = 'WeepingAngel';
@@ -1360,7 +1360,7 @@ class WorldBuilder {
   }
 
   load3DModels() {
-    // 1. Weeping Angel (Mater Dolorosa)
+    // 1. Weeping Angel (Angelus Lacrimarum)
     // Normal natural statue width (wings full and natural, torso uncompressed)
     if (this.statues.weepingAngel) {
       this.loadEntityGLB('assets/models/weeping_angel_model.glb', this.statues.weepingAngel, {

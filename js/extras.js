@@ -66,7 +66,7 @@ class ExtrasManager {
       {
         id: 'weepingAngel',
         name: 'WEEPING ANGEL',
-        latinName: 'Mater Dolorosa ("Our Lady of Sorrows")',
+        latinName: 'Angelus Lacrimarum ("The Angel of Tears")',
         modelUrl: 'assets/models/weeping_angel_model.glb',
         portrait: 'assets/office/door_peeking_angel.jpg',
         videoKey: 'angel',
@@ -77,7 +77,7 @@ class ExtrasManager {
         roughness: 0.52,
         metalness: 0.12,
         color: 0xe2e8f0,
-        bio: 'Carved from weathered Carrara marble, Our Lady of Sorrows stands weeping in the central nave. Bound by ancient quantum observation laws, she remains motionless stone while directly observed through the surveillance cameras. The moment the feed is severed or unmonitored, she blinks across the cloister halls at horrifying velocities.'
+        bio: 'Carved from weathered Carrara marble, the Angel of Tears stands weeping in the central nave. Bound by ancient quantum observation laws, she remains motionless stone while directly observed through the surveillance cameras. The moment the feed is severed or unmonitored, she blinks across the cloister halls at horrifying velocities.'
       },
       {
         id: 'haloedSaint',
@@ -153,7 +153,7 @@ class ExtrasManager {
       {
         id: 'weepingAngel',
         name: 'WEEPING ANGEL',
-        latinName: 'Mater Dolorosa ("Our Lady of Sorrows")',
+        latinName: 'Angelus Lacrimarum ("The Angel of Tears")',
         sub: 'Left Arched Door Breach \u2022 Rapid Corridor Lunge',
         still: 'assets/office/door_peeking_angel.jpg',
         videoKey: 'angel'
@@ -225,7 +225,7 @@ class ExtrasManager {
         photoCam: 'cam01',
         photoTitle: 'CAM 01 // SANCTUARY DAIS',
         photoThumb: 'assets/cctv/church_cam_normal.png',
-        summary: 'Fr. Thomas welcomes the new night watchman, outlining diocesan energy quotas, the magnetic iron threshold door, and the disturbing tendency of Our Lady of Sorrows to vacate the high altar dais when unwatched.',
+        summary: 'Fr. Thomas welcomes the new night watchman, outlining diocesan energy quotas, the magnetic iron threshold door, and the disturbing tendency of the Angel of Tears to vacate the high altar dais when unwatched.',
         transcript: [
           "If you're hearing this, you survived your first few minutes in the parish security office.",
           "Now, don't worry about the rumors. The diocese has us on a strict energy quota, so keep an eye on that backup battery.",

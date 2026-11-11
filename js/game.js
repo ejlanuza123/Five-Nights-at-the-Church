@@ -3545,7 +3545,7 @@ class GameEngine {
 
       // If ANY entity is already inside the office (stage 4), raising monitor is fatal!
       if (this.aiConfig.weepingAngel.stage === 4) {
-        this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
+        this.triggerJumpscare('weepingAngel', 'THE ANGEL OF TEARS ENTERED THROUGH THE UNARMED DOOR');
         return;
       }
       if (this.aiConfig.haloedSaint.stage === 4) {
@@ -4130,7 +4130,7 @@ class GameEngine {
     const ai = this.aiConfig.weepingAngel;
     if (ai.level <= 0) return;
 
-    // Ambient distant cathedral weeping timer (Our Lady of Sorrows weeping in the dark)
+    // Ambient distant cathedral weeping timer (The Angel of Tears weeping in the dark)
     ai._weepTimer = (ai._weepTimer || 0) + delta;
     if (!ai._nextWeepInterval) ai._nextWeepInterval = 16 + Math.random() * 20;
     if (ai.stage >= 0 && ai.stage <= 3 && ai._weepTimer >= ai._nextWeepInterval) {
@@ -4213,7 +4213,7 @@ class GameEngine {
           // She has BLINKED CLOSER right inside the office beside the desk!
           const attackThreshold = isNight6OrHard ? 0.35 : 0.8;
           if (ai.attackTimer >= attackThreshold || (isNight6OrHard && this.isCCTVOpen)) {
-            this.triggerJumpscare('weepingAngel', 'OUR LADY OF SORROWS ENTERED THROUGH THE UNARMED DOOR');
+            this.triggerJumpscare('weepingAngel', 'THE ANGEL OF TEARS ENTERED THROUGH THE UNARMED DOOR');
             return;
           }
         }
