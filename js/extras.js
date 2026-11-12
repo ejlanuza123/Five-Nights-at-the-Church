@@ -469,7 +469,7 @@ class ExtrasManager {
     this.init3DViewer();
     this.initJumpscaresGallery();
     this.initConfidentialTapes();
-    this.initCCTVArchive();
+    // CCTV archive removed from Confidential Tapes
     this.initCheatsSection();
 
     // Window Resize
@@ -1502,29 +1502,7 @@ class ExtrasManager {
       });
     }
 
-    // Sub-tab toggling: CONFIDENTIAL TAPES vs SURVEILLANCE PHOTOS
-    const btnSubtabTapes = document.getElementById('btn-subtab-tapes');
-    const btnSubtabPhotos = document.getElementById('btn-subtab-photos');
-    const audioView = document.getElementById('tapes-audio-view');
-    const photosView = document.getElementById('tapes-photos-view');
 
-    if (btnSubtabTapes && btnSubtabPhotos && audioView && photosView) {
-      btnSubtabTapes.addEventListener('click', () => {
-        btnSubtabTapes.classList.add('active');
-        btnSubtabPhotos.classList.remove('active');
-        audioView.classList.remove('hidden');
-        photosView.classList.add('hidden');
-        window.Sound?.playLightClick();
-      });
-
-      btnSubtabPhotos.addEventListener('click', () => {
-        btnSubtabPhotos.classList.add('active');
-        btnSubtabTapes.classList.remove('active');
-        photosView.classList.remove('hidden');
-        audioView.classList.add('hidden');
-        window.Sound?.playLightClick();
-      });
-    }
 
     // Initialize with first tape ready
     this.selectTape(0, false);
