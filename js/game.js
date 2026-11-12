@@ -505,6 +505,7 @@ class GameEngine {
       'assets/office/window_hallway_angel.jpg',
       'assets/office/window_hallway_saint_far.jpg',
       'assets/office/window_hallway_saint.jpg',
+      'assets/office/window_hallway_mary_far.jpg',
       'assets/office/window_hallway_mary.jpg',
       'assets/office/door_peeking_angel.jpg',
       'assets/office/door_peeking_saint.jpg',
@@ -866,7 +867,8 @@ class GameEngine {
       saint_close: texLoader.load('assets/office/window_hallway_saint.jpg'),
       angel: texLoader.load('assets/office/window_hallway_angel.jpg'),
       saint: texLoader.load('assets/office/window_hallway_saint.jpg'),
-      mary: texLoader.load('assets/office/window_hallway_mary.jpg')
+      mary: texLoader.load('assets/office/window_hallway_mary.jpg'),
+      mary_far: texLoader.load('assets/office/window_hallway_mary_far.jpg')
     };
 
     this.positionStatuesInitial();
@@ -980,7 +982,7 @@ class GameEngine {
 
       const moveToWindow = (Math.random() < 0.50 && isWindowFree);
       if (moveToWindow) {
-        this.aiConfig.weepingAngel.location = 'WINDOW';
+        this.aiConfig.weepingAngel.location = 'WINDOW'; this.aiConfig.weepingAngel.windowDist = 'far';
         this.aiConfig.weepingAngel.stage = 1;
         this.aiConfig.weepingAngel.windowTimer = 0;
         this._lastAngelStage = 1;
@@ -1043,7 +1045,7 @@ class GameEngine {
 
       const moveToWindow = (Math.random() < 0.50 && isWindowFree);
       if (moveToWindow) {
-        this.aiConfig.haloedSaint.location = 'WINDOW';
+        this.aiConfig.haloedSaint.location = 'WINDOW'; this.aiConfig.haloedSaint.windowDist = 'far';
         this.aiConfig.haloedSaint.stage = 1;
         this.aiConfig.haloedSaint.windowTimer = 0;
         this._lastSaintStage = 1;
@@ -1106,7 +1108,7 @@ class GameEngine {
 
       const moveToWindow = (Math.random() < 0.45 && isWindowFree);
       if (moveToWindow) {
-        this.aiConfig.veiledMourner.location = 'WINDOW';
+        this.aiConfig.veiledMourner.location = 'WINDOW'; this.aiConfig.veiledMourner.windowDist = 'far';
         this.aiConfig.veiledMourner.stage = 1;
         this.aiConfig.veiledMourner.doorApproach = false;
         this.aiConfig.veiledMourner.windowTimer = 0;
@@ -1483,9 +1485,13 @@ class GameEngine {
           pose2.visible = false;
         }
         break;
-      case 1: // CAM 05 - Cloister Hallway approach
-      case 2: // CAM 05 - Right outside observation window
-        saint.visible = false; // Photorealistically displayed on windowBackdrop!
+      case 1: // Window Hallway approach
+        saint.visible = false;
+        this.aiConfig.haloedSaint.windowDist = 'far';
+        this.aiConfig.haloedSaint.windowTimer = 0;
+        break;
+      case 2: // Outside left door
+        saint.visible = false;
         break;
       case 3: // Exactly outside the Left Arched Church Doorway threshold in the outer cloister hallway!
         saint.position.set(-4.20, 0.0, -0.60);
@@ -1888,11 +1894,17 @@ class GameEngine {
     // Strict Window Glass Isolation: ONLY entities specifically at the front window glass ('WINDOW') appear here!
     // When an entity is at CAM_05 (outside the left door), it must NOT appear on the window glass.
     if (angelLoc === 'WINDOW') {
-      targetTex = this.windowTextures.angel_close;
+      targetTex = (this.aiConfig.weepingAngel.windowDist === 'close')
+        ? this.windowTextures.angel_close
+        : (this.windowTextures.angel_far || this.windowTextures.angel_close);
     } else if (saintLoc === 'WINDOW') {
-      targetTex = this.windowTextures.saint_close;
+      targetTex = (this.aiConfig.haloedSaint.windowDist === 'close')
+        ? this.windowTextures.saint_close
+        : (this.windowTextures.saint_far || this.windowTextures.saint_close);
     } else if (mournerLoc === 'WINDOW') {
-      targetTex = this.windowTextures.mary;
+      targetTex = (this.aiConfig.veiledMourner.windowDist === 'close')
+        ? this.windowTextures.mary
+        : (this.windowTextures.mary_far || this.windowTextures.mary);
     }
 
     const mat = this.world.nodes.windowBackdropMat;
@@ -4234,6 +4246,15 @@ class GameEngine {
       }
       ai.windowTimer = (ai.windowTimer || 0) + delta;
       const windowPatience = isNight6OrHard ? 2.2 : 3.5;
+      const stepCloseThreshold = windowPatience * 0.45;
+
+      if ((ai.windowDist || 'far') === 'far' && ai.windowTimer >= stepCloseThreshold) {
+        ai.windowDist = 'close';
+        this.updateWindowHallwayView();
+        window.Sound.playStoneGrind(0.5);
+        window.Sound.playLeftFootstep(0.6);
+      }
+
       if (ai.windowTimer >= windowPatience) {
         ai.windowTimer = 0;
         // MISSED! Moves closer: near CAM 05 or CAM 03 (CAM 04 vent is strictly isolated to Mourner)
@@ -4471,6 +4492,15 @@ class GameEngine {
       }
       ai.windowTimer = (ai.windowTimer || 0) + delta;
       const windowPatience = isNight6OrHard ? 2.2 : 3.5;
+      const stepCloseThreshold = windowPatience * 0.45;
+
+      if ((ai.windowDist || 'far') === 'far' && ai.windowTimer >= stepCloseThreshold) {
+        ai.windowDist = 'close';
+        this.updateWindowHallwayView();
+        window.Sound.playStoneGrind(0.5);
+        window.Sound.playLeftFootstep(0.6);
+      }
+
       if (ai.windowTimer >= windowPatience) {
         ai.windowTimer = 0;
         // MISSED! Moves closer: near CAM 05 or CAM 01 (CAM 04 vent is strictly isolated to Mourner)
@@ -4745,6 +4775,15 @@ class GameEngine {
       }
       ai.windowTimer = (ai.windowTimer || 0) + delta;
       const windowPatience = isNight6OrHard ? 2.2 : 3.5;
+      const stepCloseThreshold = windowPatience * 0.45;
+
+      if ((ai.windowDist || 'far') === 'far' && ai.windowTimer >= stepCloseThreshold) {
+        ai.windowDist = 'close';
+        this.updateWindowHallwayView();
+        window.Sound.playStoneGrind(0.5);
+        window.Sound.playLeftFootstep(0.6);
+      }
+
       if (ai.windowTimer >= windowPatience) {
         ai.windowTimer = 0;
         // MISSED! Moves closer: 50% chance to flank Left Door (CAM 05) or 50% chance to enter Vent (CAM 04)
