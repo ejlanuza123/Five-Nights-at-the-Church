@@ -148,7 +148,7 @@ class WorldBuilder {
     });
 
     // Retro CRT TV Surveillance Monitor Screen (CCTV Feed)
-    const crtFeedTex = new THREE.TextureLoader().load('assets/cctv/church_cam_normal.png');
+    const crtFeedTex = new THREE.TextureLoader().load('assets/cctv/church_cam_normal.webp');
     this.materials.crtTVFeed = new THREE.MeshBasicMaterial({
       map: crtFeedTex
     });
@@ -1279,6 +1279,7 @@ class WorldBuilder {
     } = options;
 
     const loader = new THREE.GLTFLoader();
+    if (window.MeshoptDecoder) loader.setMeshoptDecoder(window.MeshoptDecoder);
     loader.load(
       url,
       (gltf) => {

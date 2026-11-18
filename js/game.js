@@ -469,33 +469,33 @@ class GameEngine {
 
     // 3. Preload CCTV Feeds & Textures
     const feeds = [
-      'assets/cctv/church_cam_normal.png',
-      'assets/cctv/church_cam_01_angel_pedestal_awake.png',
-      'assets/cctv/church_cam_anomaly.png',
-      'assets/cctv/church_cam_01_empty.png',
-      'assets/cctv/church_cam_01_mary_altar.png',
-      'assets/cctv/church_cam_01_saint_nave.png',
-      'assets/cctv/church_cam_01_angel_normal_saint.png',
-      'assets/cctv/church_cam_01_angel_normal_mourner.png',
-      'assets/cctv/church_cam_02_columbarium.png',
-      'assets/cctv/church_cam_02_columbarium_anomaly.png',
-      'assets/cctv/church_cam_02_empty.png',
-      'assets/cctv/church_cam_02_angel_crypt.png',
-      'assets/cctv/church_cam_02_mourner_normal_angel.png',
-      'assets/cctv/church_cam_03_confessional.png',
-      'assets/cctv/church_cam_03_confessional_anomaly.png',
-      'assets/cctv/church_cam_03_empty.png',
-      'assets/cctv/church_cam_03_mary_chapel.png',
-      'assets/cctv/church_cam_03_saint_normal_mourner.png',
-      'assets/cctv/church_cam_04_vent.png',
-      'assets/cctv/church_cam_04_vent_far.png',
-      'assets/cctv/church_cam_04_vent_crawl.png',
-      'assets/cctv/church_cam_04_vent_anomaly.png',
-      'assets/cctv/church_cam_05_narthex.png',
-      'assets/cctv/church_cam_05_narthex_anomaly.png',
-      'assets/cctv/church_cam_05_saint_hallway.png',
-      'assets/cctv/church_cam_05_mary_hallway.png',
-      'assets/cctv/church_cam_05_saint_angel.png',
+      'assets/cctv/church_cam_normal.webp',
+      'assets/cctv/church_cam_01_angel_pedestal_awake.webp',
+      'assets/cctv/church_cam_anomaly.webp',
+      'assets/cctv/church_cam_01_empty.webp',
+      'assets/cctv/church_cam_01_mary_altar.webp',
+      'assets/cctv/church_cam_01_saint_nave.webp',
+      'assets/cctv/church_cam_01_angel_normal_saint.webp',
+      'assets/cctv/church_cam_01_angel_normal_mourner.webp',
+      'assets/cctv/church_cam_02_columbarium.webp',
+      'assets/cctv/church_cam_02_columbarium_anomaly.webp',
+      'assets/cctv/church_cam_02_empty.webp',
+      'assets/cctv/church_cam_02_angel_crypt.webp',
+      'assets/cctv/church_cam_02_mourner_normal_angel.webp',
+      'assets/cctv/church_cam_03_confessional.webp',
+      'assets/cctv/church_cam_03_confessional_anomaly.webp',
+      'assets/cctv/church_cam_03_empty.webp',
+      'assets/cctv/church_cam_03_mary_chapel.webp',
+      'assets/cctv/church_cam_03_saint_normal_mourner.webp',
+      'assets/cctv/church_cam_04_vent.webp',
+      'assets/cctv/church_cam_04_vent_far.webp',
+      'assets/cctv/church_cam_04_vent_crawl.webp',
+      'assets/cctv/church_cam_04_vent_anomaly.webp',
+      'assets/cctv/church_cam_05_narthex.webp',
+      'assets/cctv/church_cam_05_narthex_anomaly.webp',
+      'assets/cctv/church_cam_05_saint_hallway.webp',
+      'assets/cctv/church_cam_05_mary_hallway.webp',
+      'assets/cctv/church_cam_05_saint_angel.webp',
       'assets/entities/angel_cutout.png',
       'assets/entities/saint_cutout.png',
       'assets/entities/mary_cutout.png',
@@ -2564,9 +2564,9 @@ class GameEngine {
 
     // 2. Preload anomaly images for zero-lag instant glitch swap (Phase 2 & Phase 3)
     const phase2Img = new Image();
-    phase2Img.src = 'assets/cctv/church_cam_01_angel_pedestal_awake.png';
+    phase2Img.src = 'assets/cctv/church_cam_01_angel_pedestal_awake.webp';
     const anomalyImg = new Image();
-    anomalyImg.src = 'assets/cctv/church_cam_anomaly.png';
+    anomalyImg.src = 'assets/cctv/church_cam_anomaly.webp';
 
     const triggerTwitch = () => {
       if (this.isRunning || this.isNightTransitioning) return;
@@ -3626,89 +3626,89 @@ class GameEngine {
       // CAM 01: Sanctuary Altar & Nave
       // Case 1: Angel in normal place/pose on pedestal, BUT Saint came into the nave!
       if (isAngelDormant && saintLoc === 'CAM_01') {
-        return 'assets/cctv/church_cam_01_angel_normal_saint.png';
+        return 'assets/cctv/church_cam_01_angel_normal_saint.webp';
       }
       // Case 2: Saint roaming alone in Sanctuary Nave
       if (saintLoc === 'CAM_01') {
-        return 'assets/cctv/church_cam_01_saint_nave.png';
+        return 'assets/cctv/church_cam_01_saint_nave.webp';
       }
       // Case 3: Angel in normal place/pose on pedestal, BUT Mourner came into the aisle!
       if (isAngelDormant && mournerLoc === 'CAM_01') {
-        return 'assets/cctv/church_cam_01_angel_normal_mourner.png';
+        return 'assets/cctv/church_cam_01_angel_normal_mourner.webp';
       }
       // Case 4: Mourner roaming in Sanctuary Altar (pedestal empty / angel moved)
       if (mournerLoc === 'CAM_01') {
-        return 'assets/cctv/church_cam_01_mary_altar.png';
+        return 'assets/cctv/church_cam_01_mary_altar.webp';
       }
       // Case 5: Angel at CAM 01
       if (angelLoc === 'CAM_01') {
         if (this.aiConfig.weepingAngel.hasActivated || this.aiConfig.weepingAngel.aisle || this.aiConfig.weepingAngel.stage === -1) {
           // Pedestal is empty, Angel is standing in center aisle between pews (never returns to peaceful pose)
-          return 'assets/cctv/church_cam_anomaly.png';
+          return 'assets/cctv/church_cam_anomaly.webp';
         }
         if (this.aiConfig.weepingAngel.awakened) {
           // Weeping Angel awakened on pedestal, hands down staring forward
-          return 'assets/cctv/church_cam_01_angel_pedestal_awake.png';
+          return 'assets/cctv/church_cam_01_angel_pedestal_awake.webp';
         }
-        return 'assets/cctv/church_cam_normal.png'; // 1st Phase: Angel dormant on altar pedestal (original pose)
+        return 'assets/cctv/church_cam_normal.webp'; // 1st Phase: Angel dormant on altar pedestal (original pose)
       }
-      return 'assets/cctv/church_cam_01_empty.png';
+      return 'assets/cctv/church_cam_01_empty.webp';
     }
 
     if (camId === 2) {
       // CAM 02: Memorial Columbarium Crypt
       // Case 1: Mourner in normal place/pose on pedestal, BUT Angel came into the crypt!
       if (isMournerDormant && angelLoc === 'CAM_02') {
-        return 'assets/cctv/church_cam_02_mourner_normal_angel.png';
+        return 'assets/cctv/church_cam_02_mourner_normal_angel.webp';
       }
       // Case 2: Angel roaming in crypt
       if (angelLoc === 'CAM_02') {
-        return 'assets/cctv/church_cam_02_angel_crypt.png';
+        return 'assets/cctv/church_cam_02_angel_crypt.webp';
       }
       // Case 3: Mourner at CAM 02
       if (mournerLoc === 'CAM_02') {
         if (this.aiConfig.veiledMourner.hasActivated || this.aiConfig.veiledMourner.awakened || this.aiConfig.veiledMourner.stage === -1) {
-          return 'assets/cctv/church_cam_02_columbarium_anomaly.png'; // Mourner standing upright in crypt tombs (never returns to dormant pose)
+          return 'assets/cctv/church_cam_02_columbarium_anomaly.webp'; // Mourner standing upright in crypt tombs (never returns to dormant pose)
         }
-        return 'assets/cctv/church_cam_02_columbarium.png'; // Mourner seated dormant on crypt pedestal
+        return 'assets/cctv/church_cam_02_columbarium.webp'; // Mourner seated dormant on crypt pedestal
       }
-      return 'assets/cctv/church_cam_02_empty.png';
+      return 'assets/cctv/church_cam_02_empty.webp';
     }
 
     if (camId === 3) {
       // CAM 03: Reconciliation Chapel Confessional
       // Case 1: Saint in normal place/pose in alcove, BUT Mourner came into the chapel!
       if (isSaintDormant && mournerLoc === 'CAM_03') {
-        return 'assets/cctv/church_cam_03_saint_normal_mourner.png';
+        return 'assets/cctv/church_cam_03_saint_normal_mourner.webp';
       }
       // Case 2: Mourner roaming in chapel
       if (mournerLoc === 'CAM_03') {
-        return 'assets/cctv/church_cam_03_mary_chapel.png';
+        return 'assets/cctv/church_cam_03_mary_chapel.webp';
       }
       // Case 3: Saint at CAM 03
       if (saintLoc === 'CAM_03') {
         if (this.aiConfig.haloedSaint.hasActivated || this.aiConfig.haloedSaint.awakened || this.aiConfig.haloedSaint.stage === -1) {
-          return 'assets/cctv/church_cam_03_confessional_anomaly.png'; // Saint screaming close up (never returns to dormant pose)
+          return 'assets/cctv/church_cam_03_confessional_anomaly.webp'; // Saint screaming close up (never returns to dormant pose)
         }
-        return 'assets/cctv/church_cam_03_confessional.png'; // Saint standing dormant in alcove
+        return 'assets/cctv/church_cam_03_confessional.webp'; // Saint standing dormant in alcove
       }
-      return 'assets/cctv/church_cam_03_empty.png';
+      return 'assets/cctv/church_cam_03_empty.webp';
     }
 
     if (camId === 4) {
       // CAM 04: Return Air Duct (Veiled Mourner ONLY - Angel and Saint strictly prohibited)
-      // 1st Phase: Empty vent duct ('assets/cctv/church_cam_04_vent.png')
-      // 2nd Phase: Mourner is further down the duct ('assets/cctv/church_cam_04_vent_far.png')
-      // 3rd Phase: Mourner is closer up at duct camera opening ('assets/cctv/church_cam_04_vent_anomaly.png')
+      // 1st Phase: Empty vent duct ('assets/cctv/church_cam_04_vent.webp')
+      // 2nd Phase: Mourner is further down the duct ('assets/cctv/church_cam_04_vent_far.webp')
+      // 3rd Phase: Mourner is closer up at duct camera opening ('assets/cctv/church_cam_04_vent_anomaly.webp')
       if (mournerLoc === 'CAM_04') {
         if (this.aiConfig.veiledMourner.stage === 1) {
-          return 'assets/cctv/church_cam_04_vent_far.png'; // 2nd Phase: Entity further down duct
+          return 'assets/cctv/church_cam_04_vent_far.webp'; // 2nd Phase: Entity further down duct
         }
         if (this.aiConfig.veiledMourner.stage === 2) {
-          return 'assets/cctv/church_cam_04_vent_anomaly.png'; // 3rd Phase: Entity closer up at opening
+          return 'assets/cctv/church_cam_04_vent_anomaly.webp'; // 3rd Phase: Entity closer up at opening
         }
       }
-      return 'assets/cctv/church_cam_04_vent.png'; // 1st Phase: Empty vent duct
+      return 'assets/cctv/church_cam_04_vent.webp'; // 1st Phase: Empty vent duct
     }
 
     if (camId === 5) {
@@ -3719,33 +3719,33 @@ class GameEngine {
 
       // Case 1: BOTH Saint AND Angel are in the same cam (CAM 05)!
       if (isSaintInHall && isAngelInHall) {
-        return 'assets/cctv/church_cam_05_saint_angel.png';
+        return 'assets/cctv/church_cam_05_saint_angel.webp';
       }
       // Case 2: Saint in hallway outside door
       if (isSaintInHall) {
-        return 'assets/cctv/church_cam_05_saint_hallway.png';
+        return 'assets/cctv/church_cam_05_saint_hallway.webp';
       }
       // Case 3: Angel in hallway outside door
       if (isAngelInHall) {
-        return 'assets/cctv/church_cam_05_narthex_anomaly.png';
+        return 'assets/cctv/church_cam_05_narthex_anomaly.webp';
       }
       // Case 4: Mourner in hallway outside door
       if (isMournerInHall) {
-        return 'assets/cctv/church_cam_05_mary_hallway.png';
+        return 'assets/cctv/church_cam_05_mary_hallway.webp';
       }
-      return 'assets/cctv/church_cam_05_narthex.png';
+      return 'assets/cctv/church_cam_05_narthex.webp';
     }
 
-    return 'assets/cctv/church_cam_normal.png';
+    return 'assets/cctv/church_cam_normal.webp';
   }
 
   isCamAnomaly(camId) {
     const normalFeeds = {
-      1: 'assets/cctv/church_cam_normal.png',
-      2: 'assets/cctv/church_cam_02_columbarium.png',
-      3: 'assets/cctv/church_cam_03_confessional.png',
-      4: 'assets/cctv/church_cam_04_vent.png',
-      5: 'assets/cctv/church_cam_05_narthex.png'
+      1: 'assets/cctv/church_cam_normal.webp',
+      2: 'assets/cctv/church_cam_02_columbarium.webp',
+      3: 'assets/cctv/church_cam_03_confessional.webp',
+      4: 'assets/cctv/church_cam_04_vent.webp',
+      5: 'assets/cctv/church_cam_05_narthex.webp'
     };
     return this.getCCTVImage(camId) !== normalFeeds[camId];
   }

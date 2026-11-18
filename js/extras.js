@@ -178,31 +178,31 @@ class ExtrasManager {
     this.selectedJumpscareIndex = 0;
 
     this.cctvGallery = [
-      { id: 'cam01_normal', cam: 'cam01', title: 'CAM 01 // SANCTUARY NAVE', sub: 'Dormant Weeping Angel on high marble dais', src: 'assets/cctv/church_cam_normal.png' },
-      { id: 'cam01_angel_awake', cam: 'cam01', title: 'CAM 01 // SANCTUARY DAIS (AWAKENED)', sub: 'Weeping Angel turning head towards CCTV', src: 'assets/cctv/church_cam_01_angel_pedestal_awake.png' },
-      { id: 'cam01_angel_nave', cam: 'cam01', title: 'CAM 01 // CENTRAL NAVE AISLE', sub: 'Angel advanced down church center aisle', src: 'assets/cctv/church_cam_01_angel_nave.png' },
-      { id: 'cam01_dual_mourner', cam: 'cam01', title: 'CAM 01 // DUAL ANOMALY INCIDENT', sub: 'Veiled Mourner standing in nave beside Angel dais', src: 'assets/cctv/church_cam_01_angel_normal_mourner.png' },
-      { id: 'cam01_dual_saint', cam: 'cam01', title: 'CAM 01 // CONSECRATED NAVE CONFLICT', sub: 'Sanctus Michael patrolling front of central altar', src: 'assets/cctv/church_cam_01_angel_normal_saint.png' },
-      { id: 'cam01_empty', cam: 'cam01', title: 'CAM 01 // HIGH DAIS (VACATED)', sub: 'Pedestal empty; Weeping Angel has breached sanctuary', src: 'assets/cctv/church_cam_01_empty.png' },
+      { id: 'cam01_normal', cam: 'cam01', title: 'CAM 01 // SANCTUARY NAVE', sub: 'Dormant Weeping Angel on high marble dais', src: 'assets/cctv/church_cam_normal.webp' },
+      { id: 'cam01_angel_awake', cam: 'cam01', title: 'CAM 01 // SANCTUARY DAIS (AWAKENED)', sub: 'Weeping Angel turning head towards CCTV', src: 'assets/cctv/church_cam_01_angel_pedestal_awake.webp' },
+      { id: 'cam01_angel_nave', cam: 'cam01', title: 'CAM 01 // CENTRAL NAVE AISLE', sub: 'Angel advanced down church center aisle', src: 'assets/cctv/church_cam_01_angel_nave.webp' },
+      { id: 'cam01_dual_mourner', cam: 'cam01', title: 'CAM 01 // DUAL ANOMALY INCIDENT', sub: 'Veiled Mourner standing in nave beside Angel dais', src: 'assets/cctv/church_cam_01_angel_normal_mourner.webp' },
+      { id: 'cam01_dual_saint', cam: 'cam01', title: 'CAM 01 // CONSECRATED NAVE CONFLICT', sub: 'Sanctus Michael patrolling front of central altar', src: 'assets/cctv/church_cam_01_angel_normal_saint.webp' },
+      { id: 'cam01_empty', cam: 'cam01', title: 'CAM 01 // HIGH DAIS (VACATED)', sub: 'Pedestal empty; Weeping Angel has breached sanctuary', src: 'assets/cctv/church_cam_01_empty.webp' },
 
-      { id: 'cam02_crypt', cam: 'cam02', title: 'CAM 02 // COLUMBARIUM CRYPT', sub: 'Veiled Mourner dormant beside funeral vault niche', src: 'assets/cctv/church_cam_02_columbarium.png' },
-      { id: 'cam02_empty', cam: 'cam02', title: 'CAM 02 // MEMORIAL VAULT (VACATED)', sub: 'Pedestal vacant; Mourner crawling inside HVAC shafts', src: 'assets/cctv/church_cam_02_empty.png' },
-      { id: 'cam02_angel_crypt', cam: 'cam02', title: 'CAM 02 // UNHOLY FLANK (ANGEL IN CRYPT)', sub: 'Weeping Angel prowling the columbarium vault', src: 'assets/cctv/church_cam_02_angel_crypt.png' },
-      { id: 'cam02_dual', cam: 'cam02', title: 'CAM 02 // CRYPT DUAL CONVERGENCE', sub: 'Veiled Mourner and Weeping Angel converging together', src: 'assets/cctv/church_cam_02_mourner_normal_angel.png' },
+      { id: 'cam02_crypt', cam: 'cam02', title: 'CAM 02 // COLUMBARIUM CRYPT', sub: 'Veiled Mourner dormant beside funeral vault niche', src: 'assets/cctv/church_cam_02_columbarium.webp' },
+      { id: 'cam02_empty', cam: 'cam02', title: 'CAM 02 // MEMORIAL VAULT (VACATED)', sub: 'Pedestal vacant; Mourner crawling inside HVAC shafts', src: 'assets/cctv/church_cam_02_empty.webp' },
+      { id: 'cam02_angel_crypt', cam: 'cam02', title: 'CAM 02 // UNHOLY FLANK (ANGEL IN CRYPT)', sub: 'Weeping Angel prowling the columbarium vault', src: 'assets/cctv/church_cam_02_angel_crypt.webp' },
+      { id: 'cam02_dual', cam: 'cam02', title: 'CAM 02 // CRYPT DUAL CONVERGENCE', sub: 'Veiled Mourner and Weeping Angel converging together', src: 'assets/cctv/church_cam_02_mourner_normal_angel.webp' },
 
-      { id: 'cam03_saint', cam: 'cam03', title: 'CAM 03 // RECONCILIATION CHAPEL', sub: 'Sanctus Michael standing upright inside arch niche', src: 'assets/cctv/church_cam_03_confessional.png' },
-      { id: 'cam03_empty', cam: 'cam03', title: 'CAM 03 // CHAPEL ALCOVE (VACATED)', sub: 'Niche empty; Saint patrolling cloister hallways', src: 'assets/cctv/church_cam_03_empty.png' },
-      { id: 'cam03_dual', cam: 'cam03', title: 'CAM 03 // CONFESSIONAL DUAL VISITATION', sub: 'Veiled Mourner standing alongside Sanctus Michael', src: 'assets/cctv/church_cam_03_saint_normal_mourner.png' },
+      { id: 'cam03_saint', cam: 'cam03', title: 'CAM 03 // RECONCILIATION CHAPEL', sub: 'Sanctus Michael standing upright inside arch niche', src: 'assets/cctv/church_cam_03_confessional.webp' },
+      { id: 'cam03_empty', cam: 'cam03', title: 'CAM 03 // CHAPEL ALCOVE (VACATED)', sub: 'Niche empty; Saint patrolling cloister hallways', src: 'assets/cctv/church_cam_03_empty.webp' },
+      { id: 'cam03_dual', cam: 'cam03', title: 'CAM 03 // CONFESSIONAL DUAL VISITATION', sub: 'Veiled Mourner standing alongside Sanctus Michael', src: 'assets/cctv/church_cam_03_saint_normal_mourner.webp' },
 
-      { id: 'cam04_empty', cam: 'cam04', title: 'CAM 04 // HVAC DUCT (PHASE 1)', sub: 'Clean return air duct; entity has not entered', src: 'assets/cctv/church_cam_04_vent.png' },
-      { id: 'cam04_far', cam: 'cam04', title: 'CAM 04 // HVAC DUCT (PHASE 2 FAR)', sub: 'Veiled Mourner crawling deep inside ductwork', src: 'assets/cctv/church_cam_04_vent_far.png' },
-      { id: 'cam04_near', cam: 'cam04', title: 'CAM 04 // HVAC DUCT (PHASE 3 CLOSE)', sub: 'Veiled Mourner close up at surveillance lens opening', src: 'assets/cctv/church_cam_04_vent_anomaly.png' },
+      { id: 'cam04_empty', cam: 'cam04', title: 'CAM 04 // HVAC DUCT (PHASE 1)', sub: 'Clean return air duct; entity has not entered', src: 'assets/cctv/church_cam_04_vent.webp' },
+      { id: 'cam04_far', cam: 'cam04', title: 'CAM 04 // HVAC DUCT (PHASE 2 FAR)', sub: 'Veiled Mourner crawling deep inside ductwork', src: 'assets/cctv/church_cam_04_vent_far.webp' },
+      { id: 'cam04_near', cam: 'cam04', title: 'CAM 04 // HVAC DUCT (PHASE 3 CLOSE)', sub: 'Veiled Mourner close up at surveillance lens opening', src: 'assets/cctv/church_cam_04_vent_anomaly.webp' },
 
-      { id: 'cam05_dormant', cam: 'cam05', title: 'CAM 05 // WEST CLOISTER NARTHEX', sub: 'Quiet vaulted corridor leading to office left door', src: 'assets/cctv/church_cam_05_narthex.png' },
-      { id: 'cam05_saint', cam: 'cam05', title: 'CAM 05 // SAINT CLOISTER ADVANCE', sub: 'Sanctus Michael advancing down west corridor', src: 'assets/cctv/church_cam_05_saint_hallway.png' },
-      { id: 'cam05_angel', cam: 'cam05', title: 'CAM 05 // ANGEL CLOISTER APPROACH', sub: 'Weeping Angel standing beneath vaulted archway', src: 'assets/cctv/church_cam_05_narthex_anomaly.png' },
-      { id: 'cam05_dual', cam: 'cam05', title: 'CAM 05 // CLOISTER CONFLICT (BOTH ENTITIES)', sub: 'Both Sanctus Michael & Weeping Angel in same hallway', src: 'assets/cctv/church_cam_05_saint_angel.png' },
-      { id: 'cam05_mourner', cam: 'cam05', title: 'CAM 05 // MOURNER CLOISTER FLANK', sub: 'Veiled Mourner flanking outside the left doorway', src: 'assets/cctv/church_cam_05_mary_hallway.png' },
+      { id: 'cam05_dormant', cam: 'cam05', title: 'CAM 05 // WEST CLOISTER NARTHEX', sub: 'Quiet vaulted corridor leading to office left door', src: 'assets/cctv/church_cam_05_narthex.webp' },
+      { id: 'cam05_saint', cam: 'cam05', title: 'CAM 05 // SAINT CLOISTER ADVANCE', sub: 'Sanctus Michael advancing down west corridor', src: 'assets/cctv/church_cam_05_saint_hallway.webp' },
+      { id: 'cam05_angel', cam: 'cam05', title: 'CAM 05 // ANGEL CLOISTER APPROACH', sub: 'Weeping Angel standing beneath vaulted archway', src: 'assets/cctv/church_cam_05_narthex_anomaly.webp' },
+      { id: 'cam05_dual', cam: 'cam05', title: 'CAM 05 // CLOISTER CONFLICT (BOTH ENTITIES)', sub: 'Both Sanctus Michael & Weeping Angel in same hallway', src: 'assets/cctv/church_cam_05_saint_angel.webp' },
+      { id: 'cam05_mourner', cam: 'cam05', title: 'CAM 05 // MOURNER CLOISTER FLANK', sub: 'Veiled Mourner flanking outside the left doorway', src: 'assets/cctv/church_cam_05_mary_hallway.webp' },
 
       { id: 'door_angel', cam: 'office', title: 'OFFICE // LEFT DOORWAY THRESHOLD', sub: 'Weeping Angel staring through open door frame', src: 'assets/office/door_peeking_angel.jpg' },
       { id: 'door_saint', cam: 'office', title: 'OFFICE // LEFT DOORWAY THRESHOLD', sub: 'Sanctus Michael standing ready outside door', src: 'assets/office/door_peeking_saint.jpg' },
@@ -224,7 +224,7 @@ class ExtrasManager {
         duration: '00:38',
         photoCam: 'cam01',
         photoTitle: 'CAM 01 // SANCTUARY DAIS',
-        photoThumb: 'assets/cctv/church_cam_normal.png',
+        photoThumb: 'assets/cctv/church_cam_normal.webp',
         summary: 'Fr. Thomas welcomes the new night watchman, outlining diocesan energy quotas, the magnetic iron threshold door, and the disturbing tendency of the Angel of Tears to vacate the high altar dais when unwatched.',
         transcript: [
           "If you're hearing this, you survived your first few minutes in the parish security office.",
@@ -245,7 +245,7 @@ class ExtrasManager {
         duration: '00:46',
         photoCam: 'cam05',
         photoTitle: 'CAM 05 // WEST CLOISTER NARTHEX',
-        photoThumb: 'assets/cctv/church_cam_05_saint_hallway.png',
+        photoThumb: 'assets/cctv/church_cam_05_saint_hallway.webp',
         summary: 'Warning concerning Sanctus Michael (The Archangel) prowling outside the security office observation window. Instructions on conserving office power while using the desk halogen spotlight beam to repel his aggressive patrols.',
         transcript: [
           "Hello again! Glad to see you back for Night Two.",
@@ -266,7 +266,7 @@ class ExtrasManager {
         duration: '00:52',
         photoCam: 'cam04',
         photoTitle: 'CAM 04 // HVAC RETURN AIR DUCT',
-        photoThumb: 'assets/cctv/church_cam_04_vent_anomaly.png',
+        photoThumb: 'assets/cctv/church_cam_04_vent_anomaly.webp',
         summary: 'Notice regarding the crypt seal breach. The Veiled Mourner has entered the HVAC ventilation shafts. Protocol commands switching on the duct inspection beam and pulling the emergency fire shutter when she approaches the grille.',
         transcript: [
           "Uh, hello? Okay, listen. Night Three is usually when things... escalate.",
@@ -286,7 +286,7 @@ class ExtrasManager {
         duration: '00:34',
         photoCam: 'cam05',
         photoTitle: 'CAM 05 // DUAL ENTITY THRESHOLD',
-        photoThumb: 'assets/cctv/church_cam_05_saint_angel.png',
+        photoThumb: 'assets/cctv/church_cam_05_saint_angel.webp',
         summary: 'Fr. Thomas in acute panic during a simultaneous breach. Static distortions, warning of Latin whispers outside the office window, and a violent impact before the recording violently cuts off.',
         transcript: [
           "Hello? (heavy static) Can you hear me? Listen... I don't have much time.",
@@ -307,7 +307,7 @@ class ExtrasManager {
         duration: '01:05',
         photoCam: 'cam02',
         photoTitle: 'CAM 02 // COLUMBARIUM PLAGUE VAULT',
-        photoThumb: 'assets/cctv/church_cam_02_columbarium.png',
+        photoThumb: 'assets/cctv/church_cam_02_columbarium.webp',
         summary: 'The secret origin of the church curse: During the 1888 plague, an unholy binding ritual bound malevolent entities into the sanctuary effigies. Explains why holy water and prayers fail, and why direct observation forces them to lock into rigid stone.',
         transcript: [
           "Vatican Congregation of Rites, October 1892. Dictated by Monsignor Valerius.",
@@ -331,7 +331,7 @@ class ExtrasManager {
         duration: '00:58',
         photoCam: 'cam01',
         photoTitle: 'CAM 01 // VACATED SANCTUARY DAIS',
-        photoThumb: 'assets/cctv/church_cam_01_empty.png',
+        photoThumb: 'assets/cctv/church_cam_01_empty.webp',
         summary: 'Official police post-mortem examination of night watchman Thomas Reyes found dead against the security door. Zero physical trauma, frozen expression of pure terror, sub-zero skin, and marble dust residue on his throat.',
         transcript: [
           "County Coroner's Audio Log. Case File 83-409. Detective Marcus Vance recording.",
@@ -997,6 +997,7 @@ class ExtrasManager {
     }
 
     const loader = new THREE.GLTFLoader();
+    if (window.MeshoptDecoder) loader.setMeshoptDecoder(window.MeshoptDecoder);
     loader.load(
       entity.modelUrl,
       (gltf) => {

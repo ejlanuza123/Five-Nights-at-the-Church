@@ -9,9 +9,9 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261110_v62">
-  <link rel="preload" as="image" href="assets/cctv/church_cam_normal.png">
-  <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.png">
+  <link rel="stylesheet" href="css/style.css?v=20261118_v67">
+  <link rel="preload" as="image" href="assets/cctv/church_cam_normal.webp">
+  <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.webp">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="assets/icon/app_icon.png">
   <link rel="shortcut icon" href="assets/icon/icon-192.png">
@@ -185,7 +185,7 @@
     <!-- Fullscreen Digital CCTV Surveillance Overlay -->
     <div id="cctv-overlay">
       <!-- High-Resolution Raw CCTV Camera Capture Layer -->
-      <img id="cctv-screen-img" class="cctv-screen-img" src="assets/cctv/church_cam_normal.png" alt="CCTV Camera Feed" />
+      <img id="cctv-screen-img" class="cctv-screen-img" src="assets/cctv/church_cam_normal.webp" alt="CCTV Camera Feed" />
 
       <!-- Night Vision Infrared Phosphor Green Tint & Central Illuminator -->
       <div class="cctv-nightvision-layer" id="cctv-nightvision-layer"></div>
@@ -318,8 +318,6 @@
     </audio>
     <audio id="bgm-game" src="assets/audio/dark_ambient_horror.mp3" preload="auto" loop playsinline>
       <source src="assets/audio/dark_ambient_horror.mp3" type="audio/mpeg">
-      <source src="assets/audio/Dark%20Ambient%20-%20Horror.mp3" type="audio/mpeg">
-      <source src="assets/audio/Dark Ambient - Horror.mp3" type="audio/mpeg">
     </audio>
 
     <!-- RL3 Studio Opening Video Intro (Shown First on Launch) -->
@@ -1462,6 +1460,7 @@
     }
   </script>
   <script src="libs/GLTFLoader.js"></script>
+  <script src="libs/meshopt_decoder.js"></script>
   <script>
     if (typeof THREE !== 'undefined' && typeof THREE.GLTFLoader === 'undefined') {
       document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"><\/script>');
@@ -1469,10 +1468,10 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261112_v66"></script>
-  <script src="js/textures.js?v=20261112_v66"></script>
-  <script src="js/models.js?v=20261112_v66"></script>
-  <script src="js/extras.js?v=20261112_v66"></script>
-  <script src="js/game.js?v=20261112_v66"></script>
+  <script src="js/audio.js?v=20261118_v67"></script>
+  <script src="js/textures.js?v=20261118_v67"></script>
+  <script src="js/models.js?v=20261118_v67"></script>
+  <script src="js/extras.js?v=20261118_v67"></script>
+  <script src="js/game.js?v=20261118_v67"></script>
 </body>
 </html>

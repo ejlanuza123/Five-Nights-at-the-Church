@@ -2250,7 +2250,7 @@ video::-webkit-media-controls-overlay-play-button {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: url('../assets/cctv/church_cam_normal.png');
+  background-image: url('../assets/cctv/church_cam_normal.webp');
   background-size: cover;
   background-position: center 38%;
   filter: contrast(1.15) brightness(0.78) saturate(0.85);
@@ -2262,13 +2262,13 @@ video::-webkit-media-controls-overlay-play-button {
 /* Clean, steady lobby background: zero position shake / zero displacement */
 .menu-church-bg.anomaly,
 .menu-church-bg.anomaly-phase3 {
-  background-image: url('../assets/cctv/church_cam_anomaly.png') !important;
+  background-image: url('../assets/cctv/church_cam_anomaly.webp') !important;
   filter: brightness(1.08) contrast(1.45) saturate(1.2) drop-shadow(0 0 35px rgba(220, 38, 38, 0.75)) !important;
   transform: none !important;
 }
 
 .menu-church-bg.anomaly-phase2 {
-  background-image: url('../assets/cctv/church_cam_01_angel_pedestal_awake.png') !important;
+  background-image: url('../assets/cctv/church_cam_01_angel_pedestal_awake.webp') !important;
   filter: brightness(1.08) contrast(1.45) saturate(1.2) drop-shadow(0 0 35px rgba(220, 38, 38, 0.75)) !important;
   transform: none !important;
 }

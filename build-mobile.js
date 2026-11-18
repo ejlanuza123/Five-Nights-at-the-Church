@@ -48,14 +48,17 @@ topFiles.forEach(file => {
   }
 });
 
-// 2. Copy directories
+// 2. Copy directories (wipe stale copies first so deleted/renamed assets do not linger in the APK)
 const folders = ['css', 'js', 'libs', 'assets'];
 folders.forEach(folder => {
   const src = path.join(rootDir, folder);
   if (fs.existsSync(src)) {
     console.log(`[Copying directory] ${folder}...`);
-    copyRecursive(src, path.join(wwwDir, folder));
-    copyRecursive(src, path.join(androidPublicDir, folder));
+    [wwwDir, androidPublicDir].forEach(target => {
+      const dest = path.join(target, folder);
+      if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true, force: true });
+      copyRecursive(src, dest);
+    });
   }
 });
 
