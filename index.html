@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#030406">
   <title>Five Nights at the Church</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="css/style.css?v=20261118_v67">
+  <link rel="stylesheet" href="css/style.css?v=20261120_v68">
   <link rel="preload" as="image" href="assets/cctv/church_cam_normal.webp">
   <link rel="preload" as="image" href="assets/cctv/church_cam_anomaly.webp">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
@@ -48,6 +48,9 @@
 
     <!-- Red Jumpscare Strobe Flash -->
     <div id="jumpscare-flash"></div>
+
+    <!-- Psychological Horror Heartbeat & 3AM Vignette Pulse -->
+    <div id="horror-heartbeat-vignette"></div>
 
     <!-- Cinematic Fullscreen Video Jumpscare (Individual Dedicated Video Tags for Zero Latency) -->
     <div id="jumpscare-video-container" class="hidden">
@@ -186,6 +189,8 @@
     <div id="cctv-overlay">
       <!-- High-Resolution Raw CCTV Camera Capture Layer -->
       <img id="cctv-screen-img" class="cctv-screen-img" src="assets/cctv/church_cam_normal.webp" alt="CCTV Camera Feed" />
+      <!-- Subliminal 0.15s Psychological Horror Flash Layer (Nights 3-6) -->
+      <img id="cctv-subliminal-img" class="cctv-subliminal-img hidden" src="" alt="" aria-hidden="true" />
 
       <!-- Night Vision Infrared Phosphor Green Tint & Central Illuminator -->
       <div class="cctv-nightvision-layer" id="cctv-nightvision-layer"></div>
@@ -1468,10 +1473,10 @@
   </script>
 
   <!-- Game Modules -->
-  <script src="js/audio.js?v=20261118_v67"></script>
-  <script src="js/textures.js?v=20261118_v67"></script>
-  <script src="js/models.js?v=20261118_v67"></script>
-  <script src="js/extras.js?v=20261118_v67"></script>
-  <script src="js/game.js?v=20261118_v67"></script>
+  <script src="js/audio.js?v=20261120_v68"></script>
+  <script src="js/textures.js?v=20261120_v68"></script>
+  <script src="js/models.js?v=20261120_v68"></script>
+  <script src="js/extras.js?v=20261120_v68"></script>
+  <script src="js/game.js?v=20261120_v68"></script>
 </body>
 </html>

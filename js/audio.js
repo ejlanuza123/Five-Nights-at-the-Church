@@ -246,8 +246,9 @@ class SoundEngine {
       this.fadeAudioOut(this.gameAudio, 300);
     }
 
-    // Guarantee no in-game weeping / crying audio leaks into the lobby
+    // Guarantee no in-game weeping / crying or psychological horror audio leaks into the lobby
     this.stopDistantWeeping(0.1);
+    this.stopPsychologicalHorrorAudio(0.15);
 
     this.updateBGMVolume();
 
@@ -1384,6 +1385,7 @@ class SoundEngine {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
+    this.stopDynamicHeartbeat(0.2);
   }
 
   playHeartThud(time, freq, vol) {
@@ -1402,12 +1404,273 @@ class SoundEngine {
     osc.stop(time + 0.18);
   }
 
+  // --- PSYCHOLOGICAL HORROR MICRO-EVENTS AUDIO (NIGHTS 3-6) ---
+
+  // 1. 3:00 AM Distant Church Bell Toll (uploaded horror_bell_3am.mp3)
+  playHorrorBell3AM(volumeScale = 0.88) {
+    if (this.isMuted) return;
+    try {
+      this.stopHorrorBell3AM(0.1);
+      const sfx = (this.sfxVolume !== undefined ? this.sfxVolume : 0.90);
+      const master = (this.masterVolume !== undefined ? this.masterVolume : 0.85);
+      const targetVol = Math.max(0, Math.min(1.0, volumeScale * sfx * master));
+      if (targetVol <= 0.005) return;
+
+      if (!this.horrorBellAudioEl) {
+        this.horrorBellAudioEl = new Audio('assets/audio/horror_bell_3am.mp3');
+        this.horrorBellAudioEl.preload = 'auto';
+      }
+      const el = this.horrorBellAudioEl;
+      if (el._fadeRaf) {
+        cancelAnimationFrame(el._fadeRaf);
+        el._fadeRaf = null;
+      }
+      el.currentTime = 0;
+      el.volume = targetVol;
+      el.play().catch(() => {});
+    } catch (e) {}
+  }
+
+  stopHorrorBell3AM(fadeSec = 0.3) {
+    if (!this.horrorBellAudioEl) return;
+    try {
+      const el = this.horrorBellAudioEl;
+      if (el._fadeRaf) {
+        cancelAnimationFrame(el._fadeRaf);
+        el._fadeRaf = null;
+      }
+      if (el.paused) return;
+      if (fadeSec <= 0.05) {
+        el.pause();
+        el.currentTime = 0;
+        return;
+      }
+      const startVol = el.volume;
+      const startTime = performance.now();
+      const fadeMs = fadeSec * 1000;
+      const step = () => {
+        const elapsed = performance.now() - startTime;
+        if (elapsed < fadeMs && !el.paused) {
+          el.volume = Math.max(0, startVol * (1 - elapsed / fadeMs));
+          el._fadeRaf = requestAnimationFrame(step);
+        } else {
+          el.pause();
+          el.currentTime = 0;
+          el._fadeRaf = null;
+        }
+      };
+      el._fadeRaf = requestAnimationFrame(step);
+    } catch (e) {}
+  }
+
+  // 2. Whispered Ghostly Choir Echoes (uploaded horror_whispers.mp3, stereo-panned snippet)
+  playHorrorWhispers(pan = 0.0, volumeScale = 0.72, durationSec = 5.5) {
+    if (this.isMuted) return;
+    const nowMs = Date.now();
+    if (this._lastWhisperMs && (nowMs - this._lastWhisperMs) < 9000) return;
+    this._lastWhisperMs = nowMs;
+
+    const sfx = (this.sfxVolume !== undefined ? this.sfxVolume : 0.90);
+    const master = (this.masterVolume !== undefined ? this.masterVolume : 0.85);
+    const targetVol = Math.max(0, Math.min(1.0, volumeScale * sfx * master));
+    if (targetVol <= 0.005) return;
+
+    const playWithBuffer = (buf) => {
+      if (!this.ctx || !this.masterGain || !buf) return;
+      try {
+        this.stopHorrorWhispers(0.15);
+        const now = this.ctx.currentTime;
+        const maxOffset = Math.max(0, buf.duration - durationSec - 0.5);
+        const startOffset = maxOffset > 1 ? Math.random() * maxOffset : 0;
+
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(targetVol, now + 0.65);
+        gain.gain.setValueAtTime(targetVol, now + Math.max(0.8, durationSec - 1.4));
+        gain.gain.linearRampToValueAtTime(0.001, now + durationSec);
+
+        const panner = this.createPanner(pan);
+        src.connect(gain);
+        if (panner) {
+          gain.connect(panner);
+          panner.connect(this.masterGain);
+        } else {
+          gain.connect(this.masterGain);
+        }
+
+        src.start(now, startOffset, durationSec);
+        this.activeWhisperSource = { src, gain, panner };
+        src.onended = () => {
+          if (this.activeWhisperSource && this.activeWhisperSource.src === src) {
+            this.activeWhisperSource = null;
+          }
+        };
+      } catch (e) {}
+    };
+
+    if (this.horrorWhispersBuffer && this.ctx && this.masterGain) {
+      playWithBuffer(this.horrorWhispersBuffer);
+      return;
+    }
+
+    // Decode into WebAudio buffer for stereo panning on first trigger; fallback to HTML5 Audio immediately
+    if (this.ctx && !this._loadingWhispersBuffer) {
+      this._loadingWhispersBuffer = true;
+      fetch('assets/audio/horror_whispers.mp3')
+        .then(r => r.arrayBuffer())
+        .then(ab => this.ctx.decodeAudioData(ab))
+        .then(decoded => {
+          this.horrorWhispersBuffer = decoded;
+          this._loadingWhispersBuffer = false;
+        })
+        .catch(() => {
+          this._loadingWhispersBuffer = false;
+        });
+    }
+
+    try {
+      if (!this.horrorWhispersAudioEl) {
+        this.horrorWhispersAudioEl = new Audio('assets/audio/horror_whispers.mp3');
+        this.horrorWhispersAudioEl.preload = 'auto';
+      }
+      const el = this.horrorWhispersAudioEl;
+      if (el._stopTimer) clearTimeout(el._stopTimer);
+      el.currentTime = Math.random() * 10;
+      el.volume = targetVol;
+      el.play().catch(() => {});
+      el._stopTimer = setTimeout(() => {
+        this.stopHorrorWhispers(0.8);
+      }, Math.max(1500, (durationSec - 0.8) * 1000));
+    } catch (e) {}
+  }
+
+  stopHorrorWhispers(fadeSec = 0.25) {
+    if (this.activeWhisperSource && this.ctx) {
+      try {
+        const now = this.ctx.currentTime;
+        const w = this.activeWhisperSource;
+        if (w.gain) {
+          w.gain.gain.cancelScheduledValues(now);
+          w.gain.gain.setValueAtTime(w.gain.gain.value, now);
+          w.gain.gain.linearRampToValueAtTime(0.001, now + fadeSec);
+        }
+        setTimeout(() => {
+          try { w.src?.stop(); } catch (e) {}
+        }, fadeSec * 1000 + 40);
+      } catch (e) {}
+      this.activeWhisperSource = null;
+    }
+    if (this.horrorWhispersAudioEl) {
+      const el = this.horrorWhispersAudioEl;
+      if (el._stopTimer) {
+        clearTimeout(el._stopTimer);
+        el._stopTimer = null;
+      }
+      if (!el.paused) {
+        try {
+          if (fadeSec <= 0.05) {
+            el.pause();
+            el.currentTime = 0;
+          } else {
+            const startVol = el.volume;
+            const startTime = performance.now();
+            const fadeMs = fadeSec * 1000;
+            const step = () => {
+              const elapsed = performance.now() - startTime;
+              if (elapsed < fadeMs && !el.paused) {
+                el.volume = Math.max(0, startVol * (1 - elapsed / fadeMs));
+                requestAnimationFrame(step);
+              } else {
+                el.pause();
+                el.currentTime = 0;
+              }
+            };
+            requestAnimationFrame(step);
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
+  // 3. Smoothly Scaling Dynamic Heartbeat (uploaded horror_heartbeat.mp3)
+  updateDynamicHeartbeat(intensity = 0) {
+    const clamped = Math.max(0, Math.min(1, intensity));
+    if (this.isMuted || clamped <= 0.02) {
+      if (this.horrorHeartbeatAudioEl && !this.horrorHeartbeatAudioEl.paused) {
+        this.horrorHeartbeatAudioEl.volume = 0;
+        this.horrorHeartbeatAudioEl.pause();
+      }
+      return;
+    }
+
+    try {
+      if (!this.horrorHeartbeatAudioEl) {
+        this.horrorHeartbeatAudioEl = new Audio('assets/audio/horror_heartbeat.mp3');
+        this.horrorHeartbeatAudioEl.loop = true;
+        this.horrorHeartbeatAudioEl.preload = 'auto';
+      }
+      const el = this.horrorHeartbeatAudioEl;
+      const sfx = (this.sfxVolume !== undefined ? this.sfxVolume : 0.90);
+      const master = (this.masterVolume !== undefined ? this.masterVolume : 0.85);
+      // Smooth non-linear curve so low dread is subtle and imminent door/vent wait is pounding
+      const targetVol = Math.max(0, Math.min(1.0, Math.pow(clamped, 1.15) * 0.92 * sfx * master));
+      el.volume = targetVol;
+      // Subtly accelerate heartbeat tempo as threat gets closer (0.95x -> 1.32x)
+      const targetRate = 0.95 + clamped * 0.37;
+      if (Math.abs(el.playbackRate - targetRate) > 0.02) {
+        el.playbackRate = targetRate;
+      }
+      if (el.paused && targetVol > 0.01) {
+        el.play().catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  stopDynamicHeartbeat(fadeSec = 0.2) {
+    if (!this.horrorHeartbeatAudioEl) return;
+    try {
+      const el = this.horrorHeartbeatAudioEl;
+      if (el.paused) return;
+      if (fadeSec <= 0.05) {
+        el.volume = 0;
+        el.pause();
+        el.currentTime = 0;
+        return;
+      }
+      const startVol = el.volume;
+      const startTime = performance.now();
+      const fadeMs = fadeSec * 1000;
+      const step = () => {
+        const elapsed = performance.now() - startTime;
+        if (elapsed < fadeMs && !el.paused) {
+          el.volume = Math.max(0, startVol * (1 - elapsed / fadeMs));
+          requestAnimationFrame(step);
+        } else {
+          el.volume = 0;
+          el.pause();
+          el.currentTime = 0;
+        }
+      };
+      requestAnimationFrame(step);
+    } catch (e) {}
+  }
+
+  stopPsychologicalHorrorAudio(fadeSec = 0.25) {
+    this.stopHorrorBell3AM(fadeSec);
+    this.stopHorrorWhispers(fadeSec);
+    this.stopDynamicHeartbeat(fadeSec);
+  }
+
   // --- TOTAL FACILITY POWER FAILURE ---
   playPowerShutdown() {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
     this.stopAmbientOrgan();
     this.stopHeartbeat();
+    this.stopPsychologicalHorrorAudio(0.2);
 
     // Electrical inverter capacitor discharge
     const osc = this.ctx.createOscillator();
@@ -1471,6 +1734,7 @@ class SoundEngine {
     }
     this.resume();
     this.stopHeartbeat();
+    this.stopPsychologicalHorrorAudio(0.1);
     const now = this.ctx ? this.ctx.currentTime : 0;
     const vol = (this.sfxVolume !== undefined ? this.sfxVolume : 0.9) * (this.masterVolume !== undefined ? this.masterVolume : 0.85);
 
@@ -1664,6 +1928,7 @@ class SoundEngine {
     if (!this.ctx) return;
     this.stopAmbientOrgan();
     this.stopHeartbeat();
+    this.stopPsychologicalHorrorAudio(0.2);
 
     // Contemporary parish carillon chime sequence
     const notes = [392.00, 440.00, 493.88, 587.33, 659.25, 783.99]; // G4, A4, B4, D5, E5, G5

@@ -1298,6 +1298,260 @@ class GameEngine {
     }
   }
 
+  // --- PSYCHOLOGICAL HORROR MICRO-EVENTS (NIGHTS 3-6 & CUSTOM NIGHT) ---
+  isPsychologicalHorrorNight() {
+    return (this.currentNight >= 3 || this.isCustomNight);
+  }
+
+  resetPsychologicalHorrorState() {
+    this._heartbeatIntensity = 0;
+    this._ambientSubliminalTimer = 0;
+    this._nextAmbientSubliminal = 24 + Math.random() * 16;
+    this._lastSubliminalMs = 0;
+    this._lastApproachWhisperMs = 0;
+
+    if (this._horrorFlickerTimeouts && this._horrorFlickerTimeouts.length) {
+      this._horrorFlickerTimeouts.forEach(t => clearTimeout(t));
+    }
+    this._horrorFlickerTimeouts = [];
+
+    if (this._subliminalFlashTimeout) {
+      clearTimeout(this._subliminalFlashTimeout);
+      this._subliminalFlashTimeout = null;
+    }
+
+    const subImg = document.getElementById('cctv-subliminal-img');
+    if (subImg) subImg.classList.add('hidden');
+
+    const vig = document.getElementById('horror-heartbeat-vignette');
+    if (vig) {
+      vig.classList.remove('bell-3am-pulse');
+      vig.style.opacity = '0';
+    }
+
+    if (window.Sound && typeof window.Sound.stopPsychologicalHorrorAudio === 'function') {
+      window.Sound.stopPsychologicalHorrorAudio(0.15);
+    }
+  }
+
+  triggerHorrorFlickerSequence() {
+    if (this._horrorFlickerTimeouts && this._horrorFlickerTimeouts.length) {
+      this._horrorFlickerTimeouts.forEach(t => clearTimeout(t));
+    }
+    this._horrorFlickerTimeouts = [];
+
+    const vig = document.getElementById('horror-heartbeat-vignette');
+    if (vig) {
+      vig.classList.add('bell-3am-pulse');
+      this._horrorFlickerTimeouts.push(setTimeout(() => {
+        vig.classList.remove('bell-3am-pulse');
+      }, 2400));
+    }
+
+    // Three staggered eerie candle/office lamp flickers synced with the 3:00 AM bell
+    const pulses = [
+      { delay: 0, duration: 380 },
+      { delay: 850, duration: 260 },
+      { delay: 1900, duration: 480 }
+    ];
+    pulses.forEach(p => {
+      this._horrorFlickerTimeouts.push(setTimeout(() => {
+        if (!this.isRunning || this.gameOver || this.victory || this.isBlackout) return;
+        this._officeLightFlickerUntil = Date.now() + p.duration;
+      }, p.delay));
+    });
+  }
+
+  triggerSubliminalCCTVFlash(entityName = null) {
+    if (!this.isRunning || this.gameOver || this.victory || this.isBlackout || !this.isCCTVOpen) return;
+    if (this.isCamGlitching(this.activeCameraId)) return;
+
+    const now = Date.now();
+    if (this._lastSubliminalMs && (now - this._lastSubliminalMs) < 12000) return;
+    this._lastSubliminalMs = now;
+
+    const subImg = document.getElementById('cctv-subliminal-img');
+    if (!subImg) return;
+
+    const poolByEntity = {
+      weepingAngel: [
+        'assets/cctv/church_cam_01_angel_phase2.webp',
+        'assets/cctv/church_cam_02_angel_crypt.webp',
+        'assets/cctv/church_cam_05_narthex_anomaly.webp'
+      ],
+      haloedSaint: [
+        'assets/cctv/church_cam_03_confessional_anomaly.webp',
+        'assets/cctv/church_cam_05_saint_hallway.webp',
+        'assets/cctv/church_cam_01_saint_nave.webp'
+      ],
+      veiledMourner: [
+        'assets/cctv/church_cam_04_vent_anomaly.webp',
+        'assets/cctv/church_cam_02_columbarium_anomaly.webp',
+        'assets/cctv/church_cam_05_mary_hallway.webp'
+      ]
+    };
+
+    const allPool = [
+      'assets/cctv/church_cam_01_angel_phase2.webp',
+      'assets/cctv/church_cam_02_columbarium_anomaly.webp',
+      'assets/cctv/church_cam_03_confessional_anomaly.webp',
+      'assets/cctv/church_cam_04_vent_anomaly.webp',
+      'assets/cctv/church_cam_05_narthex_anomaly.webp'
+    ];
+
+    const list = (entityName && poolByEntity[entityName]) ? poolByEntity[entityName] : allPool;
+    const chosen = list[Math.floor(Math.random() * list.length)];
+
+    subImg.src = chosen;
+    subImg.classList.remove('hidden');
+
+    if (this._subliminalFlashTimeout) clearTimeout(this._subliminalFlashTimeout);
+    // Exact 0.15s (150ms) subliminal apparition flash
+    this._subliminalFlashTimeout = setTimeout(() => {
+      subImg.classList.add('hidden');
+      this._subliminalFlashTimeout = null;
+    }, 150);
+  }
+
+  triggerEntityApproachHorror(entityName, toLoc, newStage) {
+    if (!this.isRunning || this.gameOver || this.victory || this.isBlackout) return;
+    if (!this.isPsychologicalHorrorNight()) return;
+    if (newStage < 1) return;
+
+    const nightFactor = Math.min(1, Math.max(0, (this.currentNight - 2) / 4));
+    const whisperChance = 0.28 + nightFactor * 0.28 + (newStage >= 2 ? 0.12 : 0);
+
+    // Stereo pan aligned with approach direction
+    let pan = 0.0;
+    if (toLoc === 'RIGHT_VENT' || toLoc === 'CAM_04') {
+      pan = 0.7;
+    } else if (toLoc === 'LEFT_DOOR' || toLoc === 'CAM_05') {
+      pan = -0.65;
+    } else if (toLoc === 'WINDOW' || toLoc === 'WINDOW_FAR') {
+      pan = 0.0;
+    } else {
+      pan = (Math.random() - 0.5) * 0.9;
+    }
+
+    const now = Date.now();
+    if ((!this._lastApproachWhisperMs || (now - this._lastApproachWhisperMs) > 15000) && Math.random() < whisperChance) {
+      this._lastApproachWhisperMs = now;
+      const vol = newStage >= 3 ? 0.78 : (newStage === 2 ? 0.62 : 0.48);
+      const dur = 4.5 + Math.random() * 2.5;
+      if (window.Sound && typeof window.Sound.playHorrorWhispers === 'function') {
+        window.Sound.playHorrorWhispers(pan, vol, dur);
+      }
+    }
+
+    // Subliminal 0.15s CCTV flash when an entity moves closer while player watches cameras
+    if (this.isCCTVOpen && Math.random() < (0.35 + nightFactor * 0.2)) {
+      this.triggerSubliminalCCTVFlash(entityName);
+    }
+  }
+
+  updatePsychologicalHorror(delta) {
+    if (!this.isRunning || this.gameOver || this.victory || this.isBlackout) {
+      if (this._heartbeatIntensity > 0) {
+        this._heartbeatIntensity = 0;
+        if (window.Sound && typeof window.Sound.updateDynamicHeartbeat === 'function') {
+          window.Sound.updateDynamicHeartbeat(0);
+        }
+      }
+      return;
+    }
+
+    const angel = this.aiConfig.weepingAngel;
+    const saint = this.aiConfig.haloedSaint;
+    const mourner = this.aiConfig.veiledMourner;
+    const isPsychNight = this.isPsychologicalHorrorNight();
+
+    let targetThreat = 0;
+    let imminentCount = 0;
+
+    // 1. Entities waiting right outside the Left Door
+    const angelAtDoor = (angel.stage === 3 || angel.location === 'LEFT_DOOR');
+    const saintAtDoor = (saint.stage === 3 || saint.location === 'LEFT_DOOR');
+    const mournerAtDoor = (mourner.doorApproach && (mourner.stage === 3 || mourner.location === 'LEFT_DOOR'));
+
+    if (angelAtDoor || saintAtDoor || mournerAtDoor) {
+      imminentCount++;
+      const doorThreat = this.isLeftDoorClosed ? 0.55 : 0.92;
+      const maxAtk = Math.max(
+        angelAtDoor ? (angel.attackTimer || 0) : 0,
+        saintAtDoor ? (saint.attackTimer || 0) : 0,
+        mournerAtDoor ? (mourner.attackTimer || 0) : 0
+      );
+      targetThreat = Math.max(targetThreat, Math.min(1.0, doorThreat + Math.min(0.08, maxAtk * 0.02)));
+    }
+
+    // 2. Veiled Mourner waiting right outside the Right Vent
+    const mournerAtVent = (!mourner.doorApproach && (mourner.stage === 3 || mourner.location === 'RIGHT_VENT'));
+    if (mournerAtVent) {
+      imminentCount++;
+      const ventThreat = this.isVentClosed ? 0.55 : 0.92;
+      targetThreat = Math.max(targetThreat, Math.min(1.0, ventThreat + Math.min(0.08, (mourner.attackTimer || 0) * 0.02)));
+    }
+
+    // 3. Entity staring through the Center Window
+    const anyAtWindow = (angel.location === 'WINDOW' || saint.location === 'WINDOW' || mourner.location === 'WINDOW');
+    if (anyAtWindow) {
+      imminentCount++;
+      targetThreat = Math.max(targetThreat, 0.85);
+    }
+
+    // Multiple simultaneous threats push heartbeat to maximum
+    if (imminentCount >= 2) {
+      targetThreat = 1.0;
+    }
+
+    // 4. Subtle dread build-up on Nights 3-6 when entities are one step away (hallway/vent crawl)
+    if (isPsychNight && targetThreat < 0.4) {
+      const closeApproach = (
+        angel.stage === 2 || angel.location === 'CAM_05' || angel.location === 'WINDOW_FAR' ||
+        saint.stage === 2 || saint.location === 'CAM_05' || saint.location === 'WINDOW_FAR' ||
+        mourner.stage === 2 || mourner.location === 'CAM_04' || mourner.location === 'CAM_05' || mourner.location === 'WINDOW_FAR'
+      );
+      if (closeApproach) {
+        targetThreat = Math.max(targetThreat, 0.30);
+      }
+    }
+
+    // Smoothly interpolate heartbeat intensity (rises quickly under danger, fades gently when safe)
+    if (this._heartbeatIntensity === undefined) this._heartbeatIntensity = 0;
+    const lerpRate = targetThreat > this._heartbeatIntensity ? 1.8 : 0.75;
+    this._heartbeatIntensity += (targetThreat - this._heartbeatIntensity) * Math.min(1, delta * lerpRate);
+    if (this._heartbeatIntensity < 0.01 && targetThreat === 0) this._heartbeatIntensity = 0;
+
+    if (window.Sound && typeof window.Sound.updateDynamicHeartbeat === 'function') {
+      window.Sound.updateDynamicHeartbeat(this._heartbeatIntensity);
+    }
+
+    // Subtle heartbeat peripheral vignette synced to heartbeat intensity
+    const vig = document.getElementById('horror-heartbeat-vignette');
+    if (vig && !vig.classList.contains('bell-3am-pulse')) {
+      if (this._heartbeatIntensity > 0.35) {
+        const pulse = 0.75 + 0.25 * Math.sin(performance.now() * (0.006 + this._heartbeatIntensity * 0.005));
+        const alpha = Math.min(0.85, (this._heartbeatIntensity - 0.30) * 1.15 * pulse);
+        vig.style.opacity = alpha.toFixed(3);
+      } else {
+        vig.style.opacity = '0';
+      }
+    }
+
+    // 5. Rare ambient subliminal CCTV flash while monitoring cameras on Nights 3-6
+    if (isPsychNight && this.isCCTVOpen && !this.isCamGlitching(this.activeCameraId)) {
+      this._ambientSubliminalTimer = (this._ambientSubliminalTimer || 0) + delta;
+      if (!this._nextAmbientSubliminal) this._nextAmbientSubliminal = 24 + Math.random() * 18;
+      if (this._ambientSubliminalTimer >= this._nextAmbientSubliminal) {
+        this._ambientSubliminalTimer = 0;
+        this._nextAmbientSubliminal = 28 + Math.random() * 24;
+        if (Math.random() < 0.55) {
+          this.triggerSubliminalCCTVFlash();
+        }
+      }
+    }
+  }
+
   camLocToId(loc) {
     if (loc === 'CAM_01') return 1;
     if (loc === 'CAM_02') return 2;
@@ -1345,6 +1599,11 @@ class GameEngine {
     affected.forEach(camId => {
       this.triggerCameraMotionError(camId, 3.2);
     });
+
+    // Psychological horror micro-events when an entity advances closer (Nights 3-6)
+    if (newStage > oldStage) {
+      this.triggerEntityApproachHorror(entityName, toLoc, newStage);
+    }
   }
 
   onCameraErrorResolved(camId) {
@@ -3092,6 +3351,7 @@ class GameEngine {
 
     window.Sound.stopAmbientOrgan();
     window.Sound.stopHeartbeat();
+    this.resetPsychologicalHorrorState();
     window.Sound.stopDistantWeeping(0.35);
     window.Sound.stopVentGlitchSound(0.15);
     window.Sound.startMenuDrone();
@@ -3209,6 +3469,7 @@ class GameEngine {
     this.hour = 0;
     this.nightTimer = 0;
     this.power = 100.0;
+    this.resetPsychologicalHorrorState();
     this.updateHUD();
 
     this.positionStatuesInitial();
@@ -4009,6 +4270,7 @@ class GameEngine {
   triggerBlackout() {
     this.isBlackout = true;
     this.muteCassette();
+    this.resetPsychologicalHorrorState();
     this.vibrate([150, 100, 250]);
     window.Sound.playPowerShutdown();
     window.Sound.stopVentGlitchSound(0.1); // Power loss cuts vent cam glitch
@@ -4085,10 +4347,19 @@ class GameEngine {
       cctvTimeEl.textContent = fullTimeString;
     }
 
-    // 5. Hourly Church Carillon Bell Toll
+    // 5. Hourly Church Carillon Bell Toll (with 3:00 AM Psychological Horror Event on Nights 3-6)
     if (currentHourIndex > this.hour && currentHourIndex <= 6) {
       this.hour = currentHourIndex;
-      window.Sound.playChurchBell(1.0, 1);
+      if (this.hour === 3 && this.isPsychologicalHorrorNight()) {
+        if (window.Sound && typeof window.Sound.playHorrorBell3AM === 'function') {
+          window.Sound.playHorrorBell3AM(0.88);
+        } else {
+          window.Sound.playChurchBell(0.75, 1);
+        }
+        this.triggerHorrorFlickerSequence();
+      } else {
+        window.Sound.playChurchBell(1.0, 1);
+      }
 
       if (this.hour === 6) {
         this.triggerVictory();
@@ -4100,6 +4371,7 @@ class GameEngine {
     this.victory = true;
     this.isRunning = false;
     this.muteCassette();
+    this.resetPsychologicalHorrorState();
     window.Sound.stopDistantWeeping(0.4);
     window.Sound.stopVentGlitchSound(0.3);
     window.Sound.stopBGM(true);
@@ -5035,6 +5307,7 @@ class GameEngine {
     // Pause background music & halt ambient organ/heartbeat
     window.Sound.pauseBGM();
     window.Sound.stopHeartbeat();
+    this.resetPsychologicalHorrorState();
     if (window.Sound.playEntityJumpscare) window.Sound.playEntityJumpscare(entityName);
     else window.Sound.playJumpscare(entityName);
     this.vibrate([200, 80, 400, 100, 600]);
@@ -5181,6 +5454,7 @@ class GameEngine {
       this.updateTime(effectiveDelta);
       this.updatePower(effectiveDelta);
       this.updateAI(effectiveDelta);
+      this.updatePsychologicalHorror(rawDelta);
 
       // Decrement CCTV Camera Motion Error Timers
       for (let cam = 1; cam <= 5; cam++) {
@@ -5193,6 +5467,10 @@ class GameEngine {
             }
           }
         }
+      }
+    } else if (this.isPaused && this._heartbeatIntensity > 0) {
+      if (window.Sound && typeof window.Sound.updateDynamicHeartbeat === 'function') {
+        window.Sound.updateDynamicHeartbeat(0);
       }
     }
 
